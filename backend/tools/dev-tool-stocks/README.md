@@ -49,9 +49,25 @@ Get list of popular stock symbols.
 
 ## Setup
 
-1. Get an Alpha Vantage API key from https://www.alphavantage.co/support/#api-key
-2. Set the environment variable: `ALPHA_VANTAGE_API_KEY=your_api_key_here`
-3. The tool will automatically use real API data when available, or mock data for demos
+### API Key Configuration
+
+This tool uses the Alpha Vantage API for real stock data. You have two options for API key configuration:
+
+1. **Environment Variable**: Set `ALPHA_VANTAGE_API_KEY` in your system environment
+2. **.env File**: Add your API key to the tool's `.env` file:
+   ```
+   ALPHA_VANTAGE_API_KEY=your_alpha_vantage_api_key_here
+   ```
+
+### Getting an API Key
+
+1. Visit [Alpha Vantage](https://www.alphavantage.co/support/#api-key)
+2. Sign up for a free API key
+3. Add the key using one of the methods above
+
+### Mock Data
+
+If no API key is provided, the tool will automatically use mock/demo data for development and testing purposes. This allows the tool to work immediately without requiring API key setup.
 
 ## Architecture
 

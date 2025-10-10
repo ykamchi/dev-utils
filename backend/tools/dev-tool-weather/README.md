@@ -14,13 +14,23 @@ A beautiful weather display tool that shows current weather conditions and forec
 
 ## API Integration
 
-This tool uses the OpenWeatherMap API. To use real weather data:
+This tool uses the OpenWeatherMap API for real weather data. You have two options for API key configuration:
 
-1. Get an API key from [OpenWeatherMap](https://openweathermap.org/api)
-2. Set the `OPENWEATHER_API_KEY` environment variable
-3. Or pass the API key as a query parameter: `?api_key=YOUR_KEY`
+1. **Environment Variable**: Set `OPENWEATHER_API_KEY` in your system environment
+2. **.env File**: Add your API key to the tool's `.env` file:
+   ```
+   OPENWEATHER_API_KEY=your_openweather_api_key_here
+   ```
 
-Without an API key, the tool will display demo/mock data.
+### Getting an API Key
+
+1. Visit [OpenWeatherMap](https://openweathermap.org/api)
+2. Sign up for a free API key
+3. Add the key using one of the methods above
+
+### Mock Data
+
+If no API key is provided, the tool will display demo/mock weather data. This allows the tool to work immediately for development and testing without requiring API key setup.
 
 ## Usage
 
