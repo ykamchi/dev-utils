@@ -5,10 +5,9 @@ A modular development tools application with tool-based architecture.
 """
 
 import os
-import json
 import importlib.util
 from pathlib import Path
-from flask import Flask, request, jsonify, send_from_directory, render_template
+from flask import Flask, jsonify, render_template
 from flask_cors import CORS
 from dotenv import load_dotenv
 
@@ -43,6 +42,11 @@ class ToolManager:
         for tool_dir in TOOLS_DIR.iterdir():
             if tool_dir.is_dir() and not tool_dir.name.startswith('_'):
                 try:
+                    # Check for tool-specific requirements
+                    tool_req_file = tool_dir / "requirements.txt"
+                    if tool_req_file.exists():
+                        print(f"Tool {tool_dir.name} has additional requirements in {tool_req_file}")
+
                     # Load tool-specific environment variables
                     tool_env_file = tool_dir / ".env"
                     if tool_env_file.exists():

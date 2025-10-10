@@ -30,6 +30,12 @@ Returns a hardcoded welcome message.
 }
 ```
 
+## Dependencies
+
+This tool has no external Python dependencies and uses only the standard library. It relies on the main application dependencies for Flask and other core functionality.
+
+See `requirements.txt` in this directory for reference (contains only a comment about standard library usage).
+
 ## Development Notes
 
 ### Tool Layout Best Practices

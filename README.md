@@ -24,11 +24,12 @@ A modular development tools application with a beautiful theming system and exte
 dev_utils/
 ├── backend/                    # Python Flask backend
 │   ├── main.py                # Main server application
-│   ├── requirements.txt       # Python dependencies
+│   ├── requirements.txt       # Core Python dependencies (Flask, CORS, dotenv)
 │   └── tools/                 # Backend tool implementations
 │       └── dev-tool-system-performance/           # Example dev-tool-system-performance tool
 │           ├── tool.py        # Tool business logic
-│           └── api.py         # API endpoints
+│           ├── api.py         # API endpoints
+│           └── requirements.txt # Tool-specific dependencies (optional)
 ├── frontend/                  # Pure HTML/CSS/JS frontend
 │   ├── index.html            # Main application template
 │   └── static/               # Static assets
@@ -250,6 +251,16 @@ def register_apis(app, base_path):
                 'success': False,
                 'error': str(e)
             }), 500
+```
+
+#### `backend/tools/my-awesome-tool/requirements.txt` (optional):
+```txt
+# My Awesome Tool - Requirements
+# Add any tool-specific Python dependencies here
+# These will be in addition to the main backend/requirements.txt
+
+requests>=2.31.0
+some-other-package>=1.0.0
 ```
 
 ### 2. Frontend Tool Implementation

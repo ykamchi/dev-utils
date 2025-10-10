@@ -69,6 +69,14 @@ This tool uses the Alpha Vantage API for real stock data. You have two options f
 
 If no API key is provided, the tool will automatically use mock/demo data for development and testing purposes. This allows the tool to work immediately without requiring API key setup.
 
+## Dependencies
+
+This tool requires the following Python packages (in addition to the main application dependencies):
+
+- `requests>=2.31.0` - For making HTTP requests to the Alpha Vantage API
+
+See `requirements.txt` in this directory for the complete list of tool-specific dependencies.
+
 ## Architecture
 
 - **Backend**: Python Flask API with Alpha Vantage integration

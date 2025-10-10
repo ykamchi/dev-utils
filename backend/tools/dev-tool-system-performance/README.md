@@ -54,6 +54,14 @@ frontend/static/tools/dev-tool-system-performance/
 └── style.css            # Tool-specific styles
 ```
 
+## Dependencies
+
+This tool requires the following Python packages (in addition to the main application dependencies):
+
+- `psutil>=5.9.6` - For system monitoring and resource usage statistics
+
+See `requirements.txt` in this directory for the complete list of tool-specific dependencies.
+
 ## API Endpoints
 
 ### GET /api/dev-tool-system-performance/info

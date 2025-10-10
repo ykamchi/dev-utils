@@ -1,0 +1,4 @@
+# Dev Tool System Performance - Requirements
+# External dependencies for system monitoring functionality
+
+psutil>=5.9.6

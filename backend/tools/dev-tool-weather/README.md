@@ -32,6 +32,14 @@ This tool uses the OpenWeatherMap API for real weather data. You have two option
 
 If no API key is provided, the tool will display demo/mock weather data. This allows the tool to work immediately for development and testing without requiring API key setup.
 
+## Dependencies
+
+This tool requires the following Python packages (in addition to the main application dependencies):
+
+- `requests>=2.31.0` - For making HTTP requests to the OpenWeatherMap API
+
+See `requirements.txt` in this directory for the complete list of tool-specific dependencies.
+
 ## Usage
 
 The weather tool displays:

@@ -1,0 +1,4 @@
+# Dev Tool Weather - Requirements
+# External dependencies for weather data functionality
+
+requests>=2.31.0
