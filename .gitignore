@@ -231,7 +231,6 @@ dist
 .tern-port
 
 # IDE and Editor files
-.vscode/
 .idea/
 *.swp
 *.swo
