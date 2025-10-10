@@ -43,6 +43,12 @@ class ToolManager:
         for tool_dir in TOOLS_DIR.iterdir():
             if tool_dir.is_dir() and not tool_dir.name.startswith('_'):
                 try:
+                    # Load tool-specific environment variables
+                    tool_env_file = tool_dir / ".env"
+                    if tool_env_file.exists():
+                        load_dotenv(tool_env_file)
+                        print(f"Loaded environment variables for tool: {tool_dir.name}")
+
                     # Check if tool.py exists
                     tool_file = tool_dir / "tool.py"
                     if not tool_file.exists():
