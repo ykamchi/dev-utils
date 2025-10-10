@@ -459,9 +459,6 @@ dmypy.json
 secrets.json
 config/local.py
 
-# Tool-specific environment files (contain API keys)
-backend/tools/*/.env
-
 # Development notes
 NOTES.md
 TODO.md
