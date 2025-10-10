@@ -9,6 +9,7 @@ A beautiful and functional stock market data tool for the Dev Tools application.
 - **Beautiful UI**: Modern gradient design with responsive layout
 - **Mock Data Fallback**: Works without API keys for development/demo purposes
 - **Auto-refresh**: Updates stock data every 30 seconds
+- **Global Header**: Uses the application's global header system (no tool-specific header needed)
 
 ## API Endpoints
 

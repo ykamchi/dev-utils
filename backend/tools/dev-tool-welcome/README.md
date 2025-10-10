@@ -11,6 +11,7 @@ Dev Tool Welcome provides a friendly welcome message to users of the Dev Tools A
 - **Welcome Message**: Displays a hardcoded welcome message
 - **Simple Interface**: Clean and minimal design
 - **Server Timestamp**: Shows when the message was generated
+- **Global Header**: Uses the application's global header system (no tool-specific header needed)
 
 ## API Endpoints
 

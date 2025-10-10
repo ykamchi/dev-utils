@@ -11,6 +11,7 @@ Dev Tool System Info provides a comprehensive overview of your dev-tools server 
 - **System Information**: Platform details, hostname, and Python version
 - **Auto-refresh**: Automatically updates every 3 seconds
 - **Professional Dashboard**: Beautiful UI with color-coded statistics cards
+- **Global Header**: Uses the application's global header system (no tool-specific header needed)
 
 ## Features
 

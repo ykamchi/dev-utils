@@ -1,4 +1,6 @@
 [//]: # (This is a markdown file)
+<!-- markdownlint-disable -->
+<!-- vim: set ft=markdown: -->
 ---
 title: Dev Tools App
 description: A modular development tools application
@@ -25,7 +27,6 @@ dev_utils/
 │   ├── requirements.txt       # Python dependencies
 │   └── tools/                 # Backend tool implementations
 │       └── dev-tool-system-performance/           # Example dev-tool-system-performance tool
-│           ├── __init__.py    # Package initialization
 │           ├── tool.py        # Tool business logic
 │           └── api.py         # API endpoints
 ├── frontend/                  # Pure HTML/CSS/JS frontend
@@ -97,18 +98,44 @@ The application will be available at: http://127.0.0.1:5000
 
 ## Included Tools
 
-### 💻 Dev Tool System Info
-The Dev Tool System Info provides a comprehensive dashboard showing:
-- **Static Welcome Message**: Professional greeting explaining the dev-tools platform
+### � Dev Tool System Performance
+The Dev Tool System Performance provides a comprehensive dashboard showing:
 - **Real-time System Monitoring**: Live CPU, memory, and disk usage statistics
 - **System Information**: Platform details, hostname, and Python version
-- **Auto-refresh**: Automatically updates every 30 seconds
+- **Auto-refresh**: Automatically updates every 3 seconds
 
-**API**: `GET /api/dev-tool-system-performance/info`  
+**API**: `GET /api/dev-tool-system-performance/info`, `GET /api/dev-tool-system-performance/memory-usage`  
 **Features**: System monitoring, server stats, responsive dashboard  
 **Dependencies**: `psutil` for system monitoring
 
-See [Dev Tool System Info README](backend/tools/dev-tool-system-performance/README.md) for detailed documentation.
+See [Dev Tool System Performance README](backend/tools/dev-tool-system-performance/README.md) for detailed documentation.
+
+### 👋 Dev Tool Welcome
+A simple welcome message tool that displays a friendly greeting.
+
+**API**: `GET /api/dev-tool-welcome/message`  
+**Features**: Welcome message, server timestamp  
+**Dependencies**: None
+
+See [Dev Tool Welcome README](backend/tools/dev-tool-welcome/README.md) for detailed documentation.
+
+### 🌤️ Dev Tool Weather
+A beautiful weather display tool with current conditions and forecasts.
+
+**API**: `GET /api/dev-tool-weather/current`, `GET /api/dev-tool-weather/forecast`  
+**Features**: Current weather, 5-day forecast, city selection  
+**Dependencies**: OpenWeatherMap API (optional)
+
+See [Dev Tool Weather README](backend/tools/dev-tool-weather/README.md) for detailed documentation.
+
+### 📈 Dev Tool Stocks
+A stock market data tool showing real-time quotes and popular stocks.
+
+**API**: `GET /api/dev-tool-stocks/quote`, `GET /api/dev-tool-stocks/popular`  
+**Features**: Stock quotes, market data, auto-refresh  
+**Dependencies**: Alpha Vantage API (optional)
+
+See [Dev Tool Stocks README](backend/tools/dev-tool-stocks/README.md) for detailed documentation.
 
 ## Tool Architecture
 
@@ -118,7 +145,6 @@ The dev-tools app uses a modular architecture where each tool is a separate pack
 
 ```
 backend/tools/[tool-name]/
-├── __init__.py          # Package exports
 ├── tool.py              # Business logic and metadata
 └── api.py               # HTTP API endpoints
 
@@ -146,6 +172,17 @@ The backend automatically discovers tools by:
 
 Tools are identified by their directory name (e.g., `dev-tool-system-performance`, `my-awesome-tool`).
 
+## Global Header System
+
+The application uses a unified header system that automatically displays tool information:
+
+- **Automatic Population**: Tool icon and name are pulled from `tool.py` metadata
+- **Consistent Design**: All tools share the same header styling and behavior
+- **Theme Integration**: Headers automatically adapt to the selected theme
+- **No Tool Headers**: Individual tools should not include their own header elements
+
+The global header eliminates duplication and ensures a consistent user experience across all tools.
+
 ## Creating New Tools
 
 To add a new tool to the application:
@@ -159,22 +196,6 @@ mkdir backend/tools/my-awesome-tool
 ```
 
 Create the following files:
-
-#### `backend/tools/my-awesome-tool/__init__.py`:
-```python
-"""
-My Awesome Tool Package
-"""
-
-from .tool import get_tool_info, get_my_data
-from .api import register_apis
-
-__all__ = [
-    'get_tool_info',
-    'register_apis',
-    'get_my_data'
-]
-```
 
 #### `backend/tools/my-awesome-tool/tool.py`:
 ```python
@@ -210,7 +231,7 @@ My Awesome Tool - API Endpoints
 """
 
 from flask import jsonify
-from . import tool
+from .tool import get_my_data
 
 def register_apis(app, base_path):
     """Register my-awesome-tool API endpoints"""
@@ -219,7 +240,7 @@ def register_apis(app, base_path):
     def get_data():
         """Get data from the tool"""
         try:
-            data = tool.get_my_data()
+            data = get_my_data()
             return jsonify({
                 'success': True,
                 'data': data
@@ -244,11 +265,6 @@ mkdir -p frontend/static/tools/my-awesome-tool
 <link rel="stylesheet" href="style.css">
 
 <div class="my-awesome-tool">
-    <div class="tool-header">
-        <h2>🚀 My Awesome Tool</h2>
-        <p>Description of the tool</p>
-    </div>
-
     <div class="tool-body">
         <button onclick="loadData()">Load Data</button>
         <div id="content"></div>
@@ -288,14 +304,10 @@ window.addEventListener('DOMContentLoaded', () => {
     margin: 0 auto;
 }
 
-.my-awesome-tool .tool-header {
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-.my-awesome-tool .tool-header h2 {
-    color: var(--color-primary-accent);
-    font-size: 2em;
+.my-awesome-tool .tool-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .my-awesome-tool button {
@@ -351,12 +363,17 @@ Each tool exposes its own API endpoints as defined in the tool's `tool.py` metad
 The application supports 11 different themes that can be switched dynamically:
 
 1. **Executive Blue/Gold** (Default)
-2. **Monochromatic Elegance**
+2. **Monochrome Elegance**
 3. **Traditional Mahogany**
 4. **Regal Dark Mode**
 5. **Soft Sage & Stone**
 6. **French Provincial**
 7. **Dark Modern**
+8. **Light Modern**
+9. **GitHub Dark**
+10. **Solarized Dark**
+11. **Dracula**
+12. **One Dark Pro**
 
 Themes are defined in `frontend/static/css/main.css` using CSS custom properties (variables).
 
@@ -376,6 +393,7 @@ To add a new theme:
 Always use CSS custom properties (theme variables) instead of hardcoded colors to ensure consistency and theme compatibility:
 
 **Available Theme Variables:**
+- `--color-background-main`: Main page background color
 - `--color-primary-accent`: Main brand color (default: #192A56)
 - `--color-primary-accent-hover`: Hover state for primary color
 - `--color-secondary-accent`: Secondary color (default: #4A6C7E)
@@ -383,8 +401,17 @@ Always use CSS custom properties (theme variables) instead of hardcoded colors t
 - `--color-text-dark`: Dark text color (default: #2C3E50)
 - `--color-text-light`: Light/muted text color (default: #FBFBF2)
 - `--color-card-background`: Card background color
-- `--color-warning-error`: Warning/error color
+- `--color-warning-error`: Warning/error color (default: #A65B43)
 - `--color-info-background`: Info background with transparency
+- `--color-overlay-white`: Subtle white overlay (rgba(255, 255, 255, 0.1))
+- `--color-overlay-border`: Subtle border overlay (rgba(255, 255, 255, 0.1))
+- `--color-positive-bg-light`: Light positive/success background
+- `--color-positive-bg-strong`: Strong positive/success background
+- `--color-negative-bg-light`: Light negative/error background
+- `--color-negative-bg-strong`: Strong negative/error background
+- `--shadow-card-light`: Light card shadow (0 2px 8px rgba(0, 0, 0, 0.1))
+- `--shadow-card-hover`: Hover card shadow (0 4px 16px rgba(0, 0, 0, 0.15))
+- `--shadow-card-main`: Main card shadow (0 8px 32px rgba(...))
 
 **❌ Avoid Hardcoded Colors:**
 ```css
@@ -403,10 +430,19 @@ Always use CSS custom properties (theme variables) instead of hardcoded colors t
 
 **✅ Theme-Aware Components:**
 - Use `var(--color-primary-accent)` for primary buttons and links
-- Use `var(--color-secondary-accent)` for secondary elements
-- Use `var(--color-highlight-gold)` for highlights and important data
-- Use `var(--color-text-dark)` and `var(--color-text-light)` for text hierarchy
+- Use `var(--color-primary-accent-hover)` for hover states of primary elements
+- Use `var(--color-secondary-accent)` for secondary elements and borders
+- Use `var(--color-highlight-gold)` for highlights, success states, and important data
+- Use `var(--color-text-dark)` for primary text and headings
+- Use `var(--color-text-light)` for muted text, secondary content, and light backgrounds
 - Use `var(--color-card-background)` for card/container backgrounds
+- Use `var(--color-background-main)` for main page backgrounds
+- Use `var(--color-warning-error)` for error states, warnings, and negative indicators
+- Use `var(--color-info-background)` for informational backgrounds and subtle gradients
+- Use `var(--color-positive-bg-light)` and `var(--color-positive-bg-strong)` for positive/success backgrounds
+- Use `var(--color-negative-bg-light)` and `var(--color-negative-bg-strong)` for negative/error backgrounds
+- Use `var(--color-overlay-white)` and `var(--color-overlay-border)` for subtle overlays
+- Use `var(--shadow-card-light)`, `var(--shadow-card-hover)`, and `var(--shadow-card-main)` for card shadows
 
 #### 🏗️ **General Best Practices**
 - Keep tools self-contained and modular
@@ -418,6 +454,7 @@ Always use CSS custom properties (theme variables) instead of hardcoded colors t
 - Use semantic HTML and accessible markup
 - Implement proper loading states and error handling
 - Clean up event listeners and polling intervals when tools are unloaded
+- **Do not include tool-header elements** - the application provides a global header system automatically
 
 ## Contributing
 

@@ -10,6 +10,7 @@ A beautiful weather display tool that shows current weather conditions and forec
 - Responsive design
 - City selection
 - Real-time updates
+- **Global Header**: Uses the application's global header system (no tool-specific header needed)
 
 ## API Integration
 
