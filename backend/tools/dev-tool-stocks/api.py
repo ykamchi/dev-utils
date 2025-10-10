@@ -4,10 +4,7 @@ Handles HTTP requests and responses for stock data.
 """
 
 from flask import jsonify, request
-import sys
-import os
-sys.path.append(os.path.dirname(__file__))
-from tool import get_stock_quote, get_popular_stocks
+from . import tool
 
 def register_apis(app, base_path):
     """Register dev-tool-stocks API endpoints"""
@@ -25,7 +22,7 @@ def register_apis(app, base_path):
                     'error': 'Symbol parameter is required'
                 }), 400
 
-            quote_data = get_stock_quote(symbol, api_key)
+            quote_data = tool.get_stock_quote(symbol, api_key)
             return jsonify({
                 'success': True,
                 'data': quote_data
@@ -40,7 +37,7 @@ def register_apis(app, base_path):
     def get_popular_stocks_endpoint():
         """Get list of popular stock symbols"""
         try:
-            popular_stocks = get_popular_stocks()
+            popular_stocks = tool.get_popular_stocks()
             return jsonify({
                 'success': True,
                 'data': popular_stocks
