@@ -76,19 +76,28 @@ def get_system_info():
         },
         'system_info': system_info
     }
+
+def get_memory_usage_by_process():
     """Get memory usage by process/applications"""
     try:
         processes = []
-        for proc in psutil.process_iter(['pid', 'name', 'memory_info']):
+        for proc in psutil.process_iter(['pid', 'name', 'memory_info', 'cpu_percent']):
             try:
-                # Get process memory info
+                # Get process memory and CPU info
                 mem_info = proc.info['memory_info']
                 if mem_info:
                     memory_mb = mem_info.rss / (1024 * 1024)  # Convert to MB
+                    # Get CPU usage (this might be 0.0 for the first call, but will be accurate on subsequent calls)
+                    try:
+                        cpu_percent = proc.info.get('cpu_percent', 0.0) or 0.0
+                    except:
+                        cpu_percent = 0.0
+                    
                     processes.append({
                         'pid': proc.info['pid'],
                         'name': proc.info['name'],
-                        'memory_mb': round(memory_mb, 2)
+                        'memory_mb': round(memory_mb, 2),
+                        'cpu_percent': round(cpu_percent, 1)
                     })
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 continue
@@ -96,17 +105,19 @@ def get_system_info():
         # Sort by memory usage descending
         processes.sort(key=lambda x: x['memory_mb'], reverse=True)
 
-        # Group processes by name and sum memory
+        # Group processes by name and sum memory and CPU
         process_groups = {}
         for proc in processes:
             name = proc['name']
             if name in process_groups:
                 process_groups[name]['memory_mb'] += proc['memory_mb']
+                process_groups[name]['cpu_percent'] += proc['cpu_percent']
                 process_groups[name]['count'] += 1
             else:
                 process_groups[name] = {
                     'name': name,
                     'memory_mb': proc['memory_mb'],
+                    'cpu_percent': proc['cpu_percent'],
                     'count': 1
                 }
 
@@ -114,25 +125,28 @@ def get_system_info():
         grouped_processes = list(process_groups.values())
         grouped_processes.sort(key=lambda x: x['memory_mb'], reverse=True)
 
-        # Take top 8 processes, aggregate the rest into "Others"
-        top_processes = grouped_processes[:8]
-        others_memory = sum(proc['memory_mb'] for proc in grouped_processes[8:])
+        # Take top 10 processes for the apps list, aggregate the rest into "Others" for pie chart
+        top_processes = grouped_processes[:10]
+        others_memory = sum(proc['memory_mb'] for proc in grouped_processes[10:])
+        others_cpu = sum(proc['cpu_percent'] for proc in grouped_processes[10:])
 
         if others_memory > 0:
             top_processes.append({
                 'name': 'Others',
                 'memory_mb': round(others_memory, 2),
-                'count': len(grouped_processes) - 8
+                'cpu_percent': round(others_cpu, 1),
+                'count': len(grouped_processes) - 10
             })
 
         # Calculate percentages
         total_memory = sum(proc['memory_mb'] for proc in top_processes)
         for proc in top_processes:
-            proc['percentage'] = round((proc['memory_mb'] / total_memory) * 100, 1)
+            proc['percentage'] = round((proc['memory_mb'] / total_memory) * 100, 1) if total_memory > 0 else 0
 
         return {
             'processes': top_processes,
-            'total_memory_mb': round(total_memory, 2)
+            'total_memory_mb': round(total_memory, 2),
+            'process_count': len(grouped_processes)
         }
 
     except Exception as e:

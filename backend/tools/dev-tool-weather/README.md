@@ -5,40 +5,71 @@ A beautiful weather display tool that shows current weather conditions and forec
 ## Features
 
 - Current weather display with temperature, humidity, wind, and more
-- 5-day weather forecast
+- Multi-day weather forecast (up to 16 days supported)
 - Beautiful animated weather icons
 - Responsive design
-- City selection
+- City selection with automatic geocoding
 - Real-time updates
 - **Global Header**: Uses the application's global header system (no tool-specific header needed)
 
 ## API Integration
 
-This tool uses the OpenWeatherMap API for real weather data. You have two options for API key configuration:
+This tool uses the **Open-Meteo API**, which is completely free and does not require an API key. Open-Meteo provides reliable weather data from multiple sources without any registration or costs.
 
-1. **Environment Variable**: Set `OPENWEATHER_API_KEY` in your system environment
-2. **.env File**: Add your API key to the tool's `.env` file:
-   ```
-   OPENWEATHER_API_KEY=your_openweather_api_key_here
-   ```
+### No API Key Required
 
-### Getting an API Key
+Unlike many weather APIs, Open-Meteo works immediately without any setup:
+- ✅ **No API key needed**
+- ✅ **No registration required**
+- ✅ **No usage limits for basic requests**
+- ✅ **Free for both development and production**
 
-1. Visit [OpenWeatherMap](https://openweathermap.org/api)
-2. Sign up for a free API key
-3. Add the key using one of the methods above
+### How It Works
 
-### Mock Data
+The tool automatically:
+1. Converts city names to coordinates using Open-Meteo's geocoding service
+2. Fetches current weather and forecast data from Open-Meteo API
+3. Maps weather codes to user-friendly descriptions and icons
+4. Falls back to mock data if there are any network/API issues
 
-If no API key is provided, the tool will display demo/mock weather data. This allows the tool to work immediately for development and testing without requiring API key setup.
+### Data Sources
+
+Open-Meteo aggregates data from multiple reliable weather providers including:
+- National Weather Services
+- Weather models (ECMWF, GFS, etc.)
+- Satellite and radar data
+
+### Geocoding & City Support
+
+The tool includes intelligent city name resolution:
+- **Automatic Geocoding**: Converts city names to precise latitude/longitude coordinates
+- **Global Coverage**: Supports cities worldwide through Open-Meteo's geocoding API
+- **Fallback Coordinates**: Includes hardcoded coordinates for major cities (New York, London, Tokyo, Paris, Sydney) for reliability
+- **Flexible Input**: Accepts various city name formats and handles common variations
+
+### Weather Code Mapping
+
+The tool includes comprehensive weather code mapping:
+- **WMO Weather Codes**: Maps Open-Meteo's numeric weather codes to descriptive text
+- **Icon Compatibility**: Converts weather codes to OpenWeatherMap-style icon codes for consistent UI
+- **Comprehensive Coverage**: Supports all major weather conditions (clear, cloudy, rain, snow, fog, thunderstorms, etc.)
+
+### Data Accuracy
+
+- **Real-time Data**: Current weather updates in real-time
+- **Forecast Accuracy**: Multi-day forecasts based on reliable weather models
+- **Temperature Precision**: Rounded to whole degrees for clean display
+- **Wind Data**: Speed and direction information included
 
 ## Dependencies
 
 This tool requires the following Python packages (in addition to the main application dependencies):
 
-- `requests>=2.31.0` - For making HTTP requests to the OpenWeatherMap API
+- `requests>=2.31.0` - For making HTTP requests to the Open-Meteo API and geocoding service
 
 See `requirements.txt` in this directory for the complete list of tool-specific dependencies.
+
+**Note**: No API key or registration is required - Open-Meteo provides completely free weather data without authentication.
 
 ## Usage
 
@@ -46,8 +77,12 @@ The weather tool displays:
 - Current temperature and "feels like" temperature
 - Weather description and icon
 - Humidity, pressure, wind speed/direction
-- Sunrise/sunset times
-- 5-day forecast with high/low temperatures
+- Sunrise/sunset times (estimated)
+- Multi-day forecast with high/low temperatures (default 5 days, up to 16 supported)
+
+**API Endpoints:**
+- `GET /api/dev-tool-weather/current?city={city_name}` - Get current weather
+- `GET /api/dev-tool-weather/forecast?city={city_name}&days={number}` - Get weather forecast
 
 **Scrolling Behavior:**
 - City selector stays fixed at the top
