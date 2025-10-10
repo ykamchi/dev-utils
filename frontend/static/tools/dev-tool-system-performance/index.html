@@ -1,0 +1,122 @@
+<div class="dev-tool-system-performance">
+    <div class="tool-body">
+        
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-state" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p>Loading system information...</p>
+        </div>
+        
+        <div id="infoContent" class="info-content" style="display: none;">
+            <!-- System Performance Cards -->
+            <div class="performance-section">
+                <div class="stats-grid">
+                    <div class="stat-card cpu-card">
+                        <div class="card-header">
+                            <div class="stat-icon">⚡</div>
+                            <div class="stat-title">CPU Usage</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-main">
+                                <div id="cpuUsage" class="stat-value">--</div>
+                                <div class="stat-unit">%</div>
+                            </div>
+                            <div class="stat-progress">
+                                <div id="cpuProgress" class="progress-bar cpu-progress"></div>
+                            </div>
+                            <div id="cpuCores" class="stat-detail">-- cores</div>
+                        </div>
+                    </div>
+                    <div class="stat-card memory-card">
+                        <div class="card-header">
+                            <div class="stat-icon">🧠</div>
+                            <div class="stat-title">Memory</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-main">
+                                <div id="memoryUsage" class="stat-value">--</div>
+                                <div class="stat-unit">%</div>
+                            </div>
+                            <div class="stat-progress">
+                                <div id="memoryProgress" class="progress-bar memory-progress"></div>
+                            </div>
+                            <div id="memoryDetails" class="stat-detail">-- / -- GB</div>
+                        </div>
+                    </div>
+                    <div class="stat-card disk-card">
+                        <div class="card-header">
+                            <div class="stat-icon">💾</div>
+                            <div class="stat-title">Disk</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-main">
+                                <div id="diskUsage" class="stat-value">--</div>
+                                <div class="stat-unit">%</div>
+                            </div>
+                            <div class="stat-progress">
+                                <div id="diskProgress" class="progress-bar disk-progress"></div>
+                            </div>
+                            <div id="diskDetails" class="stat-detail">-- / -- GB</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- CPU Usage Graph -->
+                <div class="cpu-graph-section">
+                    <div class="cpu-graph-container">
+                        <div class="top-cpu-apps-list" id="topCpuAppsList">
+                            <h4>Top CPU Apps</h4>
+                            <div class="cpu-apps-list" id="cpuAppsList">
+                                <!-- Top CPU apps will be populated here -->
+                            </div>
+                        </div>
+                        <div class="cpu-chart-wrapper">
+                            <h4>📈 CPU Usage History (Last 3 minutes)</h4>
+                            <svg id="cpuGraph" class="cpu-graph" viewBox="0 0 600 200" preserveAspectRatio="xMidYMid meet">
+                                <defs>
+                                    <linearGradient id="cpuGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" style="stop-color:var(--color-primary-accent);stop-opacity:0.8" />
+                                        <stop offset="100%" style="stop-color:var(--color-primary-accent);stop-opacity:0.2" />
+                                    </linearGradient>
+                                </defs>
+                                <rect x="0" y="0" width="600" height="200" fill="transparent" />
+                                <g id="cpuGrid" class="graph-grid"></g>
+                                <polyline id="cpuLine" class="cpu-line" fill="none" stroke="var(--color-primary-accent)" stroke-width="2" />
+                                <polygon id="cpuArea" class="cpu-area" fill="url(#cpuGradient)" />
+                                <g id="cpuDataPoints" class="cpu-data-points"></g>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Memory Usage Pie Chart -->
+            <div class="memory-pie-section">
+                <h3 class="section-title">🧠 Memory Usage by Application</h3>
+                <div class="memory-pie-container">
+                    <div class="top-apps-list" id="topAppsList">
+                        <h4>Top Memory Apps</h4>
+                        <div class="apps-list" id="appsList">
+                            <!-- Top apps will be populated here -->
+                        </div>
+                    </div>
+                    <div class="pie-chart-wrapper">
+                        <svg id="memoryPieChart" class="memory-pie-chart" viewBox="0 0 300 300" preserveAspectRatio="xMidYMid meet">
+                            <!-- Pie chart will be drawn here -->
+                        </svg>
+                    </div>
+                    <div class="pie-legend" id="memoryLegend">
+                        <!-- Legend items will be populated here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- System Info Card -->
+            <div class="system-section">
+                <div class="system-info-grid" id="systemInfoGrid">
+                    <!-- System info will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

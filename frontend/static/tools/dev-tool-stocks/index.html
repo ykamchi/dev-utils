@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dev Tool Stocks</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="stocks-container">
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-state">
+            <div class="loading-spinner"></div>
+            <p>Loading stock data...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="error-state" style="display: none;">
+            <div class="error-icon">⚠️</div>
+            <h3>Unable to Load Stock Data</h3>
+            <p id="errorMessage">Please check your connection and try again.</p>
+            <button id="retryBtn" class="retry-btn">Retry</button>
+        </div>
+
+        <!-- Main Content -->
+        <div id="stocksContent" class="stocks-content" style="display: none;">
+            <!-- Search Section - Fixed at top -->
+            <div class="search-section">
+                <div class="search-input-group">
+                    <input type="text" id="stockInput" placeholder="Enter stock symbol (e.g., AAPL)" value="AAPL">
+                    <button id="searchBtn" class="search-btn">Search</button>
+                </div>
+                <div class="popular-stocks">
+                    <button class="stock-btn" data-symbol="AAPL">AAPL</button>
+                    <button class="stock-btn" data-symbol="GOOGL">GOOGL</button>
+                    <button class="stock-btn" data-symbol="MSFT">MSFT</button>
+                    <button class="stock-btn" data-symbol="AMZN">AMZN</button>
+                    <button class="stock-btn" data-symbol="TSLA">TSLA</button>
+                    <button class="stock-btn" data-symbol="NVDA">NVDA</button>
+                </div>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="content-section">
+                <!-- Current Stock Display -->
+            <div class="current-stock">
+                <div class="stock-header">
+                    <div class="stock-info">
+                        <h2 id="stockSymbol">AAPL</h2>
+                        <div class="stock-price">
+                            <span id="stockPrice">$175.50</span>
+                            <span id="stockChange" class="stock-change positive">+2.34</span>
+                        </div>
+                    </div>
+                    <div class="stock-meta">
+                        <div class="meta-item">
+                            <div class="meta-label">Volume</div>
+                            <div class="meta-value" id="stockVolume">45.2M</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Prev Close</div>
+                            <div class="meta-value" id="stockPrevClose">$173.16</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Last Update</div>
+                            <div class="meta-value" id="lastUpdate">14:30:00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stock-details">
+                    <div class="detail-card">
+                        <div class="detail-icon">📊</div>
+                        <div class="detail-content">
+                            <div class="detail-value" id="marketCap">$2.8T</div>
+                            <div class="detail-label">Market Cap</div>
+                        </div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-icon">📈</div>
+                        <div class="detail-content">
+                            <div class="detail-value" id="peRatio">28.5</div>
+                            <div class="detail-label">P/E Ratio</div>
+                        </div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-icon">💰</div>
+                        <div class="detail-content">
+                            <div class="detail-value positive" id="changePercent">+1.35%</div>
+                            <div class="detail-label">Change %</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Market Overview -->
+            <div class="market-overview">
+                <h3>Market Overview</h3>
+                <div id="marketStocks" class="market-stocks">
+                    <!-- Market stock cards will be populated by JavaScript -->
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

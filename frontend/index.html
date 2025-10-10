@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dev Tools App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body id="page-body">
+    <!-- Top Header Bar -->
+    <div class="top-header">
+        <div class="header-left">
+            <button class="drawer-toggle-btn" id="drawerToggleBtn" title="Toggle Tools Drawer">
+                <span class="burger-icon">☰</span>
+            </button>
+            <div class="logo">DEV TOOLS</div>
+            <div class="header-text">Development Tools & Utilities Platform</div>
+        </div>
+        <div class="header-right">
+            <div class="theme-switcher">
+                <label for="theme-select">Theme:</label>
+                <select id="theme-select" onchange="ThemeManager.setTheme(this.value)">
+                    <option value="default">Executive Blue/Gold</option>
+                    <option value="monochrome">Monochromatic Elegance</option>
+                    <option value="mahogany">Traditional Mahogany</option>
+                    <option value="regal-dark">Regal Dark Mode</option>
+                    <option value="sage-stone">Soft Sage & Stone</option>
+                    <option value="provincial">French Provincial</option>
+                    <option value="dark-modern">Dark Modern</option>
+                    <option value="light-modern">Light Modern</option>
+                    <option value="github-dark">GitHub Dark</option>
+                    <option value="solarized-dark">Solarized Dark</option>
+                    <option value="dracula">Dracula</option>
+                    <option value="one-dark-pro">One Dark Pro</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Drawer Overlay (mobile only) -->
+        <div class="drawer-overlay" id="drawerOverlay"></div>
+        
+        <!-- Tools Drawer -->
+        <div class="tools-drawer" id="toolsDrawer">
+            <div class="drawer-header">
+                <h3>Available Tools</h3>
+                <button class="refresh-tools-btn" id="refreshToolsBtn" title="Refresh Tools">
+                    <span class="refresh-icon">⟳</span>
+                </button>
+            </div>
+            <div class="drawer-content">
+                <div class="tools-list" id="toolsList">
+                    <div class="loading-tools">Loading tools...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="content-area" id="contentArea">
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="welcome-content">
+                    <h1>Welcome to Dev Tools</h1>
+                    <p>Select a tool from the left panel to get started.</p>
+                    <div class="welcome-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Available Tools:</span>
+                            <span class="stat-value" id="toolsCount">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tool Container -->
+            <div class="tool-container">
+                <!-- Tool Header -->
+                <div class="tool-header">
+                    <div class="tool-icon" id="toolIcon">📊</div>
+                    <div class="tool-name" id="toolName">Tool</div>
+                </div>
+                
+                <!-- Tool Content Container -->
+                <div class="tool-content" id="toolContent" style="display: none;">
+                    <!-- Tool content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading tool...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/modules/utils/general.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/modules/ui/theme-manager.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/modules/tools/tool-loader.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

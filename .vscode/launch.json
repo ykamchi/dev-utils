@@ -1,0 +1,36 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Dev Tools App",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "FLASK_DEBUG": "1"
+            },
+            "cwd": "${workspaceFolder}",
+            "autoReload": {
+                "enable": true
+            }
+        },
+        {
+            "name": "Debug Dev Tools App",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/main.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "FLASK_DEBUG": "1",
+                "DEBUG": "True"
+            },
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false
+        }
+    ]
+}

@@ -1,0 +1,42 @@
+<div class="dev-tool-welcome">
+    <div class="tool-body">
+        <div id="welcomeContent" class="welcome-content" style="display: none;">
+            <!-- Welcome Message Card -->
+            <div class="welcome-card">
+                <div class="card-header">
+                    <h3 id="welcomeTitle">Welcome!</h3>
+                </div>
+                <div class="card-body">
+                    <div id="welcomeMessage" class="welcome-message"></div>
+                    <div id="welcomeSubtitle" class="welcome-subtitle"></div>
+                    <div class="welcome-footer">
+                        <div class="server-info">
+                            <span class="info-icon">🕒</span>
+                            <span id="serverTime" class="server-time">--</span>
+                        </div>
+                        <div id="serverStatus" class="server-status">
+                            <span class="status-icon">💚</span>
+                            <span>Server running smoothly</span>
+                        </div>
+                        <div class="timestamp">
+                            <span class="timestamp-icon">🕒</span>
+                            <span id="timestamp">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-state">
+            <div class="loading-spinner"></div>
+            <p>Loading welcome message...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="error-state" style="display: none;">
+            <div class="error-icon">❌</div>
+            <p id="errorMessage">Failed to load welcome message</p>
+        </div>
+    </div>
+</div>
