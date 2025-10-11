@@ -1,0 +1,322 @@
+/* ---------------------------------------------------- */
+/* --- Theme Definitions (Same as bedrock-utils) --- */
+/* ---------------------------------------------------- */
+
+/* 1. Monochromatic Elegance (High Contrast) */
+.theme-monochrome {
+    --color-background-main: #FFFFFF;
+    --color-primary-accent: #1C1C1C;
+    --color-primary-accent-hover: #333333;
+    --color-secondary-accent: #7A7A7A;
+    --color-highlight-gold: #0077B6;
+    --color-text-dark: #1C1C1C;
+    --color-text-light: #FFFFFF;
+    --color-card-background: #FFFFFF;
+    --color-warning-error: #DC3545;
+    --color-info-background: linear-gradient(135deg, rgba(0, 119, 182, 0.15), rgba(255, 255, 255, 0.95));
+    --box-shadow-panel: 4px -4px 7px 2px rgba(0, 0, 0, 0.25);
+    --shadow-card-light: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
+    --shadow-card-main: 0 8px 32px rgba(28, 28, 28, 0.15);
+    --color-overlay-white: rgba(255, 255, 255, 0.1);
+    --color-overlay-border: rgba(255, 255, 255, 0.1);
+    --color-overlay-dark: rgba(0, 0, 0, 0.8);
+    --color-overlay-drawer: rgba(0, 0, 0, 0.5);
+    --color-positive-bg-light: rgba(0, 119, 182, 0.1);
+    --color-positive-bg-strong: rgba(0, 119, 182, 0.2);
+    --color-negative-bg-light: rgba(220, 53, 69, 0.1);
+    --color-negative-bg-strong: rgba(220, 53, 69, 0.2);
+    --color-border-light: rgba(0, 0, 0, 0.1);
+    --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
+    --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* 2. Traditional Mahogany (Warm Earth Tones) */
+.theme-mahogany {
+    --color-background-main: #EDEAE4;
+    --color-primary-accent: #5D4037;
+    --color-primary-accent-hover: #4E342E;
+    --color-secondary-accent: #8D6E63;
+    --color-highlight-gold: #FFC107;
+    --color-text-dark: #3E2723;
+    --color-text-light: #FFFFFF;
+    --color-card-background: #FFFFFF;
+    --color-warning-error: #D84315;
+    --color-info-background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 255, 255, 0.95));
+    --box-shadow-panel: 4px -4px 7px 2px rgba(0, 0, 0, 0.25);
+    --shadow-card-light: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
+    --shadow-card-main: 0 8px 32px rgba(93, 64, 55, 0.15);
+    --color-overlay-white: rgba(255, 255, 255, 0.1);
+    --color-overlay-border: rgba(255, 255, 255, 0.1);
+    --color-overlay-dark: rgba(0, 0, 0, 0.8);
+    --color-overlay-drawer: rgba(0, 0, 0, 0.5);
+    --color-positive-bg-light: rgba(255, 193, 7, 0.1);
+    --color-positive-bg-strong: rgba(255, 193, 7, 0.2);
+    --color-negative-bg-light: rgba(216, 67, 21, 0.1);
+    --color-negative-bg-strong: rgba(216, 67, 21, 0.2);
+    --color-border-light: rgba(0, 0, 0, 0.1);
+    --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
+    --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* 3. Regal Dark Mode (Deep Green/Silver) */
+.theme-regal-dark {
+    --color-background-main: #1C282D;
+    --color-primary-accent: #004D40;
+    --color-primary-accent-hover: #00695C;
+    --color-secondary-accent: #26A69A;
+    --color-highlight-gold: #BDBDBD;
+    --color-text-dark: #E0E0E0;
+    --color-text-light: #E0E0E0;
+    --color-card-background: #233136;
+    --color-warning-error: #FFAB00;
+    --color-info-background: linear-gradient(135deg, rgba(35, 49, 54, 0.3), rgba(189, 189, 189, 0.15));
+    --box-shadow-panel: 4px -4px 7px 2px rgba(0, 0, 0, 0.25);
+    --shadow-card-light: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
+    --shadow-card-main: 0 8px 32px rgba(0, 77, 64, 0.15);
+    --color-overlay-white: rgba(224, 224, 224, 0.1);
+    --color-overlay-border: rgba(224, 224, 224, 0.1);
+    --color-overlay-dark: rgba(0, 0, 0, 0.8);
+    --color-overlay-drawer: rgba(0, 0, 0, 0.5);
+    --color-positive-bg-light: rgba(189, 189, 189, 0.1);
+    --color-positive-bg-strong: rgba(189, 189, 189, 0.2);
+    --color-negative-bg-light: rgba(255, 171, 0, 0.1);
+    --color-negative-bg-strong: rgba(255, 171, 0, 0.2);
+    --color-border-light: rgba(0, 0, 0, 0.1);
+    --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
+    --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* 4. Soft Sage & Stone (Muted Natural) */
+.theme-sage-stone {
+    --color-background-main: #F4F6F4;
+    --color-primary-accent: #4A574E;
+    --color-primary-accent-hover: #3A463E;
+    --color-secondary-accent: #A9B3A9;
+    --color-highlight-gold: #9E7B4C;
+    --color-text-dark: #3D3D3D;
+    --color-text-light: #FFFFFF;
+    --color-card-background: #FFFFFF;
+    --color-warning-error: #B70909;
+    --color-info-background: linear-gradient(135deg, rgba(158, 123, 76, 0.15), rgba(255, 255, 255, 0.95));
+    --box-shadow-panel: 4px -4px 7px 2px rgba(0, 0, 0, 0.25);
+    --shadow-card-light: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
+    --shadow-card-main: 0 8px 32px rgba(74, 87, 78, 0.15);
+    --color-overlay-white: rgba(255, 255, 255, 0.1);
+    --color-overlay-border: rgba(255, 255, 255, 0.1);
+    --color-overlay-dark: rgba(0, 0, 0, 0.8);
+    --color-overlay-drawer: rgba(0, 0, 0, 0.5);
+    --color-positive-bg-light: rgba(158, 123, 76, 0.1);
+    --color-positive-bg-strong: rgba(158, 123, 76, 0.2);
+    --color-negative-bg-light: rgba(183, 9, 9, 0.1);
+    --color-negative-bg-strong: rgba(183, 9, 9, 0.2);
+    --color-border-light: rgba(0, 0, 0, 0.1);
+    --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
+    --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* 5. French Provincial (Light Blue/Pastel) */
+.theme-provincial {
+    --color-background-main: #F8F8FF;
+    --color-primary-accent: #4682B4;
+    --color-primary-accent-hover: #3A6B9C;
+    --color-secondary-accent: #ADD8E6;
+    --color-highlight-gold: #C0C0C0;
+    --color-text-dark: #333333;
+    --color-text-light: #FFFFFF;
+    --color-card-background: #FFFFFF;
+    --color-warning-error: #D9534F;
+    --color-info-background: linear-gradient(135deg, rgba(192, 192, 192, 0.15), rgba(255, 255, 255, 0.95));
+    --box-shadow-panel: 4px -4px 7px 2px rgba(0, 0, 0, 0.25);
+    --shadow-card-light: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
+    --shadow-card-main: 0 8px 32px rgba(70, 130, 180, 0.15);
+    --color-overlay-white: rgba(255, 255, 255, 0.1);
+    --color-overlay-border: rgba(255, 255, 255, 0.1);
+    --color-overlay-dark: rgba(0, 0, 0, 0.8);
+    --color-overlay-drawer: rgba(0, 0, 0, 0.5);
+    --color-positive-bg-light: rgba(192, 192, 192, 0.1);
+    --color-positive-bg-strong: rgba(192, 192, 192, 0.2);
+    --color-negative-bg-light: rgba(217, 83, 79, 0.1);
+    --color-negative-bg-strong: rgba(217, 83, 79, 0.2);
+    --color-border-light: rgba(0, 0, 0, 0.1);
+    --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
+    --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* 6. Dark Modern (VS Code Dark+) */
+.theme-dark-modern {
+    --color-background-main: #1e1e1e;
+    --color-primary-accent: #007acc;
+    --color-primary-accent-hover: #005999;
+    --color-secondary-accent: #3c3c3c;
+    --color-highlight-gold: #3794ff;
+    --color-text-dark: #cccccc;
+    --color-text-light: #ffffff;
+    --color-card-background: #252526;
+    --color-warning-error: #f48771;
+    --color-info-background: linear-gradient(135deg,  rgba(37, 37, 38, 0.6), rgba(55, 148, 255, 0.15));
+    --box-shadow-panel: 4px -4px 7px 2px rgba(0, 0, 0, 0.5);
+    --shadow-card-light: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
+    --shadow-card-main: 0 8px 32px rgba(0, 122, 204, 0.15);
+    --color-overlay-white: rgba(204, 204, 204, 0.1);
+    --color-overlay-border: rgba(204, 204, 204, 0.1);
+    --color-overlay-dark: rgba(0, 0, 0, 0.8);
+    --color-overlay-drawer: rgba(0, 0, 0, 0.5);
+    --color-positive-bg-light: rgba(55, 148, 255, 0.1);
+    --color-positive-bg-strong: rgba(55, 148, 255, 0.2);
+    --color-negative-bg-light: rgba(244, 135, 113, 0.1);
+    --color-negative-bg-strong: rgba(244, 135, 113, 0.2);
+    --color-border-light: rgba(0, 0, 0, 0.1);
+    --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
+    --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* 7. Light Modern (VS Code Light+) */
+.theme-light-modern {
+    --color-background-main: #f3f3f3;
+    --color-primary-accent: #0066cc;
+    --color-primary-accent-hover: #004d99;
+    --color-secondary-accent: #e5e5e5;
+    --color-highlight-gold: #007acc;
+    --color-text-dark: #3c3c3c;
+    --color-text-light: #ffffff;
+    --color-card-background: #ffffff;
+    --color-warning-error: #e51400;
+    --color-info-background: linear-gradient(135deg, rgba(0, 122, 204, 0.15), rgba(255, 255, 255, 0.95));
+    --box-shadow-panel: 4px -4px 7px 2px rgba(0, 0, 0, 0.15);
+    --shadow-card-light: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
+    --shadow-card-main: 0 8px 32px rgba(0, 102, 204, 0.15);
+    --color-overlay-white: rgba(255, 255, 255, 0.1);
+    --color-overlay-border: rgba(255, 255, 255, 0.1);
+    --color-overlay-dark: rgba(0, 0, 0, 0.8);
+    --color-overlay-drawer: rgba(0, 0, 0, 0.5);
+    --color-positive-bg-light: rgba(0, 122, 204, 0.1);
+    --color-positive-bg-strong: rgba(0, 122, 204, 0.2);
+    --color-negative-bg-light: rgba(229, 20, 0, 0.1);
+    --color-negative-bg-strong: rgba(229, 20, 0, 0.2);
+    --color-border-light: rgba(0, 0, 0, 0.1);
+    --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
+    --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* 8. GitHub Dark */
+.theme-github-dark {
+    --color-background-main: #0d1117;
+    --color-primary-accent: #58a6ff;
+    --color-primary-accent-hover: #388bfd;
+    --color-secondary-accent: #21262d;
+    --color-highlight-gold: #f78166;
+    --color-text-dark: #c9d1d9;
+    --color-text-light: #ffffff;
+    --color-card-background: #161b22;
+    --color-warning-error: #da3633;
+    --color-info-background: linear-gradient(135deg, rgba(247, 129, 102, 0.15), rgba(22, 27, 34, 0.95));
+    --box-shadow-panel: 4px -4px 7px 2px rgba(0, 0, 0, 0.6);
+    --shadow-card-light: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
+    --shadow-card-main: 0 8px 32px rgba(88, 166, 255, 0.15);
+    --color-overlay-white: rgba(201, 209, 217, 0.1);
+    --color-overlay-border: rgba(201, 209, 217, 0.1);
+    --color-overlay-dark: rgba(0, 0, 0, 0.8);
+    --color-overlay-drawer: rgba(0, 0, 0, 0.5);
+    --color-positive-bg-light: rgba(247, 129, 102, 0.1);
+    --color-positive-bg-strong: rgba(247, 129, 102, 0.2);
+    --color-negative-bg-light: rgba(218, 54, 51, 0.1);
+    --color-negative-bg-strong: rgba(218, 54, 51, 0.2);
+    --color-border-light: rgba(0, 0, 0, 0.1);
+    --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
+    --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* 9. Solarized Dark */
+.theme-solarized-dark {
+    --color-background-main: #002b36;
+    --color-primary-accent: #268bd2;
+    --color-primary-accent-hover: #1e6ba8;
+    --color-secondary-accent: #073642;
+    --color-highlight-gold: #b58900;
+    --color-text-dark: #93a1a1;
+    --color-text-light: #fdf6e3;
+    --color-card-background: #073642;
+    --color-warning-error: #dc322f;
+    --color-info-background: linear-gradient(135deg, rgba(181, 137, 0, 0.15), rgba(7, 54, 66, 0.95));
+    --box-shadow-panel: 4px -4px 7px 2px rgba(0, 0, 0, 0.7);
+    --shadow-card-light: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
+    --shadow-card-main: 0 8px 32px rgba(38, 139, 210, 0.15);
+    --color-overlay-white: rgba(147, 161, 161, 0.1);
+    --color-overlay-border: rgba(147, 161, 161, 0.1);
+    --color-overlay-dark: rgba(0, 0, 0, 0.8);
+    --color-overlay-drawer: rgba(0, 0, 0, 0.5);
+    --color-positive-bg-light: rgba(181, 137, 0, 0.1);
+    --color-positive-bg-strong: rgba(181, 137, 0, 0.2);
+    --color-negative-bg-light: rgba(220, 50, 47, 0.1);
+    --color-negative-bg-strong: rgba(220, 50, 47, 0.2);
+    --color-border-light: rgba(0, 0, 0, 0.1);
+    --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
+    --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* 10. Dracula */
+.theme-dracula {
+    --color-background-main: #282a36;
+    --color-primary-accent: #bd93f9;
+    --color-primary-accent-hover: #a166f6;
+    --color-secondary-accent: #44475a;
+    --color-highlight-gold: #ffb86c;
+    --color-text-dark: #f8f8f2;
+    --color-text-light: #ffffff;
+    --color-card-background: #44475a;
+    --color-warning-error: #ff5555;
+    --color-info-background: linear-gradient(135deg, rgba(255, 184, 108, 0.15), rgba(68, 71, 90, 0.95));
+    --box-shadow-panel: 4px -4px 7px 2px rgba(0, 0, 0, 0.5);
+    --shadow-card-light: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
+    --shadow-card-main: 0 8px 32px rgba(189, 147, 249, 0.15);
+    --color-overlay-white: rgba(248, 248, 242, 0.1);
+    --color-overlay-border: rgba(248, 248, 242, 0.1);
+    --color-overlay-dark: rgba(0, 0, 0, 0.8);
+    --color-overlay-drawer: rgba(0, 0, 0, 0.5);
+    --color-positive-bg-light: rgba(255, 184, 108, 0.1);
+    --color-positive-bg-strong: rgba(255, 184, 108, 0.2);
+    --color-negative-bg-light: rgba(255, 85, 85, 0.1);
+    --color-negative-bg-strong: rgba(255, 85, 85, 0.2);
+    --color-border-light: rgba(0, 0, 0, 0.1);
+    --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
+    --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* 11. One Dark Pro */
+.theme-one-dark-pro {
+    --color-background-main: #282c34;
+    --color-primary-accent: #61dafb;
+    --color-primary-accent-hover: #4fc3e7;
+    --color-secondary-accent: #21252b;
+    --color-highlight-gold: #98c379;
+    --color-text-dark: #abb2bf;
+    --color-text-light: #ffffff;
+    --color-card-background: #21252b;
+    --color-warning-error: #e06c75;
+    --color-info-background: linear-gradient(135deg, rgba(152, 195, 121, 0.15), rgba(33, 37, 43, 0.95));
+    --box-shadow-panel: 4px -4px 7px 2px rgba(0, 0, 0, 0.6);
+    --shadow-card-light: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
+    --shadow-card-main: 0 8px 32px rgba(97, 218, 251, 0.15);
+    --color-overlay-white: rgba(171, 178, 191, 0.1);
+    --color-overlay-border: rgba(171, 178, 191, 0.1);
+    --color-overlay-dark: rgba(0, 0, 0, 0.8);
+    --color-overlay-drawer: rgba(0, 0, 0, 0.5);
+    --color-positive-bg-light: rgba(152, 195, 121, 0.1);
+    --color-positive-bg-strong: rgba(152, 195, 121, 0.2);
+    --color-negative-bg-light: rgba(224, 108, 117, 0.1);
+    --color-negative-bg-strong: rgba(224, 108, 117, 0.2);
+    --color-border-light: rgba(0, 0, 0, 0.1);
+    --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
+    --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+}

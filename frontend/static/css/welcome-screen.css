@@ -1,0 +1,68 @@
+/* Welcome Screen Styles */
+.welcome-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    padding: 40px;
+}
+
+.welcome-content h1 {
+    color: var(--color-primary-accent);
+    font-size: 3rem;
+    margin-bottom: 20px;
+    font-weight: 300;
+}
+
+.welcome-content p {
+    color: var(--color-text-dark);
+    font-size: 1.3rem;
+    margin-bottom: 30px;
+    opacity: 0.8;
+}
+
+.welcome-stats {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.stat-item {
+    background-color: var(--color-card-background);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: var(--box-shadow-panel);
+    min-width: 150px;
+}
+
+.stat-label {
+    display: block;
+    color: var(--color-text-dark);
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    opacity: 0.7;
+}
+
+.stat-value {
+    color: var(--color-highlight-gold);
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+/* Responsive styles for welcome screen */
+@media (max-width: 768px) {
+    .welcome-content h1 {
+        font-size: 2.2rem;
+    }
+
+    .welcome-content p {
+        font-size: 1.1rem;
+    }
+
+    .welcome-stats {
+        flex-direction: column;
+        align-items: center;
+    }
+}

@@ -1,7 +1,7 @@
-// Utility functions for Dev Tools App
-// Based on bedrock-utils general.js
+// Storage service for Dev Tools App
+// Handles localStorage, sessionStorage, tool state management, and API utilities
 
-const Utils = {
+const StorageService = {
     // Local storage helpers (same as bedrock-utils)
     getLocalStorageItem(key, defaultValue = null) {
         try {
@@ -79,6 +79,9 @@ const Utils = {
     },
 
     // Tool state management
+    // Example usage:
+    // const state = StorageService.getToolState('dev-tool-weather', { city: 'New York' });
+    // StorageService.setToolState('dev-tool-weather', { city: 'London' });
     getToolState(toolName, defaultState = {}) {
         return this.getStorageJSON(`dev-tools-${toolName}-state`, defaultState);
     },
@@ -94,51 +97,6 @@ const Utils = {
 
     setAppPreference(key, value) {
         this.setLocalStorageItem(`dev-tools-pref-${key}`, value);
-    },
-
-    // Format utilities
-    formatBytes(bytes, decimals = 2) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const dm = decimals < 0 ? 0 : decimals;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-    },
-
-    formatDate(date, format = 'short') {
-        const d = new Date(date);
-        if (format === 'short') {
-            return d.toLocaleDateString();
-        } else if (format === 'long') {
-            return d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
-        } else if (format === 'iso') {
-            return d.toISOString();
-        }
-        return d.toString();
-    },
-
-    // DOM utilities
-    createElement(tag, className = '', textContent = '') {
-        const element = document.createElement(tag);
-        if (className) element.className = className;
-        if (textContent) element.textContent = textContent;
-        return element;
-    },
-
-    // Event utilities
-    debounce(func, wait, immediate = false) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                timeout = null;
-                if (!immediate) func.apply(this, args);
-            };
-            const callNow = immediate && !timeout;
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-            if (callNow) func.apply(this, args);
-        };
     },
 
     // API utilities
@@ -166,7 +124,7 @@ const Utils = {
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = Utils;
+    module.exports = StorageService;
 } else {
-    window.Utils = Utils;
+    window.StorageService = StorageService;
 }

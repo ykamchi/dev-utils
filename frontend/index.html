@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dev Tools App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/themes.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/welcome-screen.css') }}">
 </head>
 <body id="page-body">
     <!-- Top Header Bar -->
@@ -19,7 +21,7 @@
         <div class="header-right">
             <div class="theme-switcher">
                 <label for="theme-select">Theme:</label>
-                <select id="theme-select" onchange="ThemeManager.setTheme(this.value)">
+                <select id="theme-select" onchange="ThemeService.setTheme(this.value)">
                     <option value="default">Executive Blue/Gold</option>
                     <option value="monochrome">Monochromatic Elegance</option>
                     <option value="mahogany">Traditional Mahogany</option>
@@ -59,18 +61,7 @@
 
         <!-- Main Content Area -->
         <div class="content-area" id="contentArea">
-            <div class="welcome-screen" id="welcomeScreen">
-                <div class="welcome-content">
-                    <h1>Welcome to Dev Tools</h1>
-                    <p>Select a tool from the left panel to get started.</p>
-                    <div class="welcome-stats">
-                        <div class="stat-item">
-                            <span class="stat-label">Available Tools:</span>
-                            <span class="stat-value" id="toolsCount">0</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- Welcome screen will be loaded here dynamically -->
             
             <!-- Tool Container -->
             <div class="tool-container">
@@ -78,6 +69,7 @@
                 <div class="tool-header">
                     <div class="tool-icon" id="toolIcon">📊</div>
                     <div class="tool-name" id="toolName">Tool</div>
+                    <div class="tool-description" id="toolDescription"></div>
                 </div>
                 
                 <!-- Tool Content Container -->
@@ -97,9 +89,10 @@
     </div>
 
     <!-- Scripts -->
-    <script src="{{ url_for('static', filename='js/modules/utils/general.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/modules/ui/theme-manager.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/modules/tools/tool-loader.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/services/storage-service.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/services/theme-service.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/services/panels-service.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/services/tools-service.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

@@ -1,8 +1,8 @@
-// Theme Manager Module
+// Theme Service Module
 // Handles theme switching and persistence
 // Based on bedrock-utils theme-manager.js with exact same themes
 
-const ThemeManager = {
+const ThemeService = {
     currentTheme: 'default', // Default theme
 
     // Initialize theme on page load
@@ -20,7 +20,7 @@ const ThemeManager = {
     // Load theme from localStorage
     loadTheme() {
         try {
-            const savedTheme = Utils.getLocalStorageItem('dev-tools-theme');
+            const savedTheme = StorageService.getLocalStorageItem('dev-tools-theme');
             if (savedTheme && this.isValidTheme(savedTheme)) {
                 this.currentTheme = savedTheme;
             }
@@ -32,7 +32,7 @@ const ThemeManager = {
     // Save current theme to localStorage
     saveTheme() {
         try {
-            Utils.setLocalStorageItem('dev-tools-theme', this.currentTheme);
+            StorageService.setLocalStorageItem('dev-tools-theme', this.currentTheme);
         } catch (error) {
             console.warn('Failed to save theme to localStorage:', error);
         }
@@ -67,14 +67,6 @@ const ThemeManager = {
         }
     },
 
-    // Toggle between light and dark themes (for backward compatibility)
-    toggleTheme() {
-        this.currentTheme = this.currentTheme === 'default' ? 'regal-dark' : 'default';
-        this.saveTheme();
-        this.applyTheme();
-        this.updateSelector();
-    },
-
     // Apply the current theme to the document
     applyTheme() {
         const body = document.getElementById('page-body');
@@ -98,5 +90,5 @@ const ThemeManager = {
     }
 };
 
-// Make ThemeManager globally available
-window.ThemeManager = ThemeManager;
+// Make ThemeService globally available
+window.ThemeService = ThemeService;

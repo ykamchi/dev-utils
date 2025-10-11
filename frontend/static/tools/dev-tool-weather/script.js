@@ -215,6 +215,10 @@ function setupWeatherEventListeners() {
 
     if (searchBtn) {
         searchBtn.addEventListener('click', () => {
+            // Save current city to tool state
+            const currentCity = document.getElementById('cityInput').value;
+            StorageService.setToolState('dev-tool-weather', { city: currentCity });
+
             window.isWeatherInitialLoad = true; // Reset to show loading
             loadWeatherData();
         });
@@ -223,6 +227,10 @@ function setupWeatherEventListeners() {
     if (cityInput) {
         cityInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
+                // Save current city to tool state
+                const currentCity = document.getElementById('cityInput').value;
+                StorageService.setToolState('dev-tool-weather', { city: currentCity });
+
                 window.isWeatherInitialLoad = true; // Reset to show loading
                 loadWeatherData();
             }
@@ -235,6 +243,10 @@ function setupWeatherEventListeners() {
         btn.addEventListener('click', () => {
             const city = btn.dataset.city;
             document.getElementById('cityInput').value = city;
+
+            // Save selected city to tool state
+            StorageService.setToolState('dev-tool-weather', { city: city });
+
             window.isWeatherInitialLoad = true; // Reset to show loading
             loadWeatherData();
         });
@@ -290,6 +302,13 @@ function showWeatherContent() {
 }
 
 // Auto-load weather on page load
+// Load saved city from tool state
+const weatherState = StorageService.getToolState('dev-tool-weather', { city: 'New York' });
+const cityInput = document.getElementById('cityInput');
+if (cityInput) {
+    cityInput.value = weatherState.city || 'New York';
+}
+
 loadWeatherData();
 
 // Set up event listeners

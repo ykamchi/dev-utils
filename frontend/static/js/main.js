@@ -6,20 +6,20 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     try {
         // Initialize theme manager first
-        ThemeManager.init();
-        console.log('Theme Manager initialized');
+        ThemeService.init();
+        console.log('Theme Service initialized');
         
         // Initialize drawer manager
         DrawerManager.init();
         console.log('Drawer Manager initialized');
         
         // Initialize tool loader
-        await ToolLoader.init();
-        console.log('Tool Loader initialized');
+        await ToolsService.init();
+        console.log('Tools Service initialized');
         
         // Auto-select last used tool after a short delay
         setTimeout(() => {
-            ToolLoader.autoSelectLastTool();
+            ToolsService.autoSelectLastTool();
         }, 500);
         
         console.log('Dev Tools App - Initialization complete');
@@ -53,26 +53,10 @@ const DrawerManager = {
             toggleBtn.addEventListener('click', () => this.toggle());
         }
         
-        // Close drawer when clicking overlay
+        // Close drawer when clicking overlay (mobile only)
         const overlay = document.getElementById('drawerOverlay');
         if (overlay) {
             overlay.addEventListener('click', () => this.close());
-        }
-        
-        // Close drawer when clicking outside (on content area) - desktop only
-        const contentArea = document.getElementById('contentArea');
-        if (contentArea) {
-            contentArea.addEventListener('click', (e) => {
-                // Don't close drawer if clicking on tool content
-                const toolContent = document.getElementById('toolContent');
-                if (toolContent && toolContent.contains(e.target)) {
-                    return; // Don't close drawer when clicking on tool content
-                }
-                
-                if (this.isOpen && window.innerWidth > 768) {
-                    this.close();
-                }
-            });
         }
         
         // Handle window resize
