@@ -368,10 +368,8 @@ async function loadData() {
     }
 }
 
-// Load data automatically when the page loads
-window.addEventListener('DOMContentLoaded', () => {
-    loadData();
-});
+// Load data when the script runs (DOM is already ready)
+loadData();
 ```
 
 **`frontend/static/tools/my-awesome-tool/style.css`**:
