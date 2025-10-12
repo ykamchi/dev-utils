@@ -1,5 +1,5 @@
 // Panel 2 - Interactive Controls Panel
-const panel_2 = {
+window.panel_2 = {
     name: 'Panel 2',
     icon: '🎛️',
     description: 'Interactive controls and settings',
@@ -190,6 +190,3 @@ const panel_2 = {
         alert('Chart exported!');
     }
 };
-
-// Make panel globally available
-window.panel_2 = panel_2;

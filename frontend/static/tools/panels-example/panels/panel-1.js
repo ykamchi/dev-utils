@@ -1,5 +1,5 @@
 // Panel 1 - Basic Information Panel
-const panel_1 = {
+window.panel_1 = {
     name: 'Panel 1',
     icon: '📊',
     description: 'Basic information and statistics',
@@ -99,6 +99,3 @@ const panel_1 = {
         alert('Statistics reset!');
     }
 };
-
-// Make panel globally available
-window.panel_1 = panel_1;

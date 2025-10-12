@@ -270,19 +270,8 @@ const ToolsService = {
             console.warn(`No script found for tool: ${toolName}`);
         }
 
-        // Initialize panels if this is a panels-based tool
-        if (toolContainer.querySelector('.panels-tool-container')) {
-            try {
-                // PanelsService should already be loaded by main.js
-                if (typeof PanelsService !== 'undefined') {
-                    await PanelsService.initForTool(toolName);
-                } else {
-                    console.error('PanelsService not available');
-                }
-            } catch (error) {
-                console.warn(`Failed to initialize panels for tool: ${toolName}`, error);
-            }
-        }
+        // Panels are now handled exclusively in loadToolHTML -> loadToolPanels
+        // No need for redundant initialization here
     },
 
     // Create HTML for tools that use the panels system
@@ -306,34 +295,59 @@ const ToolsService = {
         return container;
     },
 
-    // Load tool-specific HTML
+    // Load tool-specific content HTML
     async loadToolHTML(toolName, toolContainer) {
         try {
-            const htmlResponse = await fetch(`/static/tools/${toolName}/index.html`);
-            if (htmlResponse.ok) {
-                const html = await htmlResponse.text();
-                toolContainer.innerHTML = html;
+            if (await this.loadToolIndexHTML(toolName, toolContainer)) {
+                return;
+            } else if (await this.loadToolPanels(toolName, toolContainer)) {
+                return;
             } else {
-                // If HTML file doesn't exist, check if it's a panels tool
-                if (toolName.includes('panels')) {
-                    const toolInfo = this.toolsState[toolName] || {};
-                    const panelElement = this.createPanelsToolHTML(toolName, toolInfo);
-                    toolContainer.appendChild(panelElement);
-                } else {
-                    toolContainer.innerHTML = `<div class="tool-error"><h3>Failed to load tool</h3><p>Could not load HTML for tool: ${toolName} (${htmlResponse.status})</p></div>`;
-                    this.showError(`Failed to load HTML for tool: ${toolName} (${htmlResponse.status})`);
-                }
+                // Fail to load index.html or panels, show error
+                toolContainer.innerHTML = `<div class="tool-error"><h3>Failed to load tool</h3><p>Could not load index.html or panels for tool: ${toolName}</p><p>Error: ${error.message}</p></div>`;
             }
         } catch (error) {
-            // If fetch fails, check if it's a panels tool
-            if (toolName.includes('panels')) {
-                const toolInfo = this.toolsState[toolName] || {};
-                const panelElement = this.createPanelsToolHTML(toolName, toolInfo);
-                toolContainer.appendChild(panelElement);
-            } else {
-                toolContainer.innerHTML = `<div class="tool-error"><h3>Failed to load tool</h3><p>Could not load HTML for tool: ${toolName} (${error.message})</p></div>`;
-                this.showError(`Failed to load HTML for tool: ${toolName} (${error.message})`);
-            }
+            // Fail to load index.html or panels, show error
+            toolContainer.innerHTML = `<div class="tool-error"><h3>Failed to load tool</h3><p>Could not load index.html or panels for tool: ${toolName}</p><p>Error: ${error.message}</p></div>`;
+        }
+    },
+
+    // Load tool HTML if index.html exists
+    async loadToolIndexHTML(toolName, toolContainer) {
+        const htmlResponse = await fetch(`/static/tools/${toolName}/index.html`);
+        if (htmlResponse.ok) {
+            // index.html file exists, load it
+            const html = await htmlResponse.text();
+            toolContainer.innerHTML = html;
+            return true
+        } else {
+            return false; // Indicate that index.html was not found
+        }
+    },
+
+    // Try to load panels for a tool that doesn't have HTML
+    async loadToolPanels(toolName, toolContainer) {
+        // Check if PanelsService is available
+        if (typeof PanelsService === 'undefined') {
+            throw new Error('PanelsService not available');
+        }
+
+        // FIRST: Create the DOM structure so PanelsService.initForTool can find the elements
+        const toolInfo = this.toolsState[toolName] || {};
+        const panelElement = this.createPanelsToolHTML(toolName, toolInfo);
+        toolContainer.appendChild(panelElement);
+
+        // THEN: Initialize panels (DOM now exists for initializeUI)
+        await PanelsService.initForTool(toolName);
+
+        // Check if any panels were actually loaded
+        if (PanelsService.panelsState && PanelsService.panelsState.panelsInfo.size > 0) {
+            // Panels were found and initialized successfully
+            return true;
+        } else {
+            // No panels found, remove the DOM we just created
+            toolContainer.removeChild(panelElement);
+            return false;
         }
     },
 
@@ -390,6 +404,13 @@ const ToolsService = {
         if (overlay) {
             overlay.style.display = show ? 'flex' : 'none';
         }
+    },
+
+    // Show error message
+    showError(message) {
+        console.error('Tools Service Error:', message);
+        // You could implement a toast notification or error display here
+        alert('Error: ' + message);
     },
 
     // Update tool header with icon and name

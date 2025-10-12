@@ -1,5 +1,5 @@
 // Panel 3 - Special Agents Panel
-const panel_3 = {
+window.panel_3 = {
     name: 'Agents',
     icon: '🤖',
     description: 'AI Agents and automation tools',
@@ -267,6 +267,3 @@ const panel_3 = {
         alert('Logs displayed!');
     }
 };
-
-// Make panel globally available
-window.panel_3 = panel_3;

@@ -7,7 +7,11 @@ const PanelsService = {
 
     // Initialize panel service for a specific tool
     async initForTool(toolName) {
-        this.toolName = toolName;
+        // Clean up panels from the previous tool before initializing the new one
+        this.cleanupPanelScriptsForTool(this.toolName);
+
+        // Set new tool name
+        this.toolName = toolName; 
 
         // Always reset panel data for the new tool
         this.panelsState = {
@@ -22,8 +26,11 @@ const PanelsService = {
         // Always discover and load panels for this tool
         await this.discoverPanels();
 
-        // Always reinitialize UI since DOM may have been recreated
+        setTimeout(() => {
+            // Always reinitialize UI since DOM may have been recreated
         this.initializeUI();
+        }, 100);
+        
     },
 
     // Discover panels for a tool
@@ -51,9 +58,31 @@ const PanelsService = {
         }
     },
 
+    cleanupPanelScriptsForTool(toolName) {
+        // If no tool name provided, nothing to clean up
+        if (!toolName) return;
+
+        console.log(`Cleaning up previous panel scripts and data for tool: ${toolName}`);
+        // Remove previously loaded panel scripts from the document for this specific tool
+        const existingScripts = document.querySelectorAll(`script[src^="/static/tools/${toolName}/panels/panel-"]`);
+        existingScripts.forEach(script => script.remove());
+        
+        // Clear global panel objects using the actual panel names from current state
+        // This is precise and only removes the panels that were actually loaded
+        if (this.panelsState && this.panelsState.panelsInfo) {
+            for (const panelName of this.panelsState.panelsInfo.keys()) {
+                const panelObjectName = panelName.replace(/-/g, '_');
+                if (window[panelObjectName]) {
+                    delete window[panelObjectName];
+                }
+            }
+        }
+    },
+
     // Load a single panel
     async loadPanelInfo(panelName) {
         return new Promise((resolve, reject) => {
+            console.log(`Loading panel script: ${panelName}`);
             const script = document.createElement('script');
             script.src = `/static/tools/${this.toolName}/panels/${panelName}.js`;
             script.onload = async () => {

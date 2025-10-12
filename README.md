@@ -542,7 +542,7 @@ window.addEventListener('DOMContentLoaded', () => {
 **`frontend/static/tools/my-complex-tool/panels/panel-1.js`** (Overview Panel):
 ```javascript
 // Overview Panel Logic
-const OverviewPanel = {
+window.overviewPanel = {
     async load(container) {
         try {
             // Fetch panel data
@@ -577,17 +577,12 @@ const OverviewPanel = {
         console.log('Overview panel unloaded');
     }
 };
-
-// Register panel with PanelsService
-if (typeof PanelsService !== 'undefined') {
-    PanelsService.registerPanel('my-complex-tool', 'overview', OverviewPanel);
-}
 ```
 
 **`frontend/static/tools/my-complex-tool/panels/panel-2.js`** (Details Panel):
 ```javascript
 // Details Panel Logic
-const DetailsPanel = {
+window.detailsPanel = {
     async load(container) {
         try {
             const response = await fetch('/api/my-complex-tool/data/details');
@@ -618,17 +613,12 @@ const DetailsPanel = {
         // Cleanup if needed
     }
 };
-
-// Register panel
-if (typeof PanelsService !== 'undefined') {
-    PanelsService.registerPanel('my-complex-tool', 'details', DetailsPanel);
-}
 ```
 
 **`frontend/static/tools/my-complex-tool/panels/panel-3.js`** (Settings Panel):
 ```javascript
 // Settings Panel Logic
-const SettingsPanel = {
+window.settingsPanel = {
     async load(container) {
         try {
             const response = await fetch('/api/my-complex-tool/data/settings');
@@ -667,11 +657,6 @@ function saveSettings() {
     const selectedOption = document.getElementById('config-select').value;
     console.log('Saving setting:', selectedOption);
     // Implement save logic
-}
-
-// Register panel
-if (typeof PanelsService !== 'undefined') {
-    PanelsService.registerPanel('my-complex-tool', 'settings', SettingsPanel);
 }
 ```
 
@@ -931,7 +916,6 @@ await ToolsService.loadTools();
 
 // Panel management
 await PanelsService.loadPanelsForTool('my-panel-tool');
-PanelsService.registerPanel('tool-name', 'panel-id', panelObject);
 ```
 
 ## Theming System
