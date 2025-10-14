@@ -4,9 +4,12 @@
 const PanelsService = {
     panelsState: null, // Current tool's panel data
     toolName: null,
+    currentViewMode: 'horizontal', // 'vertical', 'horizontal', 'grid'
+    dragState: null, // For drag and drop
 
     // Initialize panel service for a specific tool
     async initForTool(toolName) {
+        console.log(`Initializing PanelsService for tool: ${toolName}`);
         // Clean up panels from the previous tool before initializing the new one
         this.cleanupPanelScriptsForTool(this.toolName);
 
@@ -28,7 +31,7 @@ const PanelsService = {
 
         setTimeout(() => {
             // Always reinitialize UI since DOM may have been recreated
-        this.initializeUI();
+            this.initializeUI();
         }, 100);
         
     },
@@ -63,14 +66,16 @@ const PanelsService = {
         if (!toolName) return;
 
         console.log(`Cleaning up previous panel scripts and data for tool: ${toolName}`);
-        // Remove previously loaded panel scripts from the document for this specific tool
-        const existingScripts = document.querySelectorAll(`script[src^="/static/tools/${toolName}/panels/panel-"]`);
-        existingScripts.forEach(script => script.remove());
+
         
         // Clear global panel objects using the actual panel names from current state
         // This is precise and only removes the panels that were actually loaded
         if (this.panelsState && this.panelsState.panelsInfo) {
             for (const panelName of this.panelsState.panelsInfo.keys()) {
+                console.log(`Cleaning up panel: ${panelName} for tool: ${toolName}`);
+                // Remove previously loaded panel scripts from the document for this specific tool
+                const existingScripts = document.querySelectorAll(`script[src^="/static/tools/${toolName}/panels/${panelName}.js"]`);
+                existingScripts.forEach(script => script.remove());
                 const panelObjectName = panelName.replace(/-/g, '_');
                 if (window[panelObjectName]) {
                     delete window[panelObjectName];
@@ -147,8 +152,56 @@ const PanelsService = {
         };
     },
 
+    // Add view mode controls to tool header
+    addViewModeControls() {
+        // Remove any existing toolbar-left-section to prevent duplicates
+        const existingLeftSection = document.querySelector('.toolbar-left-section');
+        if (existingLeftSection) {
+            existingLeftSection.remove();
+        }
+
+        // Create left section for view mode controls
+        const leftSection = document.createElement('div');
+        leftSection.className = 'toolbar-left-section';
+        leftSection.innerHTML = `
+            <div class="view-mode-controls">
+                <div class="view-mode-buttons">
+                    <button class="view-mode-btn ${this.currentViewMode === 'vertical' ? 'active' : ''}" 
+                            data-mode="vertical" title="Vertical Layout">Vertical</button>
+                    <button class="view-mode-btn ${this.currentViewMode === 'horizontal' ? 'active' : ''}" 
+                            data-mode="horizontal" title="Horizontal Layout">Horizontal</button>
+                    <button class="view-mode-btn ${this.currentViewMode === 'grid' ? 'active' : ''}" 
+                            data-mode="grid" title="Grid Layout">Grid</button>
+                </div>
+            </div>
+        `;
+
+        // Add to tool header after tool-description
+        const toolHeader = document.querySelector('.tool-header');
+        const toolDescription = document.getElementById('toolDescription');
+        
+        if (toolHeader && toolDescription) {
+            // Insert after tool-description
+            toolDescription.insertAdjacentElement('afterend', leftSection);
+        }
+
+        // Add event listeners
+        leftSection.querySelectorAll('.view-mode-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const mode = e.target.dataset.mode;
+                this.setViewMode(mode);
+                // Update active state
+                leftSection.querySelectorAll('.view-mode-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+            });
+        });
+    },
+
     // Initialize UI for panels
     initializeUI() {
+        // Load view mode preference
+        this.loadViewModePreference();
+
         // Get fresh DOM references since they may have been recreated
         this.panelsState.secondaryToolbar = document.getElementById('secondaryToolbar');
         this.panelsState.contentArea = document.getElementById('panelsContent');
@@ -160,15 +213,24 @@ const PanelsService = {
 
         // Clear existing content
         this.panelsState.secondaryToolbar.innerHTML = '';
-        this.panelsState.contentArea.innerHTML = '';
+
+        // Create collapsed panels container in secondary toolbar
+        const collapsedContainer = document.createElement('div');
+        collapsedContainer.className = 'toolbar-right-section';
+        collapsedContainer.id = 'collapsedPanelsContainer';
+        this.panelsState.secondaryToolbar.appendChild(collapsedContainer);
+
+        // Add view mode controls to tool header
+        this.addViewModeControls();
 
         // Initialize collapse order with all panels (they start collapsed)
         this.panelsState.collapseOrder = Array.from(this.panelsState.panelsInfo.keys());
 
         // Create secondary toolbar panels for all panels initially (they're all collapsed)
+        const collapsedContainerRef = this.panelsState.secondaryToolbar.querySelector('#collapsedPanelsContainer');
         for (const [panelName, panelInfo] of this.panelsState.panelsInfo) {
             const panelButton = this.createCollapsedPanel(panelName, panelInfo);
-            this.panelsState.secondaryToolbar.appendChild(panelButton);
+            collapsedContainerRef.appendChild(panelButton);
         }
 
         // Set initial state - expand first panel
@@ -187,6 +249,7 @@ const PanelsService = {
 
         buttons.forEach((button, index) => {
             const btnElement = document.createElement('button');
+            btnElement.className = 'panel-header-button';
             btnElement.title = button.title;
             btnElement.textContent = button.icon;
             btnElement.addEventListener('click', (e) => {
@@ -295,7 +358,10 @@ const PanelsService = {
     // Update collapsed panel states - only show collapsed panels
     updateCollapsedPanels() {
         // Clear existing panels
-        this.panelsState.secondaryToolbar.innerHTML = '';
+        const collapsedContainer = this.panelsState.secondaryToolbar.querySelector('#collapsedPanelsContainer');
+        if (collapsedContainer) {
+            collapsedContainer.innerHTML = '';
+        }
 
         // Create panels only for collapsed panels, ordered by collapse order
         for (const panelName of this.panelsState.collapseOrder) {
@@ -303,7 +369,7 @@ const PanelsService = {
                 const panelInfo = this.panelsState.panelsInfo.get(panelName);
                 if (panelInfo) {
                     const panelButton = this.createCollapsedPanel(panelName, panelInfo);
-                    this.panelsState.secondaryToolbar.appendChild(panelButton);
+                    collapsedContainer.appendChild(panelButton);
                 }
             }
         }
@@ -316,7 +382,7 @@ const PanelsService = {
 
         // Create container for expanded panels
         const panelsContainer = document.createElement('div');
-        panelsContainer.className = 'expanded-panels-container';
+        panelsContainer.className = `expanded-panels-container view-mode-${this.currentViewMode}`;
 
         // Render expanded panels in expand order
         for (const panelName of this.panelsState.expandOrder) {
@@ -331,6 +397,9 @@ const PanelsService = {
         }
 
         this.panelsState.contentArea.appendChild(panelsContainer);
+
+        // Initialize drag and drop
+        this.initializeDragAndDrop();
     },
 
     // Create a panel element for expanded display
@@ -344,6 +413,7 @@ const PanelsService = {
         const panelElement = document.createElement('div');
         panelElement.className = 'expanded-panel';
         panelElement.dataset.panelName = panelName;
+        panelElement.draggable = true;
 
         // Create panel header
         const panelHeader = this.createPanelHeader(panelName);
@@ -429,9 +499,10 @@ const PanelsService = {
 
             // Add collapse button to the same container
             const collapseBtn = document.createElement('button');
+            collapseBtn.className = 'panel-header-button';
             collapseBtn.title = 'Collapse panel';
             collapseBtn.dataset.panel = panelName;
-            collapseBtn.innerHTML = '<span class="collapse-icon">📁</span>';
+            collapseBtn.textContent = '📁';
             collapseBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.collapsePanel(panelName);
@@ -459,6 +530,134 @@ const PanelsService = {
     // Get expand order for a tool
     getExpandOrder() {
         return this.panelsState ? [...this.panelsState.expandOrder] : [];
+    },
+
+    // Set view mode
+    setViewMode(mode) {
+        if (!['vertical', 'horizontal', 'grid'].includes(mode)) {
+            console.error(`Invalid view mode: ${mode}`);
+            return;
+        }
+        this.currentViewMode = mode;
+        this.updatePanelContent();
+        this.saveViewModePreference();
+    },
+
+    // Get current view mode
+    getViewMode() {
+        return this.currentViewMode;
+    },
+
+    // Save view mode preference to localStorage
+    saveViewModePreference() {
+        try {
+            localStorage.setItem(`panels-view-mode-${this.toolName}`, this.currentViewMode);
+        } catch (error) {
+            console.warn('Failed to save view mode preference:', error);
+        }
+    },
+
+    // Load view mode preference from localStorage
+    loadViewModePreference() {
+        try {
+            const saved = localStorage.getItem(`panels-view-mode-${this.toolName}`);
+            if (saved && ['vertical', 'horizontal', 'grid'].includes(saved)) {
+                this.currentViewMode = saved;
+            }
+        } catch (error) {
+            console.warn('Failed to load view mode preference:', error);
+        }
+    },
+
+    // Initialize drag and drop for panels
+    initializeDragAndDrop() {
+        const container = this.panelsState.contentArea.querySelector('.expanded-panels-container');
+        if (!container) return;
+
+        // Make panels draggable
+        const panels = container.querySelectorAll('.expanded-panel');
+        panels.forEach(panel => {
+            panel.draggable = true;
+            panel.addEventListener('dragstart', this.handleDragStart.bind(this));
+            panel.addEventListener('dragend', this.handleDragEnd.bind(this));
+        });
+
+        // Make container a drop zone
+        container.addEventListener('dragover', this.handleDragOver.bind(this));
+        container.addEventListener('drop', this.handleDrop.bind(this));
+    },
+
+    // Handle drag start
+    handleDragStart(e) {
+        this.dragState = {
+            draggedPanel: e.target.dataset.panelName,
+            draggedElement: e.target
+        };
+        e.target.style.opacity = '0.5';
+        e.target.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    },
+
+    // Handle drag end
+    handleDragEnd(e) {
+        if (this.dragState) {
+            e.target.style.opacity = '1';
+            e.target.classList.remove('dragging');
+            this.dragState = null;
+        }
+        
+        // Remove drag-over class from container
+        const container = this.panelsState.contentArea.querySelector('.expanded-panels-container');
+        if (container) {
+            container.classList.remove('drag-over');
+        }
+    },
+
+    // Handle drag over
+    handleDragOver(e) {
+        e.preventDefault(); // Allow drop
+        e.dataTransfer.dropEffect = 'move';
+        
+        // Add visual feedback
+        const container = e.currentTarget;
+        container.classList.add('drag-over');
+    },
+
+    // Handle drop
+    handleDrop(e) {
+        e.preventDefault();
+        
+        if (!this.dragState) return;
+
+        const container = e.currentTarget;
+        const draggedPanel = this.dragState.draggedPanel;
+        const dropTarget = e.target.closest('.expanded-panel');
+
+        if (!dropTarget || dropTarget.dataset.panelName === draggedPanel) {
+            return;
+        }
+
+        const dropPanel = dropTarget.dataset.panelName;
+        
+        // Reorder panels
+        this.reorderPanels(draggedPanel, dropPanel);
+        
+        // Update UI
+        this.updatePanelContent();
+    },
+
+    // Reorder panels in expand order
+    reorderPanels(draggedPanel, targetPanel) {
+        const currentIndex = this.panelsState.expandOrder.indexOf(draggedPanel);
+        const targetIndex = this.panelsState.expandOrder.indexOf(targetPanel);
+
+        if (currentIndex === -1 || targetIndex === -1) return;
+
+        // Remove dragged panel from current position
+        this.panelsState.expandOrder.splice(currentIndex, 1);
+
+        // Insert at target position
+        this.panelsState.expandOrder.splice(targetIndex, 0, draggedPanel);
     }
 };
 

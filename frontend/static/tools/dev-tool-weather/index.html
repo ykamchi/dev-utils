@@ -1,10 +1,4 @@
 <div class="weather-container">
-    <!-- Loading State -->
-    <div id="loadingState" class="loading-state">
-        <div class="loading-spinner"></div>
-        <p>Loading weather data...</p>
-    </div>
-
     <!-- Error State -->
     <div id="errorState" class="error-state" style="display: none;">
         <div class="error-icon">⚠️</div>
@@ -34,6 +28,10 @@
 
         <!-- Scrollable Content -->
         <div class="content-section">
+            <!-- Last Update Time -->
+            <div class="last-update" style="font-size: 0.8em; color: #666; text-align: center; margin-bottom: 10px;">
+                Last updated: <span id="lastUpdateTime">--</span>
+            </div>
             <!-- Current Weather -->
             <div class="current-weather">
             <div class="weather-main">

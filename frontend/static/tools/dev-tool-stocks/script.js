@@ -1,319 +1,286 @@
-/**
- * Dev Tool Stocks - Frontend JavaScript
- * Handles loading and displaying stock information
- */
+// Stocks Tool Script
+// Standardized object-based architecture with init method
 
-// Prevent multiple script executions
-if (window.stocksScriptLoaded) {
-    // Script already loaded, skip initialization
-} else {
-    window.stocksScriptLoaded = true;
+window.tool_script = {
+    // Configurable polling interval (30 seconds default)
+    pollingInterval: 30000,
 
-    // Clean up any existing polling from previous loads
-    if (window.stocksPollingIntervalId) {
-        clearInterval(window.stocksPollingIntervalId);
-        window.stocksPollingIntervalId = null;
-    }
+    // State variables
+    stocksPollingId: null,
+    isStocksInitialLoad: true,
+    stocksObserver: null,
 
-// Prevent multiple initialization
-if (typeof window.isStocksInitialLoad === 'undefined') {
-    window.isStocksInitialLoad = true;
-}
+    // Initialize the stocks tool
+    init(container) {
+        console.log('[Stocks Tool] Initializing stocks tool...');
 
-// Polling management
-window.stocksPollingIntervalId = window.stocksPollingIntervalId || null;
+        setTimeout(() => {
+            this.loadStockData();
+            this.setupStocksEventListeners();
+            this.setupStocksCleanupObserver();            
+        });
+    },
 
-// Number formatting function for large values
-function formatLargeNumber(num) {
-    if (num === 0) return '$0';
+    // Number formatting function for large values
+    formatLargeNumber: function(num) {
+        if (num === 0) return '$0';
 
-    const absNum = Math.abs(num);
-    const sign = num < 0 ? '-' : '';
+        const absNum = Math.abs(num);
+        const sign = num < 0 ? '-' : '';
 
-    if (absNum >= 1e12) {
-        return `$${sign}${(absNum / 1e12).toFixed(1)}T`;
-    } else if (absNum >= 1e9) {
-        return `$${sign}${(absNum / 1e9).toFixed(1)}B`;
-    } else if (absNum >= 1e6) {
-        const millions = absNum / 1e6;
-        return `$${sign}${millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1)}M`;
-    } else if (absNum >= 1e3) {
-        const thousands = absNum / 1e3;
-        return `$${sign}${thousands % 1 === 0 ? thousands.toFixed(0) : thousands.toFixed(1)}K`;
-    } else {
-        return `$${sign}${absNum.toFixed(2)}`;
-    }
-}
+        if (absNum >= 1e12) {
+            return `$${sign}${(absNum / 1e12).toFixed(1)}T`;
+        } else if (absNum >= 1e9) {
+            return `$${sign}${(absNum / 1e9).toFixed(1)}B`;
+        } else if (absNum >= 1e6) {
+            const millions = absNum / 1e6;
+            return `$${sign}${millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1)}M`;
+        } else if (absNum >= 1e3) {
+            const thousands = absNum / 1e3;
+            return `$${sign}${thousands % 1 === 0 ? thousands.toFixed(0) : thousands.toFixed(1)}K`;
+        } else {
+            return `$${sign}${absNum.toFixed(2)}`;
+        }
+    },
 
-function startStocksPolling() {
-    // Clear any existing interval first
-    stopStocksPolling();
+    // Start polling for stock updates
+    startStocksPolling: function() {
+        this.stopStocksPolling(); // Clear any existing polling
 
-    // Start new polling interval (update every 30 seconds for stocks)
-    window.stocksPollingIntervalId = setInterval(loadStockData, 30000);
-}
+        this.stocksPollingId = setInterval(() => {
+            this.loadStockData();
+        }, this.pollingInterval);
+    },
 
-function stopStocksPolling() {
-    if (window.stocksPollingIntervalId) {
-        clearInterval(window.stocksPollingIntervalId);
-        window.stocksPollingIntervalId = null;
-    }
-}
+    // Stop polling for stock updates
+    stopStocksPolling: function() {
+        if (this.stocksPollingId) {
+            clearInterval(this.stocksPollingId);
+            this.stocksPollingId = null;
+        }
+    },
 
-// Cleanup function - called when tool is unloaded
-function cleanupStocksTool() {
-    stopStocksPolling();
-    // Reset initial load flag for next tool load
-    window.isStocksInitialLoad = true;
-    window.stocksScriptLoaded = false;
-}
+    // Set up cleanup observer to stop polling when tool is removed
+    setupStocksCleanupObserver: function() {
+        const container = document.querySelector('.tool-container[data-tool="dev-tool-stocks"]');
 
-// Set up cleanup when tool container is removed
-function setupStocksCleanupObserver() {
-    const toolContainer = document.querySelector('.tool-container[data-tool-name="dev-tool-stocks"]');
-    if (!toolContainer) return;
+        if (container && window.MutationObserver) {
+            this.stocksObserver = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'childList') {
+                        mutation.removedNodes.forEach((node) => {
+                            if (node === container || container.contains(node)) {
+                                this.stopStocksPolling();
+                                if (this.stocksObserver) {
+                                    this.stocksObserver.disconnect();
+                                }
+                            }
+                        });
+                    }
+                });
+            });
 
-    // Create mutation observer to watch for removal
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            mutation.removedNodes.forEach((node) => {
-                if (node === toolContainer || node.contains(toolContainer)) {
-                    cleanupStocksTool();
-                    observer.disconnect();
+            // Observe the parent container for removal
+            if (container.parentNode) {
+                this.stocksObserver.observe(container.parentNode, { childList: true, subtree: true });
+            }
+        }
+    },
+
+    // Load stock data from server
+    loadStockData: async function() {
+        console.log('[Stocks Tool] Loading stock data...');
+
+        const stocksContent = document.getElementById('stocksContent');
+        if (!stocksContent) {
+            return; // Tool not loaded yet
+        }
+
+        let wasInitialLoad = this.isStocksInitialLoad;
+
+        try {
+            // Only show loading on initial load, not on polling updates
+            if (this.isStocksInitialLoad) {
+                this.showStocksLoading(true);
+            }
+            this.hideStocksError();
+
+            // Only hide content on initial load, not on polling updates
+            if (this.isStocksInitialLoad) {
+                this.hideStocksContent();
+            }
+
+            const symbol = document.getElementById('stockInput').value || 'AAPL';
+
+            // Load current stock quote
+            const quoteResponse = await fetch(`/api/dev-tool-stocks/quote?symbol=${encodeURIComponent(symbol)}`);
+            if (!quoteResponse.ok) {
+                throw new Error(`Server error: ${quoteResponse.status}`);
+            }
+            const quoteResult = await quoteResponse.json();
+            if (!quoteResult.success) {
+                throw new Error(quoteResult.error || 'Failed to load stock data');
+            }
+
+            // Load news for the selected stock
+            const newsResponse = await fetch(`/api/dev-tool-stocks/news?symbol=${encodeURIComponent(symbol)}`);
+            if (!newsResponse.ok) {
+                throw new Error(`Server error: ${newsResponse.status}`);
+            }
+            const newsResult = await newsResponse.json();
+            if (!newsResult.success) {
+                throw new Error(newsResult.error || 'Failed to load news');
+            }
+
+            this.displayStockData(quoteResult.data, newsResult.data);
+            this.isStocksInitialLoad = false; // Mark that initial load is complete
+
+            // Start polling after initial load is complete
+            this.startStocksPolling();
+        } catch (error) {
+            console.error('Error loading stock data:', error);
+            this.showStocksError(error.message);
+        } finally {
+            if (wasInitialLoad) {
+                this.showStocksLoading(false);
+            }
+        }
+    },
+
+    // Display stock data in the UI
+    displayStockData: function(stockData, newsData) {
+        // Update current stock
+        document.getElementById('stockSymbol').textContent = stockData.symbol;
+        document.getElementById('stockPrice').textContent = `$${stockData.price.toFixed(2)}`;
+
+        const changeElement = document.getElementById('stockChange');
+        const changePercentElement = document.getElementById('changePercent');
+
+        const change = stockData.change;
+        const changePercent = stockData.change_percent;
+
+        changeElement.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}`;
+        changePercentElement.textContent = changePercent;
+
+        // Color coding for positive/negative changes
+        const isPositive = change >= 0;
+        changeElement.className = `stock-change ${isPositive ? 'positive' : 'negative'}`;
+        changePercentElement.className = `detail-value ${isPositive ? 'positive' : 'negative'}`;
+
+        // Update other stock details
+        document.getElementById('stockVolume').textContent = this.formatLargeNumber(stockData.volume);
+        document.getElementById('stockPrevClose').textContent = `$${stockData.previous_close.toFixed(2)}`;
+        document.getElementById('lastUpdate').textContent = stockData.last_updated;
+
+        // Clear additional data fields since we don't have real data
+        document.getElementById('marketCap').textContent = 'N/A';
+        document.getElementById('peRatio').textContent = 'N/A';
+
+        // Update news section
+        const newsContainer = document.getElementById('marketStocks');
+        newsContainer.innerHTML = '';
+
+        if (newsData && newsData.length > 0) {
+            newsData.forEach(news => {
+                const newsCard = document.createElement('div');
+                newsCard.className = 'news-card';
+
+                newsCard.innerHTML = `
+                    <div class="news-title">
+                        <a href="${news.url}" target="_blank" rel="noopener noreferrer">${news.title}</a>
+                    </div>
+                    <div class="news-description">${news.description}</div>
+                `;
+
+                newsContainer.appendChild(newsCard);
+            });
+        } else {
+            newsContainer.innerHTML = '<div class="no-news">No recent news found for this stock.</div>';
+        }
+
+        // Show content
+        this.showStocksContent();
+    },
+
+    // Event handlers
+    setupStocksEventListeners: function() {
+        // Stock search
+        const searchBtn = document.getElementById('searchBtn');
+        const stockInput = document.getElementById('stockInput');
+
+        if (searchBtn) {
+            searchBtn.addEventListener('click', () => {
+                this.isStocksInitialLoad = true; // Reset to show loading
+                this.loadStockData();
+            });
+        }
+
+        if (stockInput) {
+            stockInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.isStocksInitialLoad = true; // Reset to show loading
+                    this.loadStockData();
                 }
             });
+        }
+
+        // Popular stocks
+        const stockButtons = document.querySelectorAll('.stock-btn');
+        stockButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const symbol = btn.dataset.symbol;
+                document.getElementById('stockInput').value = symbol;
+                this.isStocksInitialLoad = true; // Reset to show loading
+                this.loadStockData();
+            });
         });
-    });
 
-    // Start observing
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-
-    // Also clean up on page unload
-    window.addEventListener('beforeunload', cleanupStocksTool);
-}
-
-// Load stock data from server
-async function loadStockData() {
-    const stocksContent = document.getElementById('stocksContent');
-    if (!stocksContent) {
-        return; // Tool not loaded yet
-    }
-
-    let wasInitialLoad = window.isStocksInitialLoad;
-
-    try {
-        // Only show loading on initial load, not on polling updates
-        if (window.isStocksInitialLoad) {
-            showStocksLoading(true);
+        // Retry button
+        const retryBtn = document.getElementById('retryBtn');
+        if (retryBtn) {
+            retryBtn.addEventListener('click', () => {
+                this.isStocksInitialLoad = true; // Reset to show loading
+                this.loadStockData();
+            });
         }
-        hideStocksError();
+    },
 
-        // Only hide content on initial load, not on polling updates
-        if (window.isStocksInitialLoad) {
-            hideStocksContent();
+    // UI helper functions
+    showStocksLoading: function(show) {
+        const loadingState = document.getElementById('loadingState');
+        if (loadingState) {
+            loadingState.style.display = show ? 'flex' : 'none';
         }
+    },
 
-        const symbol = document.getElementById('stockInput').value || 'AAPL';
-
-        // Load current stock quote
-        const quoteResponse = await fetch(`/api/dev-tool-stocks/quote?symbol=${encodeURIComponent(symbol)}`);
-        if (!quoteResponse.ok) {
-            throw new Error(`Server error: ${quoteResponse.status}`);
+    hideStocksError: function() {
+        const errorState = document.getElementById('errorState');
+        if (errorState) {
+            errorState.style.display = 'none';
         }
-        const quoteResult = await quoteResponse.json();
-        if (!quoteResult.success) {
-            throw new Error(quoteResult.error || 'Failed to load stock data');
-        }
+    },
 
-        // Load popular stocks for market overview
-        const popularResponse = await fetch('/api/dev-tool-stocks/popular');
-        if (!popularResponse.ok) {
-            throw new Error(`Server error: ${popularResponse.status}`);
+    showStocksError: function(msg) {
+        const errorState = document.getElementById('errorState');
+        const errorMessage = document.getElementById('errorMessage');
+        if (errorState && errorMessage) {
+            errorMessage.textContent = msg;
+            errorState.style.display = 'flex';
         }
-        const popularResult = await popularResponse.json();
-        if (!popularResult.success) {
-            throw new Error(popularResult.error || 'Failed to load popular stocks');
+        this.showStocksLoading(false);
+    },
+
+    hideStocksContent: function() {
+        const content = document.getElementById('stocksContent');
+        if (content) {
+            content.style.display = 'none';
         }
+    },
 
-        // Load quotes for popular stocks
-        const marketStocks = [];
-        for (const popularSymbol of popularResult.data.slice(0, 6)) {  // Limit to 6
-            try {
-                const marketResponse = await fetch(`/api/dev-tool-stocks/quote?symbol=${encodeURIComponent(popularSymbol)}`);
-                if (marketResponse.ok) {
-                    const marketResult = await marketResponse.json();
-                    if (marketResult.success) {
-                        marketStocks.push(marketResult.data);
-                    }
-                }
-            } catch (e) {
-                // Skip failed requests
-                continue;
-            }
-        }
-
-        displayStockData(quoteResult.data, marketStocks);
-        window.isStocksInitialLoad = false; // Mark that initial load is complete
-
-        // Start polling after initial load is complete
-        startStocksPolling();
-    } catch (error) {
-        console.error('Error loading stock data:', error);
-        showStocksError(error.message);
-    } finally {
-        if (wasInitialLoad) {
-            showStocksLoading(false);
+    showStocksContent: function() {
+        const content = document.getElementById('stocksContent');
+        if (content) {
+            content.style.display = 'flex';  // Changed from 'block' to 'flex' to maintain flexbox layout
         }
     }
-}
-
-// Display stock data in the UI
-function displayStockData(stockData, marketStocks) {
-    // Update current stock
-    document.getElementById('stockSymbol').textContent = stockData.symbol;
-    document.getElementById('stockPrice').textContent = `$${stockData.price.toFixed(2)}`;
-
-    const changeElement = document.getElementById('stockChange');
-    const changePercentElement = document.getElementById('changePercent');
-
-    const change = stockData.change;
-    const changePercent = stockData.change_percent;
-
-    changeElement.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}`;
-    changePercentElement.textContent = changePercent;
-
-    // Color coding for positive/negative changes
-    const isPositive = change >= 0;
-    changeElement.className = `stock-change ${isPositive ? 'positive' : 'negative'}`;
-    changePercentElement.className = `detail-value ${isPositive ? 'positive' : 'negative'}`;
-
-    // Update other stock details
-    document.getElementById('stockVolume').textContent = formatLargeNumber(stockData.volume);
-    document.getElementById('stockPrevClose').textContent = `$${stockData.previous_close.toFixed(2)}`;
-    document.getElementById('lastUpdate').textContent = stockData.last_updated;
-
-    // Mock additional data (market cap, P/E ratio)
-    document.getElementById('marketCap').textContent = formatLargeNumber(stockData.price * 1000000000);
-    document.getElementById('peRatio').textContent = (Math.random() * 50 + 10).toFixed(1);
-
-    // Update market overview
-    const marketStocksContainer = document.getElementById('marketStocks');
-    marketStocksContainer.innerHTML = '';
-
-    marketStocks.forEach(stock => {
-        const stockCard = document.createElement('div');
-        stockCard.className = 'market-stock-card';
-
-        const isPositive = stock.change >= 0;
-
-        stockCard.innerHTML = `
-            <div class="market-stock-symbol">${stock.symbol}</div>
-            <div class="market-stock-price">$${stock.price.toFixed(2)}</div>
-            <div class="market-stock-change ${isPositive ? 'positive' : 'negative'}">
-                ${stock.change >= 0 ? '+' : ''}${stock.change.toFixed(2)}
-            </div>
-        `;
-
-        marketStocksContainer.appendChild(stockCard);
-    });
-
-    // Show content
-    showStocksContent();
-}
-
-// Event handlers
-function setupStocksEventListeners() {
-    // Stock search
-    const searchBtn = document.getElementById('searchBtn');
-    const stockInput = document.getElementById('stockInput');
-
-    if (searchBtn) {
-        searchBtn.addEventListener('click', () => {
-            window.isStocksInitialLoad = true; // Reset to show loading
-            loadStockData();
-        });
-    }
-
-    if (stockInput) {
-        stockInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                window.isStocksInitialLoad = true; // Reset to show loading
-                loadStockData();
-            }
-        });
-    }
-
-    // Popular stocks
-    const stockButtons = document.querySelectorAll('.stock-btn');
-    stockButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const symbol = btn.dataset.symbol;
-            document.getElementById('stockInput').value = symbol;
-            window.isStocksInitialLoad = true; // Reset to show loading
-            loadStockData();
-        });
-    });
-
-    // Retry button
-    const retryBtn = document.getElementById('retryBtn');
-    if (retryBtn) {
-        retryBtn.addEventListener('click', () => {
-            window.isStocksInitialLoad = true; // Reset to show loading
-            loadStockData();
-        });
-    }
-}
-
-// UI helper functions
-function showStocksLoading(show) {
-    const loadingState = document.getElementById('loadingState');
-    if (loadingState) {
-        loadingState.style.display = show ? 'flex' : 'none';
-    }
-}
-
-function hideStocksError() {
-    const errorState = document.getElementById('errorState');
-    if (errorState) {
-        errorState.style.display = 'none';
-    }
-}
-
-function showStocksError(msg) {
-    const errorState = document.getElementById('errorState');
-    const errorMessage = document.getElementById('errorMessage');
-    if (errorState && errorMessage) {
-        errorMessage.textContent = msg;
-        errorState.style.display = 'flex';
-    }
-    showStocksLoading(false);
-}
-
-function hideStocksContent() {
-    const content = document.getElementById('stocksContent');
-    if (content) {
-        content.style.display = 'none';
-    }
-}
-
-function showStocksContent() {
-    const content = document.getElementById('stocksContent');
-    if (content) {
-        content.style.display = 'flex';  // Changed from 'block' to 'flex' to maintain flexbox layout
-    }
-}
-
-// Auto-load stock on page load
-loadStockData();
-
-// Set up event listeners
-setupStocksEventListeners();
-
-// Set up cleanup observer
-setupStocksCleanupObserver();
-
-// End of script execution guard
-}
+};

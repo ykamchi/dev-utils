@@ -1,5 +1,5 @@
 // Panel 2 - Interactive Controls Panel
-window.panel_2 = {
+window.example_panel_2 = {
     name: 'Panel 2',
     icon: '🎛️',
     description: 'Interactive controls and settings',

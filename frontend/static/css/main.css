@@ -346,6 +346,11 @@ body {
     font-weight: 400;
 }
 
+/* Toolbar left section in tool header */
+.tool-header .toolbar-left-section {
+    margin-left: auto;
+}
+
 /* LOADING OVERLAY */
 .loading-overlay {
     position: fixed;

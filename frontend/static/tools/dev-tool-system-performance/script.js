@@ -1,544 +1,781 @@
 /**
- * Dev Tool System Info - Frontend JavaScript
- * Handles loading and displaying system info and server stats
+ * Dev Tool System Performance - Frontend JavaScript
+ * Handles loading and displaying system performance metrics
  */
+window.tool_script = {
+    container: null,
+    pollingIntervalId: null,
+    cpuHistory: [],
+    cpuChart: null,
+    memoryChart: null,
+    MAX_DATA_POINTS: 60, // Keep 60 data points (3 minutes at 5-second intervals)
+    POLLING_INTERVAL: 1000, // Update every 5 seconds
+    memoryChartColors: [
+        'var(--color-primary-accent)',
+        'var(--color-secondary-accent)',
+        'var(--color-highlight-gold)',
+        'var(--color-warning-error)',
+        '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'
+    ],
 
-// Prevent multiple script executions
-if (window.systemInfoScriptLoaded && !window.isInitialLoad_systemInfo) {
-    // Script already loaded and tool is active, skip initialization
-} else {
-    window.systemInfoScriptLoaded = true;
+    // Initialize the tool
+    async init(container) {
+        console.log('[Dev Tool System Performance] Initializing...');
 
-    // Clean up any existing polling from previous loads
-    if (window.pollingIntervalId_systemInfo) {
-        clearInterval(window.pollingIntervalId_systemInfo);
-        window.pollingIntervalId_systemInfo = null;
-    }
+        // Store container reference
+        this.container = container;
 
-// Prevent multiple initialization
-if (typeof window.isInitialLoad_systemInfo === 'undefined') {
-    window.isInitialLoad_systemInfo = true;
-}
+        try {
+            // Load Chart.js first
+            await this.loadChartJS();
 
-// Polling management
-window.pollingIntervalId_systemInfo = window.pollingIntervalId_systemInfo || null;
+            // Listen for unload to clean up
+            window.addEventListener('beforeunload', () => this.cleanup());
 
-function startPolling() {
-    // Clear any existing interval first
-    stopPolling();
-    
-    // Start new polling interval
-    window.pollingIntervalId_systemInfo = setInterval(() => {
-        loadSystemInfo();
-        loadMemoryUsage();
-        loadCpuUsage();
-    }, 3000);
-}
+            // Fetch and show initial system info
+            const info = await this.fetchInfo();
+            this.showInfo(info);
 
-function stopPolling() {
-    if (window.pollingIntervalId_systemInfo) {
-        clearInterval(window.pollingIntervalId_systemInfo);
-        window.pollingIntervalId_systemInfo = null;
-    }
-}
-
-// Cleanup function - called when tool is unloaded
-function cleanupSystemInfoTool() {
-    stopPolling();
-    // Reset flags for next tool load
-    window.isInitialLoad_systemInfo = true;
-    window.systemInfoScriptLoaded = false;
-}
-
-// Set up cleanup when tool container is removed
-function setupCleanupObserver() {
-    // Find the tool container
-    const toolContainer = document.querySelector('.tool-container[data-tool-name="dev-tool-system-performance"]');
-    if (!toolContainer) return;
-    
-    // Create mutation observer to watch for removal
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            mutation.removedNodes.forEach((node) => {
-                if (node === toolContainer || node.contains(toolContainer)) {
-                    cleanupSystemInfoTool();
-                    observer.disconnect();
-                }
-            });
-        });
-    });
-    
-    // Start observing
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-    
-    // Also clean up on page unload
-    window.addEventListener('beforeunload', cleanupSystemInfoTool);
-}
-let cpuHistory = []; // Store CPU usage history for graphing
-const MAX_DATA_POINTS = 60; // Keep 60 data points (3 minutes at 3-second intervals)
-
-// CPU Graph functions
-function addCpuDataPoint(percentage) {
-    const timestamp = Date.now();
-    cpuHistory.push({ value: percentage, timestamp: timestamp });
-
-    // Keep only the last MAX_DATA_POINTS
-    if (cpuHistory.length > MAX_DATA_POINTS) {
-        cpuHistory.shift();
-    }
-
-    updateCpuGraph();
-}
-
-function updateCpuGraph() {
-    const svg = document.getElementById('cpuGraph');
-    if (!svg || cpuHistory.length === 0) return;
-
-    const width = 600;
-    const height = 200;
-    const padding = { top: 20, right: 20, bottom: 30, left: 40 };
-
-    const graphWidth = width - padding.left - padding.right;
-    const graphHeight = height - padding.top - padding.bottom;
-
-    // Clear previous content
-    const gridGroup = svg.querySelector('#cpuGrid');
-    const lineElement = svg.querySelector('#cpuLine');
-    const areaElement = svg.querySelector('#cpuArea');
-    const pointsGroup = svg.querySelector('#cpuDataPoints');
-
-    // Draw grid
-    drawGrid(gridGroup, width, height, padding);
-
-    // Scale data to fit graph
-    const maxValue = 100; // CPU percentage max
-    const minValue = 0;
-
-    // Create points for the line
-    const points = cpuHistory.map((point, index) => {
-        const x = padding.left + (index / Math.max(cpuHistory.length - 1, 1)) * graphWidth;
-        const y = padding.top + (1 - point.value / maxValue) * graphHeight;
-        return { x, y, value: point.value };
-    });
-
-    // Draw area fill
-    if (points.length > 1) {
-        const areaPoints = [
-            { x: padding.left, y: height - padding.bottom },
-            ...points,
-            { x: points[points.length - 1].x, y: height - padding.bottom }
-        ];
-
-        const areaPath = areaPoints.map((p, i) =>
-            `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`
-        ).join(' ') + ' Z';
-
-        areaElement.setAttribute('points', areaPoints.map(p => `${p.x},${p.y}`).join(' '));
-    }
-
-    // Draw line
-    if (points.length > 1) {
-        const linePath = points.map((p, i) =>
-            `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`
-        ).join(' ');
-        lineElement.setAttribute('points', points.map(p => `${p.x},${p.y}`).join(' '));
-    }
-
-    // Draw data points
-    pointsGroup.innerHTML = '';
-    points.forEach((point, index) => {
-        if (index % 10 === 0 || index === points.length - 1) { // Show every 10th point and last point
-            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            circle.setAttribute('cx', point.x);
-            circle.setAttribute('cy', point.y);
-            circle.setAttribute('r', '3');
-            circle.setAttribute('fill', 'var(--color-primary-accent)');
-            circle.setAttribute('stroke', 'var(--color-card-background)');
-            circle.setAttribute('stroke-width', '2');
-            pointsGroup.appendChild(circle);
+            // Start polling for memory usage updates
+            this.startPolling();
+        } catch (error) {
+            console.error('Error loading system performance:', error);
+            this.showError(error.message);
         }
-    });
-}
+    },
 
-function drawGrid(gridGroup, width, height, padding) {
-    gridGroup.innerHTML = '';
+    // Cleanup function - called when the tool is unloaded
+    cleanup() {
+        // Stop polling for data first
+        this.stopPolling();
 
-    const graphWidth = width - padding.left - padding.right;
-    const graphHeight = height - padding.top - padding.bottom;
-
-    // Horizontal grid lines (percentage)
-    for (let i = 0; i <= 4; i++) {
-        const y = padding.top + (i * graphHeight) / 4;
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', padding.left);
-        line.setAttribute('y1', y);
-        line.setAttribute('x2', width - padding.right);
-        line.setAttribute('y2', y);
-        line.setAttribute('stroke', 'var(--color-border)');
-        line.setAttribute('stroke-width', '1');
-        line.setAttribute('opacity', '0.3');
-        gridGroup.appendChild(line);
-
-        // Add percentage labels
-        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        label.setAttribute('x', padding.left - 10);
-        label.setAttribute('y', y + 4);
-        label.setAttribute('text-anchor', 'end');
-        label.setAttribute('font-size', '10px');
-        label.setAttribute('fill', 'var(--color-text-secondary)');
-        label.textContent = `${100 - (i * 25)}%`;
-        gridGroup.appendChild(label);
-    }
-
-    // Vertical grid lines (time)
-    for (let i = 0; i <= 4; i++) {
-        const x = padding.left + (i * graphWidth) / 4;
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', x);
-        line.setAttribute('y1', padding.top);
-        line.setAttribute('x2', x);
-        line.setAttribute('y2', height - padding.bottom);
-        line.setAttribute('stroke', 'var(--color-border)');
-        line.setAttribute('stroke-width', '1');
-        line.setAttribute('opacity', '0.3');
-        gridGroup.appendChild(line);
-    }
-}
-
-// Load system information from server
-async function loadSystemInfo() {
-    // Check if required elements exist
-    const infoContent = document.getElementById('infoContent');
-    if (!infoContent) {
-        return; // Tool not loaded yet
-    }
-
-    let wasInitialLoad = window.isInitialLoad_systemInfo;
-
-    try {
-        // Only show loading on initial load, not on polling updates
-        if (window.isInitialLoad_systemInfo) {
-            showLoading(true);
+        // Destroy Chart.js instances
+        if (this.cpuChart) {
+            this.cpuChart.destroy();
+            this.cpuChart = null;
         }
-        hideError();
-
-        // Only hide content on initial load, not on polling updates
-        if (window.isInitialLoad_systemInfo) {
-            hideContent();
+        if (this.memoryChart) {
+            this.memoryChart.destroy();
+            this.memoryChart = null;
         }
 
-        // Call the system info API
-        const response = await fetch('/api/dev-tool-system-performance/info', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
+        // Remove the event listener
+        window.removeEventListener('beforeunload', () => this.cleanup());
+    },
+
+    /**
+     * Load Chart.js library if not already loaded
+     */
+    loadChartJS() {
+        return new Promise((resolve, reject) => {
+            // Check if Chart.js is already loaded
+            if (typeof Chart !== 'undefined') {
+                resolve();
+                return;
             }
+
+            // Load Chart.js from CDN (latest stable version)
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+            script.onload = () => {
+                // Register center text plugin
+                Chart.register({
+                    id: 'centerText',
+                    beforeDraw: function(chart) {
+                        if (chart.config.options.plugins &&
+                            chart.config.options.plugins.centerText &&
+                            chart.config.options.plugins.centerText.display) {
+                            const { ctx, chartArea: { left, right, top, bottom, width, height } } = chart;
+                            ctx.save();
+
+                            const centerX = (left + right) / 2;
+                            const centerY = (top + bottom) / 2;
+
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+
+                            const text = chart.config.options.plugins.centerText.text;
+                            const lines = text.split('\n');
+
+                            // Main title
+                            ctx.font = 'bold 14px Arial';
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                            ctx.fillText(lines[0], centerX, centerY - 6);
+
+                            // Value
+                            if (lines[1]) {
+                                ctx.font = 'bold 18px Arial';
+                                ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+                                ctx.fillText(lines[1], centerX, centerY + 12);
+                            }
+
+                            ctx.restore();
+                        }
+                    }
+                });
+                resolve();
+            };
+            script.onerror = () => reject(new Error('Failed to load Chart.js'));
+            document.head.appendChild(script);
         });
+    },
+
+    /**
+     * Start polling for updates every 5 seconds
+     */
+    startPolling() {
+        // Clear any existing interval first
+        this.stopPolling();
+
+        // Poll immediately
+        this.update();
+
+        // Start new polling interval
+        this.pollingIntervalId = setInterval(() => {
+            this.update();
+        }, this.POLLING_INTERVAL);
+    },
+
+    /**
+     * Stop polling
+     */
+    stopPolling() {
+        if (this.pollingIntervalId) {
+            clearInterval(this.pollingIntervalId);
+            this.pollingIntervalId = null;
+        }
+    },
+
+    /**
+     * Update function - called by polling to refresh data
+     */
+    async update() {
+        try {
+            const data = await this.fetchData();
+            this.showData(data);
+        } catch (error) {
+            console.error('Error updating system performance:', error);
+            this.showError(error.message);
+        }
+    },
+
+    /**
+     * Fetch system info from the server
+     */
+    async fetchInfo() {
+        const response = await fetch('/api/dev-tool-system-performance/info');
+
         if (!response.ok) {
             throw new Error(`Server error: ${response.status}`);
         }
+
         const result = await response.json();
         if (!result.success) {
             throw new Error(result.error || 'Failed to load system information');
         }
-        displaySystemInfo(result.data);
-        loadMemoryUsage(); // Load memory usage data for pie chart
-        loadCpuUsage(); // Load CPU usage data for apps list
-        window.isInitialLoad_systemInfo = false; // Mark that initial load is complete
-        
-        // Start polling after initial load is complete
-        startPolling();
-    } catch (error) {
-        console.error('Error loading system info:', error);
-        showError(error.message);
-    } finally {
-        // Only hide loading if it was shown (on initial load)
-        if (wasInitialLoad) {
-            showLoading(false);
+
+        return result.data;
+    },
+
+    /**
+     * Display system info in the GUI
+     */
+    showInfo(info) {
+        // Update system stats cards
+        this.updateStatCard('cpu', info.system_stats.cpu.usage_percent, info.system_stats.cpu.core_count);
+        this.updateStatCard('memory', info.system_stats.memory.usage_percent,
+                       `${info.system_stats.memory.used_gb} / ${info.system_stats.memory.total_gb} GB`);
+        this.updateStatCard('disk', info.system_stats.disk.usage_percent,
+                       `${info.system_stats.disk.used_gb} / ${info.system_stats.disk.total_gb} GB`);
+
+        // Add CPU data point to history for graphing
+        this.addCpuDataPoint(info.system_stats.cpu.usage_percent);
+
+        // Update system info grid
+        this.updateSystemInfo(info.system_info);
+
+        // Show content
+        this.showContent(true);
+    },
+
+    /**
+     * Fetch all required data from the server (memory usage and CPU stats for polling)
+     */
+    async fetchData() {
+        const response = await fetch('/api/dev-tool-system-performance/memory-usage');
+
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
         }
-    }
-}
 
-// Display the system information and stats
-function displaySystemInfo(data) {
-    updateStatCard('cpu', data.system_stats.cpu.usage_percent, data.system_stats.cpu.core_count);
-    updateStatCard('memory', data.system_stats.memory.usage_percent,
-                   `${data.system_stats.memory.used_gb} / ${data.system_stats.memory.total_gb} GB`);
-    updateStatCard('disk', data.system_stats.disk.usage_percent,
-                   `${data.system_stats.disk.used_gb} / ${data.system_stats.disk.total_gb} GB`);
-
-    // Add CPU data point to history for graphing
-    addCpuDataPoint(data.system_stats.cpu.usage_percent);
-
-    // Only update system info on initial load (it's static)
-    if (window.isInitialLoad_systemInfo) {
-        updateSystemInfo(data.system_info);
-    }
-
-    // Always show content when data is successfully loaded
-    showContent(true);
-}
-
-function updateStatCard(type, percentage, detail) {
-    const usageElement = document.getElementById(`${type}Usage`);
-    const progressElement = document.getElementById(`${type}Progress`);
-    const detailElement = document.getElementById(`${type}Cores`) ||
-                         document.getElementById(`${type}Details`);
-
-    if (usageElement) animateValue(usageElement, percentage);
-    if (progressElement) animateProgressBar(progressElement, percentage);
-    if (detailElement) detailElement.textContent = detail;
-}
-
-function animateValue(element, value) {
-    if (!element) return;
-    let start = parseFloat(element.textContent) || 0;
-    let end = Math.round(value);
-    let duration = 500;
-    let startTime = null;
-    function step(timestamp) {
-        if (!startTime) startTime = timestamp;
-        let progress = Math.min((timestamp - startTime) / duration, 1);
-        let current = Math.round(start + (end - start) * progress);
-        element.textContent = current;
-        if (progress < 1) {
-            requestAnimationFrame(step);
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.error || 'Failed to load memory usage');
         }
-    }
-    requestAnimationFrame(step);
-}
 
-function animateProgressBar(element, value) {
-    if (!element) return;
-    // Use CSS custom property to animate the progress bar
-    element.style.setProperty('--progress-width', `${value}%`);
-}
-
-function updateSystemInfo(info) {
-    const grid = document.getElementById('systemInfoGrid');
-    if (!grid) return;
-
-    grid.innerHTML = '';
-    for (const key in info) {
-        const card = document.createElement('div');
-        card.className = 'system-info-card';
-        card.innerHTML = `<span class="info-label">${key.replace('_', ' ')}:</span> <span class="info-value">${info[key]}</span>`;
-        grid.appendChild(card);
-    }
-}
-
-function showLoading(show) {
-    const loadingState = document.getElementById('loadingState');
-    if (loadingState) {
-        loadingState.style.display = show ? 'block' : 'none';
-    }
-}
-
-// Memory Usage Pie Chart
-let memoryChartColors = [
-    'var(--color-primary-accent)',
-    'var(--color-secondary-accent)',
-    'var(--color-highlight-gold)',
-    'var(--color-warning-error)',
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'
-];
-
-function loadMemoryUsage() {
-    fetch('/api/dev-tool-system-performance/memory-usage')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                updateMemoryPieChart(data.data);
+        // Also fetch current CPU stats for the chart
+        try {
+            const cpuResponse = await fetch('/api/dev-tool-system-performance/info');
+            if (cpuResponse.ok) {
+                const cpuResult = await cpuResponse.json();
+                if (cpuResult.success) {
+                    result.data.system_stats = cpuResult.data.system_stats;
+                }
             }
-        })
-        .catch(error => {
-            console.error('Error loading memory usage:', error);
-        });
-}
+        } catch (error) {
+            console.warn('Could not fetch CPU stats for update:', error);
+        }
 
-function loadCpuUsage() {
-    fetch('/api/dev-tool-system-performance/memory-usage')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                updateCpuAppsList(data.data);
+        return result.data;
+    },
+
+    /**
+     * Display data in the GUI elements (memory usage and CPU stats for polling updates)
+     */
+    showData(memoryUsage) {
+        // Update memory usage data
+        this.updateMemoryPieChart(memoryUsage);
+        this.updateCpuAppsList(memoryUsage);
+
+        // Update CPU chart with new data point
+        if (memoryUsage.system_stats && memoryUsage.system_stats.cpu) {
+            this.addCpuDataPoint(memoryUsage.system_stats.cpu.usage_percent);
+        }
+
+        // Update stat cards with current values
+        if (memoryUsage.system_stats) {
+            const stats = memoryUsage.system_stats;
+            if (stats.cpu) {
+                this.updateStatCard('cpu', stats.cpu.usage_percent, stats.cpu.core_count);
             }
-        })
-        .catch(error => {
-            console.error('Error loading CPU usage:', error);
-        });
-}
+            if (stats.memory) {
+                this.updateStatCard('memory', stats.memory.usage_percent,
+                              `${stats.memory.used_gb} / ${stats.memory.total_gb} GB`);
+            }
+            if (stats.disk) {
+                this.updateStatCard('disk', stats.disk.usage_percent,
+                              `${stats.disk.used_gb} / ${stats.disk.total_gb} GB`);
+            }
+        }
+    },
 
-function updateMemoryPieChart(memoryData) {
-    const svg = document.getElementById('memoryPieChart');
-    const legend = document.getElementById('memoryLegend');
-    const appsList = document.getElementById('appsList');
-    
-    if (!svg || !legend || !appsList) return;
-    
-    // Clear previous content
-    svg.innerHTML = '';
-    legend.innerHTML = '';
-    appsList.innerHTML = '';
-    
-    const processes = memoryData.processes || [];
-    if (processes.length === 0) return;
-    
-    // Update top apps list (show top 10, excluding "Others" if it exists)
-    const topApps = processes.filter(proc => proc.name !== 'Others').slice(0, 10);
-    
-    topApps.forEach((app, index) => {
-        const appItem = document.createElement('div');
-        appItem.className = 'app-item';
-        
-        appItem.innerHTML = `
-            <div class="app-name">${app.name}</div>
-            <div class="app-stats">
-                <div class="app-memory">${app.memory_mb.toFixed(1)} MB</div>
-                <div class="app-cpu">${app.cpu_percent.toFixed(1)}%</div>
-            </div>
-        `;
-        
-        appsList.appendChild(appItem);
-    });
-    
-    // Calculate pie chart (including "Others" for visualization)
-    const centerX = 150;
-    const centerY = 150;
-    const radius = 120;
-    
-    let currentAngle = 0;
-    
-    processes.forEach((process, index) => {
-        const percentage = process.percentage;
-        const angle = (percentage / 100) * 360;
-        
-        if (percentage < 1) return; // Skip very small slices
-        
-        // Calculate path
-        const startAngle = currentAngle;
-        const endAngle = currentAngle + angle;
-        
-        const startAngleRad = (startAngle * Math.PI) / 180;
-        const endAngleRad = (endAngle * Math.PI) / 180;
-        
-        const x1 = centerX + radius * Math.cos(startAngleRad);
-        const y1 = centerY + radius * Math.sin(startAngleRad);
-        const x2 = centerX + radius * Math.cos(endAngleRad);
-        const y2 = centerY + radius * Math.sin(endAngleRad);
-        
-        const largeArcFlag = angle > 180 ? 1 : 0;
-        
-        const pathData = [
-            `M ${centerX} ${centerY}`,
-            `L ${x1} ${y1}`,
-            `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-            'Z'
-        ].join(' ');
-        
-        // Create path element
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', pathData);
-        path.setAttribute('fill', memoryChartColors[index % memoryChartColors.length]);
-        path.setAttribute('stroke', 'var(--color-card-background)');
-        path.setAttribute('stroke-width', '2');
-        
-        // Add hover effects
-        path.addEventListener('mouseenter', () => {
-            path.setAttribute('stroke-width', '4');
-        });
-        path.addEventListener('mouseleave', () => {
-            path.setAttribute('stroke-width', '2');
-        });
-        
-        svg.appendChild(path);
-        
-        // Add legend item
-        const legendItem = document.createElement('div');
-        legendItem.className = 'legend-item';
-        
-        const colorBox = document.createElement('div');
-        colorBox.className = 'legend-color';
-        colorBox.style.backgroundColor = memoryChartColors[index % memoryChartColors.length];
-        
-        const nameSpan = document.createElement('span');
-        nameSpan.className = 'legend-name';
-        nameSpan.textContent = process.name;
-        
-        const memorySpan = document.createElement('span');
-        memorySpan.className = 'legend-memory';
-        memorySpan.textContent = `${process.memory_mb.toFixed(1)} MB (${process.percentage}%)`;
-        
-        legendItem.appendChild(colorBox);
-        legendItem.appendChild(nameSpan);
-        legendItem.appendChild(memorySpan);
-        
-        legend.appendChild(legendItem);
-        
-        currentAngle = endAngle;
-    });
-}
+    /**
+     * Update a stat card with new values
+     */
+    updateStatCard(type, percentage, detail) {
+        const usageElement = document.getElementById(`${type}Usage`);
+        const progressElement = document.getElementById(`${type}Progress`);
+        const detailElement = document.getElementById(`${type}Cores`) ||
+                             document.getElementById(`${type}Details`);
 
-function updateCpuAppsList(memoryData) {
-    const cpuAppsList = document.getElementById('cpuAppsList');
-    
-    if (!cpuAppsList) return;
-    
-    // Clear previous content
-    cpuAppsList.innerHTML = '';
-    
-    const processes = memoryData.processes || [];
-    if (processes.length === 0) return;
-    
-    // Sort by CPU usage and get top 10 (excluding "Others" if it exists)
-    const sortedByCpu = processes
-        .filter(proc => proc.name !== 'Others')
-        .sort((a, b) => b.cpu_percent - a.cpu_percent)
-        .slice(0, 10);
-    
-    sortedByCpu.forEach((app, index) => {
-        const appItem = document.createElement('div');
-        appItem.className = 'cpu-app-item';
-        
-        appItem.innerHTML = `
-            <div class="cpu-app-name">${app.name}</div>
-            <div class="cpu-app-stats">
-                <div class="cpu-app-memory">${app.memory_mb.toFixed(1)} MB</div>
-                <div class="cpu-app-cpu">${app.cpu_percent.toFixed(1)}%</div>
-            </div>
-        `;
-        
-        cpuAppsList.appendChild(appItem);
-    });
-}
+        if (usageElement) this.animateValue(usageElement, percentage);
+        if (progressElement) this.animateProgressBar(progressElement, percentage);
+        if (detailElement) detailElement.textContent = detail;
+    },
 
-function hideError() {
-    // Implement error hiding if needed
-}
-function showError(msg) {
-    // Implement error display if needed
-}
-function hideContent() {
-    const content = document.getElementById('infoContent');
-    if (content) {
-        content.style.display = 'none';
+    /**
+     * Animate a numeric value
+     */
+    animateValue(element, value) {
+        if (!element) return;
+        let start = parseFloat(element.textContent) || 0;
+        let end = Math.round(value);
+        let duration = 500;
+        let startTime = null;
+        function step(timestamp) {
+            if (!startTime) startTime = timestamp;
+            let progress = Math.min((timestamp - startTime) / duration, 1);
+            let current = Math.round(start + (end - start) * progress);
+            element.textContent = current;
+            if (progress < 1) {
+                requestAnimationFrame(step);
+            }
+        }
+        requestAnimationFrame(step);
+    },
+
+    /**
+     * Animate a progress bar
+     */
+    animateProgressBar(element, value) {
+        if (!element) return;
+        element.style.setProperty('--progress-width', `${value}%`);
+    },
+
+    /**
+     * Update system info grid
+     */
+    updateSystemInfo(info) {
+        const grid = document.getElementById('systemInfoGrid');
+        if (!grid) return;
+
+        grid.innerHTML = '';
+        for (const key in info) {
+            const card = document.createElement('div');
+            card.className = 'system-info-card';
+            card.innerHTML = `<span class="info-label">${key.replace('_', ' ')}:</span> <span class="info-value">${info[key]}</span>`;
+            grid.appendChild(card);
+        }
+    },
+
+    /**
+     * Add CPU data point to history and update graph
+     */
+    addCpuDataPoint(percentage) {
+        const timestamp = Date.now();
+        this.cpuHistory.push({ value: percentage, timestamp: timestamp });
+
+        // Keep only the last MAX_DATA_POINTS
+        if (this.cpuHistory.length > this.MAX_DATA_POINTS) {
+            this.cpuHistory.shift();
+        }
+
+        this.updateCpuGraph();
+    },
+
+    /**
+     * Get color based on CPU usage percentage
+     */
+    getCpuColor(percentage) {
+        if (percentage <= 2) {
+            return '#10B981'; // GOOD - Green
+        } else if (percentage <= 20) {
+            return '#F59E0B'; // STABLE - Yellow/Orange
+        } else if (percentage <= 60) {
+            return '#F97316'; // WARNING - Orange
+        } else {
+            return '#EF4444'; // CRITICAL - Red
+        }
+    },
+
+    /**
+     * Update CPU usage graph using Chart.js
+     */
+    updateCpuGraph() {
+        const canvas = document.getElementById('cpuGraph');
+        if (!canvas || this.cpuHistory.length === 0) return;
+
+        const ctx = canvas.getContext('2d');
+
+        // Prepare data for Chart.js
+        const labels = this.cpuHistory.map((_, index) => {
+            const secondsAgo = (this.cpuHistory.length - 1 - index) * (this.POLLING_INTERVAL / 1000);
+            if (secondsAgo < 60) {
+                return `${secondsAgo}s ago`;
+            } else {
+                return `${Math.floor(secondsAgo / 60)}m ago`;
+            }
+        });
+
+        const data = this.cpuHistory.map(point => point.value);
+
+        // Create or update chart
+        if (!this.cpuChart) {
+            this.cpuChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'CPU Usage',
+                        data: data,
+                        borderColor: '#10B981', // Default color
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)', // Default fill color
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 0,
+                        borderWidth: 3,
+                        shadowColor: 'rgba(0, 0, 0, 0.1)',
+                        shadowBlur: 10,
+                        segment: {
+                            borderColor: function(context) {
+                                const value = context.p1.parsed.y;
+                                return this.getCpuColor(value);
+                            }.bind(this),
+                            backgroundColor: function(context) {
+                                const value = context.p1.parsed.y;
+                                const color = this.getCpuColor(value);
+                                const r = parseInt(color.slice(1, 3), 16);
+                                const g = parseInt(color.slice(3, 5), 16);
+                                const b = parseInt(color.slice(5, 7), 16);
+                                return `rgba(${r}, ${g}, ${b}, 0.1)`;
+                            }.bind(this)
+                        }
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2.5,
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeInOutQuart'
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'var(--color-card-background)',
+                            titleColor: 'var(--color-text-primary)',
+                            bodyColor: 'var(--color-text-primary)',
+                            borderColor: 'var(--color-border)',
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            callbacks: {
+                                title: function(context) {
+                                    return `Time: ${context[0].label}`;
+                                },
+                                label: function(context) {
+                                    return `CPU Usage: ${context.parsed.y.toFixed(1)}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            grid: {
+                                color: 'var(--color-border)',
+                                opacity: 0.3,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: 'var(--color-text-secondary)',
+                                font: {
+                                    size: 11,
+                                    weight: '500'
+                                },
+                                maxTicksLimit: 8,
+                                padding: 10
+                            },
+                            border: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                color: 'var(--color-border)',
+                                opacity: 0.3,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: 'var(--color-text-secondary)',
+                                font: {
+                                    size: 11,
+                                    weight: '500'
+                                },
+                                callback: function(value) {
+                                    return value + '%';
+                                },
+                                padding: 10,
+                                stepSize: 25
+                            },
+                            border: {
+                                display: false
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    elements: {
+                        point: {
+                            hoverBorderWidth: 3
+                        }
+                    }
+                }
+            });
+        } else {
+            // Update existing chart data
+            this.cpuChart.data.labels = labels;
+            this.cpuChart.data.datasets[0].data = data;
+            this.cpuChart.update('active'); // Smooth update with animation
+        }
+    },
+
+    /**
+     * Update memory usage pie chart using Chart.js
+     */
+    updateMemoryPieChart(memoryData) {
+        const canvas = document.getElementById('memoryPieChart');
+        const legend = document.getElementById('memoryLegend');
+        const appsList = document.getElementById('appsList');
+
+        if (!canvas || !legend || !appsList) return;
+
+        const processes = memoryData.processes || [];
+        if (processes.length === 0) return;
+
+        // Clear previous content for legend and apps list
+        legend.innerHTML = '';
+        appsList.innerHTML = '';
+
+        // Update top apps list (show top 10, excluding "Others" if it exists)
+        const topApps = processes.filter(proc => proc.name !== 'Others').slice(0, 10);
+
+        topApps.forEach((app, index) => {
+            const appItem = document.createElement('div');
+            appItem.className = 'app-item';
+
+            const appName = document.createElement('div');
+            appName.className = 'app-name';
+            appName.textContent = app.name;
+
+            const appStats = document.createElement('div');
+            appStats.className = 'app-stats';
+
+            const appMemory = document.createElement('div');
+            appMemory.className = 'app-memory';
+            appMemory.textContent = `${app.memory_mb.toFixed(1)} MB`;
+
+            const appCpu = document.createElement('div');
+            appCpu.className = 'app-cpu';
+            appCpu.textContent = `${app.cpu_percent.toFixed(1)}%`;
+
+            appStats.appendChild(appMemory);
+            appStats.appendChild(appCpu);
+
+            appItem.appendChild(appName);
+            appItem.appendChild(appStats);
+
+            appsList.appendChild(appItem);
+        });
+
+        const ctx = canvas.getContext('2d');
+
+        // Prepare data for Chart.js
+        const chartData = processes.map(process => process.percentage);
+        const chartLabels = processes.map(process => process.name);
+
+        // Create enhanced color scheme with gradients
+        const createGradient = (ctx, color1, color2) => {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, color1);
+            gradient.addColorStop(1, color2);
+            return gradient;
+        };
+
+        const enhancedColors = [
+            ['#FF6B6B', '#FF4757'], // Red gradient
+            ['#4ECDC4', '#26D0CE'], // Teal gradient
+            ['#45B7D1', '#3498DB'], // Blue gradient
+            ['#96CEB4', '#68C3A3'], // Green gradient
+            ['#FFEAA7', '#FDCB6E'], // Yellow gradient
+            ['#DDA0DD', '#BA68C8'], // Purple gradient
+            ['#FFB142', '#FFA726'], // Orange gradient
+            ['#74B9FF', '#0984E3'], // Light blue gradient
+            ['#A29BFE', '#6C5CE7'], // Lavender gradient
+            ['#FD79A8', '#E84393'], // Pink gradient
+            ['#00B894', '#00A085'], // Mint gradient
+            ['#E17055', '#D63031'], // Coral gradient
+            ['#81ECEC', '#00CEC9'], // Cyan gradient
+            ['#FDCB6E', '#E17055'], // Peach gradient
+            ['#6C5CE7', '#A29BFE']  // Indigo gradient
+        ];
+
+        // Create or update chart
+        if (!this.memoryChart) {
+            const chartColors = processes.map((_, index) => {
+                const [color1, color2] = enhancedColors[index % enhancedColors.length];
+                return createGradient(ctx, color1, color2);
+            });
+
+            this.memoryChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        data: chartData,
+                        backgroundColor: chartColors,
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                        borderWidth: 2,
+                        hoverBorderWidth: 4,
+                        hoverBorderColor: 'rgba(255, 255, 255, 0.8)',
+                        hoverOffset: 12,
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 4,
+                        shadowBlur: 12,
+                        shadowColor: 'rgba(0, 0, 0, 0.3)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 1,
+                    animation: {
+                        duration: 1500,
+                        easing: 'easeOutQuart',
+                        animateRotate: true,
+                        animateScale: true
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: true,
+                            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                            titleColor: '#FFFFFF',
+                            bodyColor: '#FFFFFF',
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                            borderWidth: 1,
+                            cornerRadius: 12,
+                            displayColors: true,
+                            boxPadding: 8,
+                            titleFont: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 13
+                            },
+                            callbacks: {
+                                title: function(context) {
+                                    return context[0].label;
+                                },
+                                label: function(context) {
+                                    const process = processes[context.dataIndex];
+                                    return [
+                                        `Memory: ${process.memory_mb.toFixed(1)} MB`,
+                                        `CPU: ${process.cpu_percent.toFixed(1)}%`,
+                                        `Usage: ${process.percentage}%`
+                                    ];
+                                },
+                                labelColor: function(context) {
+                                    return {
+                                        borderColor: 'rgba(255, 255, 255, 0.8)',
+                                        backgroundColor: chartColors[context.dataIndex]
+                                    };
+                                }
+                            }
+                        },
+                        // Add center text plugin
+                        centerText: {
+                            display: true,
+                            text: `Total\n${processes.reduce((sum, p) => sum + p.memory_mb, 0).toFixed(1)} MB`
+                        }
+                    },
+                    cutout: '70%',
+                    elements: {
+                        arc: {
+                            borderRadius: 8,
+                            borderWidth: 2,
+                            hoverBorderRadius: 12
+                        }
+                    },
+                    onHover: function(event, elements) {
+                        event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+                    }
+                }
+            });
+        } else {
+            // Update existing chart data - need to recreate gradients with current context
+            const chartColors = processes.map((_, index) => {
+                const [color1, color2] = enhancedColors[index % enhancedColors.length];
+                return createGradient(ctx, color1, color2);
+            });
+
+            this.memoryChart.data.labels = chartLabels;
+            this.memoryChart.data.datasets[0].data = chartData;
+            this.memoryChart.data.datasets[0].backgroundColor = chartColors;
+            this.memoryChart.update('active');
+        }
+
+        // Create custom legend
+        processes.forEach((process, index) => {
+            const legendItem = document.createElement('div');
+            legendItem.className = 'legend-item';
+
+            const colorBox = document.createElement('div');
+            colorBox.className = 'legend-color';
+            colorBox.style.backgroundColor = this.memoryChartColors[index % this.memoryChartColors.length];
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'legend-name';
+            nameSpan.textContent = process.name;
+
+            const memorySpan = document.createElement('span');
+            memorySpan.className = 'legend-memory';
+            memorySpan.textContent = `${process.memory_mb.toFixed(1)} MB (${process.percentage}%)`;
+
+            legendItem.appendChild(colorBox);
+            legendItem.appendChild(nameSpan);
+            legendItem.appendChild(memorySpan);
+
+            legend.appendChild(legendItem);
+        });
+    },
+
+    /**
+     * Update CPU apps list
+     */
+    updateCpuAppsList(memoryData) {
+        const cpuAppsList = document.getElementById('cpuAppsList');
+
+        if (!cpuAppsList) return;
+
+        // Clear previous content
+        cpuAppsList.innerHTML = '';
+
+        const processes = memoryData.processes || [];
+        if (processes.length === 0) return;
+
+        // Sort by CPU usage and get top 10 (excluding "Others" if it exists)
+        const sortedByCpu = processes
+            .filter(proc => proc.name !== 'Others')
+            .sort((a, b) => b.cpu_percent - a.cpu_percent)
+            .slice(0, 10);
+
+        sortedByCpu.forEach((app, index) => {
+            const appItem = document.createElement('div');
+            appItem.className = 'cpu-app-item';
+
+            const appName = document.createElement('div');
+            appName.className = 'cpu-app-name';
+            appName.textContent = app.name;
+
+            const appStats = document.createElement('div');
+            appStats.className = 'cpu-app-stats';
+
+            const appMemory = document.createElement('div');
+            appMemory.className = 'cpu-app-memory';
+            appMemory.textContent = `${app.memory_mb.toFixed(1)} MB`;
+
+            const appCpu = document.createElement('div');
+            appCpu.className = 'cpu-app-cpu';
+            appCpu.textContent = `${app.cpu_percent.toFixed(1)}%`;
+
+            appStats.appendChild(appMemory);
+            appStats.appendChild(appCpu);
+
+            appItem.appendChild(appName);
+            appItem.appendChild(appStats);
+
+            cpuAppsList.appendChild(appItem);
+        });
+    },
+
+    /**
+     * Show content
+     */
+    showContent(container) {
+        const content = document.getElementById('infoContent');
+        if (content) {
+            content.style.display = 'block';
+        }
+    },
+
+    /**
+     * Show error message
+     */
+    showError(msg) {
+        // For now, just log to console. Could be enhanced to show in UI
+        console.error('System Performance Error:', msg);
     }
-}
-function showContent(show) {
-    const content = document.getElementById('infoContent');
-    if (content) {
-        content.style.display = show ? 'block' : 'none';
-    }
-}
-
-// Auto-load info on page load
-loadSystemInfo();
-
-// Set up cleanup observer
-setupCleanupObserver();
-
-// End of script execution guard
-}
+};

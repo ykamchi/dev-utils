@@ -1,5 +1,5 @@
 // Panel 1 - Basic Information Panel
-window.panel_1 = {
+window.example_panel_1 = {
     name: 'Panel 1',
     icon: '📊',
     description: 'Basic information and statistics',

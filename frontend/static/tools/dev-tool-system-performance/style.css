@@ -83,6 +83,10 @@
     flex-wrap: wrap;
 }
 
+.cpu-chart-wrapper {
+    width: 600px;
+}
+
 .cpu-chart-wrapper h4 {
     margin: 0 0 15px 0;
     font-size: 16px;
@@ -97,30 +101,6 @@
     height: 200px;
     border-radius: 8px;
     background: transparent;
-}
-
-.graph-grid line {
-    stroke: var(--color-border);
-    stroke-width: 1;
-    opacity: 0.3;
-}
-
-.cpu-line {
-    stroke: var(--color-primary-accent);
-    stroke-width: 2;
-    fill: none;
-}
-
-.cpu-area {
-    fill: url(#cpuGradient);
-    opacity: 0.6;
-}
-
-.cpu-data-points circle {
-    fill: var(--color-primary-accent);
-    stroke: white;
-    stroke-width: 2;
-    r: 3;
 }
 
 .graph-legend {
@@ -333,17 +313,26 @@
 
 .memory-pie-container {
     display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 30px;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.chart-and-apps-container {
+    display: flex;
     gap: 30px;
     align-items: flex-start;
     justify-content: center;
     flex-wrap: wrap;
+    width: 100%;
 }
 
 .top-apps-list {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    max-width: 280px;
     min-width: 250px;
 }
 
@@ -492,56 +481,103 @@
 
 .pie-chart-wrapper {
     position: relative;
-    width: 300px;
-    height: 300px;
+    width: 320px;
+    height: 320px;
+    margin: 0 auto;
+    filter: drop-shadow(0 8px 32px rgba(0, 0, 0, 0.3));
+}
+
+.pie-chart-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 50%, transparent 100%);
+    border-radius: 50%;
+    z-index: 1;
+    pointer-events: none;
 }
 
 .memory-pie-chart {
     width: 100%;
     height: 100%;
-    transform: rotate(-90deg);
+    position: relative;
+    z-index: 2;
 }
 
 .pie-legend {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-width: 250px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
 }
 
 .legend-item {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     font-size: 14px;
-    padding: 4px 0;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid transparent;
+}
+
+.legend-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateX(4px);
 }
 
 .legend-color {
-    width: 16px;
-    height: 16px;
-    border-radius: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
     flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .legend-name {
     flex: 1;
-    font-weight: 500;
+    font-weight: 600;
     color: white;
+    font-size: 14px;
 }
 
 .legend-memory {
     font-size: 13px;
-    color: white;
-    opacity: 0.8;
-    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 8px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Responsive pie chart */
 @media (max-width: 768px) {
     .memory-pie-container {
         flex-direction: column;
+        gap: 30px;
+        align-items: center;
+    }
+    
+    .chart-and-apps-container {
+        display: flex;
+        flex-direction: column;
         gap: 20px;
+        width: 100%;
     }
     
     .top-apps-list {
@@ -550,13 +586,32 @@
     }
     
     .pie-chart-wrapper {
-        width: 250px;
-        height: 250px;
+        width: 280px;
+        height: 280px;
+        filter: drop-shadow(0 6px 24px rgba(0, 0, 0, 0.3));
+        align-self: center;
+    }
+    
+    .pie-chart-wrapper::before {
+        width: 100px;
+        height: 100px;
     }
     
     .pie-legend {
         max-width: none;
         width: 100%;
+        padding: 16px;
+        margin-top: 0;
+    }
+    
+    .legend-item {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+    
+    .legend-color {
+        width: 16px;
+        height: 16px;
     }
     
     .cpu-graph-container {

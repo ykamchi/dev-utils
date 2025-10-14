@@ -1,13 +1,32 @@
 # Dev Tool Stocks
 
-A beautiful and functional stock market data tool for the Dev Tools application.
+A beautiful and functional st## Setup
+
+### API Key Configuration
+
+This tool uses the Twelve Data API for real stock data. You have two options for API key configuration:
+
+1. **Environment Variable**: Set `TWELVE_DATA_API_KEY` in your system environment
+2. **.env File**: Add your API key to the tool's `.env` file:
+   ```
+   TWELVE_DATA_API_KEY=your_twelve_data_api_key_here
+   ```
+
+### Getting an API Key
+
+1. Visit [Twelve Data](https://twelvedata.com/pricing)
+2. Sign up for a free account
+3. Get your API key from the dashboard
+
+**Free Tier**: 800 API calls per day, 8 API calls per minute.
+
+**Note**: The market overview is limited to 3 stocks to respect API rate limits. This tool requires a valid Twelve Data API key to function. No mock data fallback is provided.l for the Dev Tools application.
 
 ## Features
 
 - **Real-time Stock Quotes**: Get current stock prices, changes, and trading volume
 - **Popular Stocks**: Quick access to major tech stocks (AAPL, GOOGL, MSFT, etc.)
 - **Beautiful UI**: Modern gradient design with responsive layout
-- **Mock Data Fallback**: Works without API keys for development/demo purposes
 - **Auto-refresh**: Updates stock data every 30 seconds
 - **Global Header**: Uses the application's global header system (no tool-specific header needed)
 
@@ -43,7 +62,7 @@ Get list of popular stock symbols.
 ```json
 {
   "success": true,
-  "data": ["AAPL", "GOOGL", "MSFT", "AMZN", "TSLA", "NVDA", "META", "NFLX"]
+  "data": ["AAPL", "MSFT", "AMZN", "TSLA", "NVDA", "NFLX"]
 }
 ```
 
@@ -51,7 +70,7 @@ Get list of popular stock symbols.
 
 ### API Key Configuration
 
-This tool uses the Alpha Vantage API for real stock data. You have two options for API key configuration:
+This tool requires an Alpha Vantage API key for real stock data. You have two options for API key configuration:
 
 1. **Environment Variable**: Set `ALPHA_VANTAGE_API_KEY` in your system environment
 2. **.env File**: Add your API key to the tool's `.env` file:
@@ -65,9 +84,7 @@ This tool uses the Alpha Vantage API for real stock data. You have two options f
 2. Sign up for a free API key
 3. Add the key using one of the methods above
 
-### Mock Data
-
-If no API key is provided, the tool will automatically use mock/demo data for development and testing purposes. This allows the tool to work immediately without requiring API key setup.
+**Note**: This tool requires a valid Alpha Vantage API key to function. No mock data fallback is provided.
 
 ## Dependencies
 
@@ -81,4 +98,4 @@ See `requirements.txt` in this directory for the complete list of tool-specific 
 
 - **Backend**: Python Flask API with Alpha Vantage integration
 - **Frontend**: HTML/CSS/JavaScript with modern responsive design
-- **Data**: Real-time stock quotes with automatic fallback to mock data
+- **Data**: Real-time stock quotes from Alpha Vantage API

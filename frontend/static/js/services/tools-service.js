@@ -1,5 +1,5 @@
 // Tools Service Module
-// Handles loading and managing tools in the drawer
+// Handles tool selection, loading, and execution
 
 const ToolsService = {
     toolsState: {},
@@ -7,41 +7,13 @@ const ToolsService = {
     
     // Initialize tool loader
     async init() {
-        this.bindEvents();
-        await this.loadTools();
         await this.loadWelcomeScreen();
-    },
-
-    // Bind event listeners
-    bindEvents() {
-        const refreshBtn = document.getElementById('refreshToolsBtn');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', () => this.refreshTools());
-        }
-    },
-
-    // Load all available tools from the backend
-    async loadTools() {
-        try {
-            this.showLoading(true);
-            const response = await StorageService.fetchJSON('/api/tools');
-            
-            if (response.success) {
-                this.toolsState = response.tools;
-                this.renderToolsList();
-            } else {
-                this.showError('Failed to load tools: ' + (response.error || 'Unknown error'));
-            }
-        } catch (error) {
-            console.error('Error loading tools:', error);
-            this.showError('Failed to connect to backend');
-        } finally {
-            this.showLoading(false);
-        }
     },
 
     // Load welcome screen HTML
     async loadWelcomeScreen() {
+        console.log('[ToolsService] Loading welcome screen...');
+
         try {
             const response = await fetch('/static/welcome-screen.html');
             if (response.ok) {
@@ -59,135 +31,45 @@ const ToolsService = {
         }
     },
 
-    // Refresh tools from backend
-    async refreshTools() {
-        try {
-            const refreshBtn = document.getElementById('refreshToolsBtn');
-            const refreshIcon = refreshBtn?.querySelector('.refresh-icon');
-            
-            // Add spinning animation
-            if (refreshIcon) {
-                refreshIcon.style.transform = 'rotate(360deg)';
-                setTimeout(() => {
-                    refreshIcon.style.transform = '';
-                }, 300);
-            }
+    // Load all available tools from the backend
+    async loadTools() {
+        console.log('[ToolsService] Loading tools from backend...');
 
-            const response = await StorageService.fetchJSON('/api/tools/refresh', {
-                method: 'POST'
-            });
-            
+        try {
+            const response = await Utils.fetchJSON('/api/tools');
+
             if (response.success) {
-                this.toolsState = response.tools;
-                this.renderToolsList();
+                this.setToolsState(response.tools);
+                return true;
             } else {
-                this.showError('Failed to refresh tools: ' + (response.error || 'Unknown error'));
+                console.error('Failed to load tools:', response.error || 'Unknown error');
+                return false;
             }
         } catch (error) {
-            console.error('Error refreshing tools:', error);
-            this.showError('Failed to refresh tools');
+            console.error('Error loading tools:', error);
+            return false;
         }
-    },
-
-    // Render the tools list in the drawer
-    renderToolsList() {
-        const toolsList = document.getElementById('toolsList');
-        if (!toolsList) return;
-
-        // Clear existing content
-        toolsList.innerHTML = '';
-
-        const toolNames = Object.keys(this.toolsState);
-        
-        if (toolNames.length === 0) {
-            const noToolsDiv = document.createElement('div');
-            noToolsDiv.className = 'no-tools';
-            
-            const heading = document.createElement('h4');
-            heading.textContent = 'No Tools Available';
-            
-            const paragraph = document.createElement('p');
-            paragraph.textContent = 'Add tools to the backend/tools directory to get started.';
-            
-            noToolsDiv.appendChild(heading);
-            noToolsDiv.appendChild(paragraph);
-            toolsList.appendChild(noToolsDiv);
-            return;
-        }
-
-        // Sort tools by name
-        toolNames.sort();
-
-        // Create tool items
-        toolNames.forEach(toolName => {
-            const toolItem = this.createToolItem(toolName);
-            toolsList.appendChild(toolItem);
-        });
-
-        // Update tools count in welcome screen
-        const toolsCountElement = document.getElementById('toolsCount');
-        if (toolsCountElement) {
-            toolsCountElement.textContent = toolNames.length;
-        }
-    },
-
-    // Create a single tool item element
-    createToolItem(toolName) {
-        const toolItem = document.createElement('div');
-        toolItem.className = 'tool-item';
-        toolItem.dataset.toolName = toolName;
-        
-        const toolInfo = this.toolsState[toolName];
-        const name = toolInfo.name || toolName;
-        const description = toolInfo.description || 'No description available';
-        const category = toolInfo.category || 'general';
-        const icon = toolInfo.icon || '🔧';
-
-        // Create tool icon element
-        const toolIcon = document.createElement('div');
-        toolIcon.className = 'tool-icon';
-        toolIcon.textContent = icon;
-
-        // Create tool name element
-        const toolNameElement = document.createElement('div');
-        toolNameElement.className = 'tool-name';
-        toolNameElement.textContent = name;
-
-        // Create tool description element
-        const toolDescription = document.createElement('div');
-        toolDescription.className = 'tool-description';
-        toolDescription.textContent = description;
-
-        // Create tool category element
-        const toolCategory = document.createElement('div');
-        toolCategory.className = 'tool-category';
-        toolCategory.textContent = category;
-
-        // Append all elements to tool item
-        toolItem.appendChild(toolIcon);
-        toolItem.appendChild(toolNameElement);
-        toolItem.appendChild(toolDescription);
-        toolItem.appendChild(toolCategory);
-
-        // Add click event
-        toolItem.addEventListener('click', () => {
-            this.selectTool(toolName);
-        });
-
-        return toolItem;
     },
 
     // Select and load a tool
     async selectTool(toolName) {
+        console.log(`[ToolsService] Selecting tool: ${toolName}`);
+
         try {
+            // Check if this is the same tool
+            if (this.activeToolName === toolName) {
+                console.log(`[ToolsService] Tool ${toolName} is already active`);
+                return;
+            }
+
             // Get tool info from state
-            const toolInfo = this.toolsState[toolName];
-            if (!toolInfo) {
+            const toolState = this.getToolState(toolName);
+            if (!toolState) {
                 throw new Error(`Tool '${toolName}' not found`);
             }
 
             // Update UI to show selection
-            this.updateToolSelection(toolName);
+            ToolsListService.updateToolSelection(toolName);
             
             // Show loading overlay
             this.showLoadingOverlay(true);
@@ -199,12 +81,12 @@ const ToolsService = {
             if (welcomeScreen) welcomeScreen.style.display = 'none';
             if (toolContent) toolContent.style.display = 'block';
             
+            // Load tool header
+            await this.loadToolHeader(toolName);
+
             // Load tool content
             await this.loadToolContent(toolName);
-            
-            // Update tool header
-            this.updateToolHeader(toolName);
-            
+                        
             this.activeToolName = toolName;
             
             // Save selected tool to storage
@@ -212,44 +94,60 @@ const ToolsService = {
             
         } catch (error) {
             console.error('Error selecting tool:', error);
-            this.showError(`Failed to load tool: ${toolName}`);
+            ToolsListService.showError(`Failed to load tool: ${toolName}`);
         } finally {
             this.showLoadingOverlay(false);
         }
     },
 
-    // Update visual selection of tools
-    updateToolSelection(selectedToolName) {
-        const toolItems = document.querySelectorAll('.tool-item');
-        toolItems.forEach(item => {
-            if (item.dataset.toolName === selectedToolName) {
-                item.classList.add('active');
-            } else {
-                item.classList.remove('active');
-            }
-        });
+    // Load tool header with icon and name
+    async loadToolHeader(toolName) {
+        console.log(`[ToolsService] Loading header for tool: ${toolName}`);
+
+        // Get toolState from state
+        const toolState = this.getToolState(toolName);
+        if (!toolState) {
+            console.warn(`Tool state not found for: ${toolName}`);
+            return;
+        }
+
+        const toolIcon = document.getElementById('toolIcon');
+        const toolNameElement = document.getElementById('toolName');
+        const toolDescription = document.getElementById('toolDescription');
+
+        if (toolIcon && toolState.icon) {
+            toolIcon.textContent = toolState.icon;
+        }
+
+        if (toolNameElement && toolState.name) {
+            toolNameElement.textContent = toolState.name;
+        }
+
+        if (toolDescription && toolState.description) {
+            toolDescription.textContent = toolState.description;
+        }
     },
 
     // Load tool content (HTML/JS)
     async loadToolContent(toolName) {
+        console.log(`[ToolsService] Loading content for tool: ${toolName}`);
+
+        // Get tool content container
         const toolContent = document.getElementById('toolContent');
         if (!toolContent) {
             console.error(`Tool content container not found for tool: ${toolName}`);
             return;
         }
 
-        // Get tool info from state
-        const toolInfo = this.toolsState[toolName];
-        if (!toolInfo) {
-            throw new Error(`Tool '${toolName}' not found`);
-        }
-
         // Create tool container
         const toolContainer = document.createElement('div');
         toolContainer.className = 'tool-container';
+
+        // TODO: Need to set a destructor to notify the tool when it's removed/unloaded
+        // and remove the code from the current tools
         toolContainer.dataset.toolName = toolName;
         
-        // Load tool HTML
+        // Load tool HTML and get the content type
         await this.loadToolHTML(toolName, toolContainer);
 
         // Clear and add new content
@@ -263,19 +161,83 @@ const ToolsService = {
             console.warn(`No CSS found for tool: ${toolName}`);
         }
 
-        // Try to load tool JavaScript
-        try {
-            await this.loadToolScript(toolName);
-        } catch (error) {
-            console.warn(`No script found for tool: ${toolName}`);
-        }
-
-        // Panels are now handled exclusively in loadToolHTML -> loadToolPanels
-        // No need for redundant initialization here
     },
 
-    // Create HTML for tools that use the panels system
-    createPanelsToolHTML(toolName, toolInfo) {
+    // Load tool-specific content HTML. 
+    // If index.html exists, load it. Otherwise, try to load panels.
+    async loadToolHTML(toolName, toolContainer) {
+        console.log(`[ToolsService] Loading HTML for tool: ${toolName}`);
+        
+        try {
+            if (await this.loadToolIndexHTML(toolName, toolContainer)) {
+                console.log(`[ToolsService] Loaded index.html for tool: ${toolName}`);
+
+                // Try to load tool script (if any)
+                await this.loadToolScript(toolName, toolContainer);
+                return;
+
+            } else if (await this.loadToolPanelsHTML(toolName, toolContainer)) {
+                console.log(`[ToolsService] Loaded panels for tool: ${toolName}`);
+                return;
+
+            } else {
+
+                // Fail to load index.html or panels, show error
+                console.error(`[ToolsService] Failed to load both index.html and panels for tool: ${toolName}`);
+                toolContainer.innerHTML = `<div class="tool-error"><h3>Failed to load tool</h3><p>Could not load index.html or panels for tool: ${toolName}</p><p>Error: ${error.message}</p></div>`;
+                return; 
+            }
+        } catch (error) {
+            // Fail to load index.html or panels, show error
+            console.error(`[ToolsService] Error loading content for tool: ${toolName}`, error);
+            toolContainer.innerHTML = `<div class="tool-error"><h3>Failed to load tool</h3><p>Could not load index.html or panels for tool: ${toolName}</p><p>Error: ${error.message}</p></div>`;
+        }
+    },
+
+    // Load tool HTML if index.html exists
+    async loadToolIndexHTML(toolName, toolContainer) {
+        console.log(`[ToolsService] Attempting to load index.html for tool: ${toolName}`);
+        
+        const htmlResponse = await fetch(`/static/tools/${toolName}/index.html`);
+        if (htmlResponse.ok) {
+            // index.html file exists, load it
+            const html = await htmlResponse.text();
+            toolContainer.innerHTML = html;
+            return true
+        } else {
+            return false; // Indicate that index.html was not found
+        }
+    },
+
+    // Try to load panels HTML for a tool that doesn't have HTML
+    async loadToolPanelsHTML(toolName, toolContainer) {
+        console.log(`[ToolsService] Attempting to load panels for tool: ${toolName}`);
+
+        // FIRST: Create the DOM structure so PanelsService.initForTool can find the elements
+        // const toolState = this.toolsState[toolName] || {};
+        const panelElement = this.createPanelsToolHTML();
+        toolContainer.appendChild(panelElement);
+
+        // THEN: Initialize panels (DOM now exists for initializeUI)
+        console.log(`[ToolsService] Calling PanelsService.initForTool for: ${toolName}`);
+        await PanelsService.initForTool(toolName);
+
+        // TODO: Need to show a nice html message if no panels were found
+        // Check if any panels were actually loaded
+        if (PanelsService.panelsState && PanelsService.panelsState.panelsInfo.size > 0) {
+            // Panels were found and initialized successfully
+            return true;
+        } else {
+            // No panels found, remove the DOM we just created
+            toolContainer.removeChild(panelElement);
+            return false;
+        }
+    },
+
+        // Create HTML for tools that use the panels system
+    createPanelsToolHTML() {
+        console.log('[ToolsService] Creating panels tool HTML structure');
+
         const container = document.createElement('div');
         container.className = 'panels-tool-container';
 
@@ -295,64 +257,11 @@ const ToolsService = {
         return container;
     },
 
-    // Load tool-specific content HTML
-    async loadToolHTML(toolName, toolContainer) {
-        try {
-            if (await this.loadToolIndexHTML(toolName, toolContainer)) {
-                return;
-            } else if (await this.loadToolPanels(toolName, toolContainer)) {
-                return;
-            } else {
-                // Fail to load index.html or panels, show error
-                toolContainer.innerHTML = `<div class="tool-error"><h3>Failed to load tool</h3><p>Could not load index.html or panels for tool: ${toolName}</p><p>Error: ${error.message}</p></div>`;
-            }
-        } catch (error) {
-            // Fail to load index.html or panels, show error
-            toolContainer.innerHTML = `<div class="tool-error"><h3>Failed to load tool</h3><p>Could not load index.html or panels for tool: ${toolName}</p><p>Error: ${error.message}</p></div>`;
-        }
-    },
-
-    // Load tool HTML if index.html exists
-    async loadToolIndexHTML(toolName, toolContainer) {
-        const htmlResponse = await fetch(`/static/tools/${toolName}/index.html`);
-        if (htmlResponse.ok) {
-            // index.html file exists, load it
-            const html = await htmlResponse.text();
-            toolContainer.innerHTML = html;
-            return true
-        } else {
-            return false; // Indicate that index.html was not found
-        }
-    },
-
-    // Try to load panels for a tool that doesn't have HTML
-    async loadToolPanels(toolName, toolContainer) {
-        // Check if PanelsService is available
-        if (typeof PanelsService === 'undefined') {
-            throw new Error('PanelsService not available');
-        }
-
-        // FIRST: Create the DOM structure so PanelsService.initForTool can find the elements
-        const toolInfo = this.toolsState[toolName] || {};
-        const panelElement = this.createPanelsToolHTML(toolName, toolInfo);
-        toolContainer.appendChild(panelElement);
-
-        // THEN: Initialize panels (DOM now exists for initializeUI)
-        await PanelsService.initForTool(toolName);
-
-        // Check if any panels were actually loaded
-        if (PanelsService.panelsState && PanelsService.panelsState.panelsInfo.size > 0) {
-            // Panels were found and initialized successfully
-            return true;
-        } else {
-            // No panels found, remove the DOM we just created
-            toolContainer.removeChild(panelElement);
-            return false;
-        }
-    },
 
     // Load tool-specific CSS
     async loadToolCSS(toolName) {
+        console.log(`[ToolsService] Loading CSS for tool: ${toolName}`);
+
         // Remove existing tool stylesheets
         const existingLink = document.querySelector(`link[data-tool="${toolName}"]`);
         if (existingLink) {
@@ -371,31 +280,60 @@ const ToolsService = {
     },
 
     // Load tool-specific JavaScript
-    async loadToolScript(toolName) {
+    async loadToolScript(toolName, toolContainer) {
+        console.log(`[ToolsService] Loading script for tool: ${toolName}`);
+
+        // Get toolState from state
+        const toolState = this.getToolState(toolName);
+        if (!toolState) {
+            console.warn(`Tool info not found for: ${toolName}`);
+            return;
+        }
+
         // Remove existing tool scripts
         const existingScript = document.querySelector(`script[data-tool="${toolName}"]`);
         if (existingScript) {
             existingScript.remove();
         }
 
-        const script = document.createElement('script');
-        script.src = `/static/tools/${toolName}/script.js`;
-        script.dataset.tool = toolName;
-        script.onerror = () => {
-            // Script not found or failed to load - this is expected for tools without JS
-        };
-        
-        document.head.appendChild(script);
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = `/static/tools/${toolName}/script.js`;
+            script.dataset.tool = toolName;
+            script.onload = async () => {
+                    try {
+                        // Get tool info from the loaded script
+                        const toolInfo = await this.getToolInfo(toolName);
+                        this.toolsState.toolInfo = toolInfo;
+                        toolInfo.init(toolContainer);  // <-- Pass the tool container to init
+                        resolve();
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                script.onerror = () => {
+                    reject(new Error(`Failed to load tool script: ${panelName}`));
+                };
+            
+            document.head.appendChild(script);
+        });
     },
 
-    // Show/hide loading state in tools list
-    showLoading(show) {
-        const toolsList = document.getElementById('toolsList');
-        if (!toolsList) return;
+    // Get tool information from loaded script
+    async getToolInfo(toolName) {
+        const toolObject = window['tool_script'];
 
-        if (show) {
-            toolsList.innerHTML = '<div class="loading-tools">Loading tools...</div>';
+        if (!toolObject) {
+            throw new Error(`Tool object not found: ${toolName}`);
         }
+
+        if (!toolObject.init || typeof toolObject.init !== 'function') {
+            throw new Error(`Tool ${toolName}: 'init' property is required and must be a function`);
+        }
+        
+        return {
+            init: toolObject.init.bind(toolObject),
+        };
     },
 
     // Show/hide loading overlay
@@ -406,42 +344,13 @@ const ToolsService = {
         }
     },
 
-    // Show error message
-    showError(message) {
-        console.error('Tools Service Error:', message);
-        // You could implement a toast notification or error display here
-        alert('Error: ' + message);
-    },
-
-    // Update tool header with icon and name
-    updateToolHeader(toolName) {
-        const toolInfo = this.toolsState[toolName];
-        if (!toolInfo) {
-            console.warn(`Tool info not found for: ${toolName}`);
-            return;
-        }
-
-        const toolIcon = document.getElementById('toolIcon');
-        const toolNameElement = document.getElementById('toolName');
-        const toolDescription = document.getElementById('toolDescription');
-        
-        if (toolIcon && toolInfo.icon) {
-            toolIcon.textContent = toolInfo.icon;
-        }
-        
-        if (toolNameElement && toolInfo.name) {
-            toolNameElement.textContent = toolInfo.name;
-        }
-
-        if (toolDescription && toolInfo.description) {
-            toolDescription.textContent = toolInfo.description;
-        }
-    },
-
     // Auto-select last used tool
     async autoSelectLastTool() {
+        console.log('[ToolsService] Attempting to auto-select last used tool');
+        
         const lastTool = StorageService.getAppPreference('lastSelectedTool');
-        if (lastTool && this.toolsState[lastTool]) {
+        const toolsState = this.getToolsState();
+        if (lastTool && toolsState[lastTool]) {
             await this.selectTool(lastTool);
         } else {
             // No tool selected, ensure welcome screen is visible
@@ -450,6 +359,19 @@ const ToolsService = {
             if (welcomeScreen) welcomeScreen.style.display = 'flex';
             if (toolContent) toolContent.style.display = 'none';
         }
+    },
+
+    // Tools state management methods
+    setToolsState(tools) {
+        this.toolsState = tools;
+    },
+
+    getToolsState() {
+        return this.toolsState;
+    },
+
+    getToolState(toolName) {
+        return this.toolsState[toolName] || null;
     }
 };
 

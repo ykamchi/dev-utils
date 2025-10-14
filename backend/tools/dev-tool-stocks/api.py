@@ -33,14 +33,22 @@ def register_apis(app, base_path):
                 'error': str(e)
             }), 500
 
-    @app.route(f'{base_path}/popular', methods=['GET'])
-    def get_popular_stocks_endpoint():
-        """Get list of popular stock symbols"""
+    @app.route(f'{base_path}/news', methods=['GET'])
+    def get_stock_news_endpoint():
+        """Get news for a stock symbol"""
         try:
-            popular_stocks = tool.get_popular_stocks()
+            symbol = request.args.get('symbol', 'AAPL')
+
+            if not symbol:
+                return jsonify({
+                    'success': False,
+                    'error': 'Symbol parameter is required'
+                }), 400
+
+            news_data = tool.get_stock_news(symbol)
             return jsonify({
                 'success': True,
-                'data': popular_stocks
+                'data': news_data
             })
         except Exception as e:
             return jsonify({

@@ -43,13 +43,3 @@ def register_apis(app, base_path):
                 'success': False,
                 'error': str(e)
             }), 500
-            return jsonify({
-                'success': True,
-                'data': memory_data
-            })
-            
-        except Exception as e:
-            return jsonify({
-                'success': False,
-                'error': str(e)
-            }), 500
