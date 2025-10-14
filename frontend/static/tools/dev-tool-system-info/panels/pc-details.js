@@ -8,8 +8,15 @@ window.pc_details = {
 
     // Initialize the panel
     init(container) {
+        console.log('[PC Details Panel] Initializing...');
+
         this.container = container;
         this.load(container);
+    },
+    
+    // Destroy the panel (cleanup)
+    destroy(container) {
+        console.log('[PC Details Panel] Destroying...');
     },
     
     // Buttons for collapsed mode (secondary toolbar)

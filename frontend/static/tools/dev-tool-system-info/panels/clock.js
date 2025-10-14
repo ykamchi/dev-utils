@@ -8,10 +8,19 @@ window.clock = {
 
     // Initialize the panel
     init(container) {
+        console.log('[Clock Panel] Initializing...');
+
         this.container = container;
         this.load(container);
     },
-    
+
+    // Destroy the panel (cleanup)
+    destroy(container) {
+        console.log('[Clock Panel] Destroying...');
+
+        this.stopClock();
+    },
+
     // Buttons for collapsed mode (secondary toolbar)
     collapseModeButtons: [
         {

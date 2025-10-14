@@ -7,6 +7,8 @@ const ToolsService = {
     
     // Initialize tool loader
     async init() {
+        console.log('[ToolsService] Initializing...');
+
         await this.loadWelcomeScreen();
     },
 
@@ -55,11 +57,26 @@ const ToolsService = {
     async selectTool(toolName) {
         console.log(`[ToolsService] Selecting tool: ${toolName}`);
 
+        // Store current active tool name to enable asynchronous cleanup
+        const currentTool = this.activeToolName;
+        const currentPanelsInfo = PanelsService.panelsState ? PanelsService.panelsState.panelsInfo : null;
+
         try {
             // Check if this is the same tool
-            if (this.activeToolName === toolName) {
+            if (currentTool === toolName) {
                 console.log(`[ToolsService] Tool ${toolName} is already active`);
                 return;
+            }
+
+            // Destroy the currently active tool before loading the new one
+            if (currentTool) {
+                console.log(`[ToolsService] Calling destroy on current tool: ${currentTool}`);
+
+                // Destroy all tool panels, if it is a panels-based tool
+                this.destroyPanels(currentTool, currentPanelsInfo);
+
+                // Destroy the tool
+                await this.destroyTool(currentTool);
             }
 
             // Get tool info from state
@@ -97,6 +114,48 @@ const ToolsService = {
             ToolsListService.showError(`Failed to load tool: ${toolName}`);
         } finally {
             this.showLoadingOverlay(false);
+        }
+    },
+
+    destroyPanels(toolName, panelsInfo) {
+        console.log(`[ToolsService] Cleaning up panels for tool: ${toolName}`);
+
+        // If no tool name provided, nothing to clean up
+        if (!toolName) {
+            console.log('[ToolsService] No tool name provided for panels cleanup');
+            return;
+        }
+
+        // If no panelsInfo provided, nothing to clean up
+        if (!panelsInfo) {
+            console.log('[ToolsService] No panelsInfo provided for panels cleanup');
+            return;
+        }
+
+        if (typeof PanelsService === 'undefined') {
+            console.log('[ToolsService] PanelsService is not defined, skipping panels cleanup');
+            return;
+        }
+        
+        // Clear global panel objects using the actual panel names from current state
+        // This is precise and only removes the panels that were actually loaded
+        for (const panelName of panelsInfo.keys()) {
+            console.log(`Cleaning up panel: ${panelName} for tool: ${toolName}`);
+
+            // Call panels destroy method and delete global reference
+            const panelObjectName = panelName.replace(/-/g, '_');
+            if (window[panelObjectName]) {
+                // Call destroy of the panel
+                window[panelObjectName].destroy();
+
+                // Remove global reference
+                delete window[panelObjectName];
+            }
+
+            // Remove the script of the panel from the document
+            const existingScripts = document.querySelectorAll(`script[src^="/static/tools/${toolName}/panels/${panelName}.js"]`);
+            existingScripts.forEach(script => script.remove());
+
         }
     },
 
@@ -166,7 +225,7 @@ const ToolsService = {
     // Load tool-specific content HTML. 
     // If index.html exists, load it. Otherwise, try to load panels.
     async loadToolHTML(toolName, toolContainer) {
-        console.log(`[ToolsService] Loading HTML for tool: ${toolName}`);
+        console.log(`[ToolsService] Loading HTML for tool: ${toolName} into the tool container`);
         
         try {
             if (await this.loadToolIndexHTML(toolName, toolContainer)) {
@@ -213,14 +272,14 @@ const ToolsService = {
     async loadToolPanelsHTML(toolName, toolContainer) {
         console.log(`[ToolsService] Attempting to load panels for tool: ${toolName}`);
 
-        // FIRST: Create the DOM structure so PanelsService.initForTool can find the elements
+        // FIRST: Create the DOM structure so PanelsService.init can find the elements
         // const toolState = this.toolsState[toolName] || {};
         const panelElement = this.createPanelsToolHTML();
         toolContainer.appendChild(panelElement);
 
         // THEN: Initialize panels (DOM now exists for initializeUI)
-        console.log(`[ToolsService] Calling PanelsService.initForTool for: ${toolName}`);
-        await PanelsService.initForTool(toolName);
+        console.log(`[ToolsService] Calling PanelsService.init for: ${toolName}`);
+        await PanelsService.init(toolName);
 
         // TODO: Need to show a nice html message if no panels were found
         // Check if any panels were actually loaded
@@ -330,10 +389,56 @@ const ToolsService = {
         if (!toolObject.init || typeof toolObject.init !== 'function') {
             throw new Error(`Tool ${toolName}: 'init' property is required and must be a function`);
         }
+
+        if (!toolObject.destroy || typeof toolObject.destroy !== 'function') {
+            throw new Error(`Tool ${toolName}: 'destroy' property is required and must be a function`);
+        }
         
         return {
             init: toolObject.init.bind(toolObject),
+            destroy: toolObject.destroy.bind(toolObject),
         };
+    },
+
+    // Destroy/unload a tool and clean up its resources
+    async destroyTool(toolName) {
+        console.log(`[ToolsService] Destroying tool: ${toolName}`);
+
+        try {
+            // Get the tool container
+            const toolContainer = document.querySelector('.tool-container');
+            if (!toolContainer) {
+                console.warn(`Tool container not found for tool: ${toolName}`);
+                return;
+            }
+
+            // Get stored tool info and call destroy method of the tool
+            const toolInfo = this.toolsState.toolInfo;
+            if (toolInfo && toolInfo.destroy) {
+                toolInfo.destroy(toolContainer);
+            }
+
+            // Remove tool-specific CSS
+            const existingLink = document.querySelector(`link[data-tool="${toolName}"]`);
+            if (existingLink) {
+                existingLink.remove();
+            }
+
+            // Remove tool-specific script
+            const existingScript = document.querySelector(`script[data-tool="${toolName}"]`);
+            if (existingScript) {
+                existingScript.remove();
+            }
+
+            // Clear tool content
+            const toolContent = document.getElementById('toolContent');
+            if (toolContent) {
+                toolContent.innerHTML = '';
+            }
+
+        } catch (error) {
+            console.error(`Error destroying tool ${toolName}:`, error);
+        }
     },
 
     // Show/hide loading overlay

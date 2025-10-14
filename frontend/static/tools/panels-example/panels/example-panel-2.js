@@ -4,6 +4,21 @@ window.example_panel_2 = {
     icon: '🎛️',
     description: 'Interactive controls and settings',
 
+    // Initialize the panel
+    init(container) {
+        console.log('[Panel 2] Initializing...');
+        this.container = container;
+        this.load(container);
+    },
+
+    // Destroy the panel (cleanup)
+    destroy(container) {
+        console.log('[Panel 2] Destroying...');
+
+        console.log('[Panel 2] Destroyed');
+    },
+
+
     // Buttons for collapsed mode (secondary toolbar)
     collapseModeButtons: [
         {
@@ -68,15 +83,6 @@ window.example_panel_2 = {
                 </div>
             </div>
         `;
-    },
-
-    // Initialize the panel
-    init(container) {
-        console.log('Panel 2 initialized');
-        // Initialize any interactive elements
-        this.currentVolume = 75;
-        this.currentTheme = 'light';
-        this.processStatus = 'Ready';
     },
 
     // Panel-specific methods

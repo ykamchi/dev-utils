@@ -163,7 +163,7 @@ The secondary toolbar appears at the top of panel-based tools and shows:
 
 The `PanelService` provides methods for managing panels:
 
-- `PanelService.initForTool(toolName)` - Initialize panels for a tool
+- `PanelService.init(toolName)` - Initialize panels for a tool
 - `PanelService.togglePanel(toolName, panelName)` - Toggle panel expansion
 - `PanelService.expandPanel(toolName, panelName)` - Expand a specific panel
 - `PanelService.collapsePanel(toolName)` - Collapse the current panel

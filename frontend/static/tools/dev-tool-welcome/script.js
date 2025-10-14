@@ -123,5 +123,11 @@ window.tool_script = {
         if (errorState) {
             errorState.style.display = 'none';
         }
+    },
+
+    // Destroy the welcome tool and clean up resources
+    destroy: function(container) {
+        console.log('[Welcome Tool] Destroying welcome tool...');
+        // No cleanup needed for welcome tool
     }
 };

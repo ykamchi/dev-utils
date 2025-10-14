@@ -8,8 +8,17 @@ window.network = {
 
     // Initialize the panel
     init(container) {
+        console.log('[Network Panel] Initializing...');
+
         this.container = container;
         this.load(container);
+    },
+
+    // Destroy the panel (cleanup)
+    destroy(container) {
+        console.log('[Network Panel] Destroying...');
+        
+        this.stopNetworkMonitor();
     },
 
     // Buttons for collapsed mode (secondary toolbar)

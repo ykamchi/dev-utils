@@ -282,5 +282,22 @@ window.tool_script = {
         if (content) {
             content.style.display = 'flex';  // Changed from 'block' to 'flex' to maintain flexbox layout
         }
+    },
+
+    // Destroy the stocks tool and clean up resources
+    destroy: function(container) {
+        console.log('[Stocks Tool] Destroying stocks tool...');
+        
+        // Stop polling
+        this.stopStocksPolling();
+        
+        // Disconnect observer
+        if (this.stocksObserver) {
+            this.stocksObserver.disconnect();
+            this.stocksObserver = null;
+        }
+        
+        // Reset state
+        this.isStocksInitialLoad = true;
     }
 };

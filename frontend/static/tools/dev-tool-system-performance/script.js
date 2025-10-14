@@ -30,7 +30,7 @@ window.tool_script = {
             await this.loadChartJS();
 
             // Listen for unload to clean up
-            window.addEventListener('beforeunload', () => this.cleanup());
+            window.addEventListener('beforeunload', () => this.destroy(container));
 
             // Fetch and show initial system info
             const info = await this.fetchInfo();
@@ -45,7 +45,9 @@ window.tool_script = {
     },
 
     // Cleanup function - called when the tool is unloaded
-    cleanup() {
+    destroy(container) {
+        console.log('[System Performance Tool] Destroying system performance tool...');
+        
         // Stop polling for data first
         this.stopPolling();
 
@@ -60,7 +62,7 @@ window.tool_script = {
         }
 
         // Remove the event listener
-        window.removeEventListener('beforeunload', () => this.cleanup());
+        window.removeEventListener('beforeunload', () => this.destroy(container));
     },
 
     /**

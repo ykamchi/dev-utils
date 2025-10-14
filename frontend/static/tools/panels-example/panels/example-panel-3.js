@@ -4,6 +4,20 @@ window.example_panel_3 = {
     icon: '🤖',
     description: 'AI Agents and automation tools',
 
+    // Initialize the panel
+    init(container) {
+        console.log('[Panel 3] Initializing...');
+        // Start activity feed updates
+        this.startActivityFeed();
+    },
+
+    // Destroy the panel (cleanup)
+    destroy(container) {
+        console.log('[Panel 3] Destroying...');
+
+        console.log('[Panel 3] Destroyed');
+    },
+
     // Buttons for collapsed mode (secondary toolbar)
     collapseModeButtons: [
         {
@@ -103,13 +117,6 @@ window.example_panel_3 = {
                 </div>
             </div>
         `;
-    },
-
-    // Initialize the panel
-    init(container) {
-        console.log('Special Agents Panel initialized');
-        // Start activity feed updates
-        this.startActivityFeed();
     },
 
     // Panel-specific methods

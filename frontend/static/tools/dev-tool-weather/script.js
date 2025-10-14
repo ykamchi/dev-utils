@@ -328,6 +328,21 @@ window.tool_script = {
         if (content) {
             content.style.display = 'flex';  // Changed from 'block' to 'flex' to maintain flexbox layout
         }
+    },
+
+    // Destroy the weather tool and clean up resources
+    destroy: function(container) {
+        console.log('[Weather Tool] Destroying weather tool...');
+        
+        // Stop polling
+        this.stopWeatherPolling();
+        
+        // Remove event listeners
+        window.removeEventListener('beforeunload', () => this.cleanupWeatherTool());
+        
+        // Reset state
+        this.isWeatherInitialLoad = true;
+        this.weatherScriptLoaded = false;
     }
 };
 

@@ -4,6 +4,21 @@ window.example_panel_1 = {
     icon: '📊',
     description: 'Basic information and statistics',
 
+    // Initialize the panel
+    init(container) {
+        console.log('[Panel 1] Initializing...');
+        this.container = container;
+        this.load(container);
+    },
+
+    // Destroy the panel (cleanup)
+    destroy(container) {
+        console.log('[Panel 1] Destroying...');
+
+
+        console.log('[Panel 1] Destroyed');
+    },
+
     // Buttons for collapsed mode (secondary toolbar)
     collapseModeButtons: [
         {
@@ -56,12 +71,6 @@ window.example_panel_1 = {
                 </div>
             </div>
         `;
-    },
-
-    // Initialize the panel
-    init(container) {
-        console.log('Panel 1 initialized');
-        // Add any initialization logic here
     },
 
     // Panel-specific methods

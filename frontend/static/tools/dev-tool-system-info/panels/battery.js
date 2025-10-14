@@ -8,8 +8,17 @@ window.battery = {
 
     // Initialize the panel
     init(container) {
+        console.log('[Battery Panel] Initializing...');
         this.container = container;
         this.load(container);
+    },
+
+    // Destroy the panel (cleanup)
+    destroy(container) {
+        console.log('[Battery Panel] Destroying...');
+        
+        this.stopBatteryMonitor();
+        console.log('Battery panel destroyed');
     },
 
     // Buttons for collapsed mode (secondary toolbar)

@@ -4,12 +4,16 @@
 const ToolsListService = {
     // Initialize tools list service
     async init() {
+        console.log('[Tools List Service] Initializing...');
+
         this.bindEvents();
         await this.loadAndRenderTools();
     },
 
     // Load tools and render the list
     async loadAndRenderTools() {
+        console.log('[Tools List Service] Loading and rendering tools into the drawer...');
+
         this.showLoading(true);
         const success = await ToolsService.loadTools();
         this.showLoading(false);

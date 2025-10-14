@@ -8,10 +8,11 @@ const PanelsService = {
     dragState: null, // For drag and drop
 
     // Initialize panel service for a specific tool
-    async initForTool(toolName) {
-        console.log(`Initializing PanelsService for tool: ${toolName}`);
-        // Clean up panels from the previous tool before initializing the new one
-        this.cleanupPanelScriptsForTool(this.toolName);
+    async init(toolName) {
+        console.log(`[PanelsService] Initializing PanelsService for tool: ${toolName}`);
+
+        // Destroy panels from the previous tool before initializing the new one
+        // this.destroyPanels(this.toolName);
 
         // Set new tool name
         this.toolName = toolName; 
@@ -29,15 +30,17 @@ const PanelsService = {
         // Always discover and load panels for this tool
         await this.discoverPanels();
 
+        // Always reinitialize UI since DOM may have been recreated
         setTimeout(() => {
-            // Always reinitialize UI since DOM may have been recreated
-            this.initializeUI();
+            this.initializeUI();    
         }, 100);
         
     },
 
     // Discover panels for a tool
     async discoverPanels() {
+        console.log(`[PanelsService] Discovering panels for tool: ${this.toolName}`);
+
         try {
             // Get panels from backend API
             const response = await fetch(`/api/tools/${this.toolName}/panels`);
@@ -49,59 +52,42 @@ const PanelsService = {
                         try {
                             await this.loadPanelInfo(panelName);
                         } catch (error) {
-                            console.warn(`Failed to load panel: ${panelName}`, error);
+                            console.warn(`[PanelsService] Failed to load panel: ${panelName}`, error);
                         }
                     }
                 }
             } else {
-                console.warn(`Failed to fetch panels for ${this.toolName}: ${response.status}`);
+                console.warn(`[PanelsService] Failed to fetch panels for ${this.toolName}: ${response.status}`);
             }
         } catch (error) {
-            console.error(`Error discovering panels for ${this.toolName}:`, error);
-        }
-    },
-
-    cleanupPanelScriptsForTool(toolName) {
-        // If no tool name provided, nothing to clean up
-        if (!toolName) return;
-
-        console.log(`Cleaning up previous panel scripts and data for tool: ${toolName}`);
-
-        
-        // Clear global panel objects using the actual panel names from current state
-        // This is precise and only removes the panels that were actually loaded
-        if (this.panelsState && this.panelsState.panelsInfo) {
-            for (const panelName of this.panelsState.panelsInfo.keys()) {
-                console.log(`Cleaning up panel: ${panelName} for tool: ${toolName}`);
-                // Remove previously loaded panel scripts from the document for this specific tool
-                const existingScripts = document.querySelectorAll(`script[src^="/static/tools/${toolName}/panels/${panelName}.js"]`);
-                existingScripts.forEach(script => script.remove());
-                const panelObjectName = panelName.replace(/-/g, '_');
-                if (window[panelObjectName]) {
-                    delete window[panelObjectName];
-                }
-            }
+            console.error(`[PanelsService] Error discovering panels for ${this.toolName}:`, error);
         }
     },
 
     // Load a single panel
     async loadPanelInfo(panelName) {
+        console.log(`[PanelsService] Loading panel info for: ${panelName}`);
+
         return new Promise((resolve, reject) => {
-            console.log(`Loading panel script: ${panelName}`);
+            console.log(`[PanelsService] Loading panel script: ${panelName}`);
             const script = document.createElement('script');
             script.src = `/static/tools/${this.toolName}/panels/${panelName}.js`;
             script.onload = async () => {
                 try {
                     // Get panel info from the loaded script
                     const panelInfo = await this.getPanelInfo(panelName);
+
+                    // Store panel info
                     this.panelsState.panelsInfo.set(panelName, panelInfo);
+                    console.log(`[PanelsService] Loaded panel: ${panelName} with panel info: `, panelInfo);
+
                     resolve();
                 } catch (error) {
                     reject(error);
                 }
             };
             script.onerror = () => {
-                reject(new Error(`Failed to load panel script: ${panelName}`));
+                reject(new Error(`[PanelsService] Failed to load panel script: ${panelName}`));
             };
             document.head.appendChild(script);
         });
@@ -109,36 +95,41 @@ const PanelsService = {
 
     // Get panel information from loaded script
     async getPanelInfo(panelName) {
+        console.log(`[PanelsService] Getting panel info for: ${panelName}`);
+
         // Convert panel filename to global object name (hyphens become underscores)
         // e.g., 'panel-1' becomes 'panel_1' to match the global object defined in the script
         const panelObjectName = panelName.replace(/-/g, '_');
         const panelObject = window[panelObjectName];
 
         if (!panelObject) {
-            throw new Error(`Panel object not found: ${panelObjectName}`);
+            throw new Error(`[PanelsService] Panel object not found: ${panelObjectName}`);
         }
 
         // Required fields - throw errors if missing
         if (!panelObject.name || typeof panelObject.name !== 'string') {
-            throw new Error(`Panel ${panelName}: 'name' property is required and must be a string`);
+            throw new Error(`[PanelsService] Panel ${panelName}: 'name' property is required and must be a string`);
         }
         if (!panelObject.icon || typeof panelObject.icon !== 'string') {
-            throw new Error(`Panel ${panelName}: 'icon' property is required and must be a string`);
+            throw new Error(`[PanelsService] Panel ${panelName}: 'icon' property is required and must be a string`);
         }
         if (!panelObject.render || typeof panelObject.render !== 'function') {
-            throw new Error(`Panel ${panelName}: 'render' property is required and must be a function`);
+            throw new Error(`[PanelsService] Panel ${panelName}: 'render' property is required and must be a function`);
         }
         if (!panelObject.description || typeof panelObject.description !== 'string') {
-            throw new Error(`Panel ${panelName}: 'description' property is required and must be a string`);
+            throw new Error(`[PanelsService] Panel ${panelName}: 'description' property is required and must be a string`);
         }
         if (!panelObject.init || typeof panelObject.init !== 'function') {
-            throw new Error(`Panel ${panelName}: 'init' property is required and must be a function`);
+            throw new Error(`[PanelsService] Panel ${panelName}: 'init' property is required and must be a function`);
+        }
+        if (!panelObject.destroy || typeof panelObject.destroy !== 'function') {
+            throw new Error(`[PanelsService] Panel ${panelName}: 'destroy' property is required and must be a function`);
         }
         if (!Array.isArray(panelObject.collapseModeButtons)) {
-            throw new Error(`Panel ${panelName}: 'collapseModeButtons' property is required and must be an array`);
+            throw new Error(`[PanelsService] Panel ${panelName}: 'collapseModeButtons' property is required and must be an array`);
         }
         if (!Array.isArray(panelObject.expandModeButtons)) {
-            throw new Error(`Panel ${panelName}: 'expandModeButtons' property is required and must be an array`);
+            throw new Error(`[PanelsService] Panel ${panelName}: 'expandModeButtons' property is required and must be an array`);
         }
 
         return {
@@ -154,6 +145,8 @@ const PanelsService = {
 
     // Add view mode controls to tool header
     addViewModeControls() {
+        console.log('[PanelsService] Adding view mode controls to tool header');
+
         // Remove any existing toolbar-left-section to prevent duplicates
         const existingLeftSection = document.querySelector('.toolbar-left-section');
         if (existingLeftSection) {
@@ -163,18 +156,34 @@ const PanelsService = {
         // Create left section for view mode controls
         const leftSection = document.createElement('div');
         leftSection.className = 'toolbar-left-section';
-        leftSection.innerHTML = `
-            <div class="view-mode-controls">
-                <div class="view-mode-buttons">
-                    <button class="view-mode-btn ${this.currentViewMode === 'vertical' ? 'active' : ''}" 
-                            data-mode="vertical" title="Vertical Layout">Vertical</button>
-                    <button class="view-mode-btn ${this.currentViewMode === 'horizontal' ? 'active' : ''}" 
-                            data-mode="horizontal" title="Horizontal Layout">Horizontal</button>
-                    <button class="view-mode-btn ${this.currentViewMode === 'grid' ? 'active' : ''}" 
-                            data-mode="grid" title="Grid Layout">Grid</button>
-                </div>
-            </div>
-        `;
+
+        // Create view mode controls container
+        const viewModeControls = document.createElement('div');
+        viewModeControls.className = 'view-mode-controls';
+
+        // Create view mode buttons container
+        const viewModeButtons = document.createElement('div');
+        viewModeButtons.className = 'view-mode-buttons';
+
+        // Create buttons
+        const modes = [
+            { mode: 'vertical', title: 'Vertical Layout', text: 'Vertical' },
+            { mode: 'horizontal', title: 'Horizontal Layout', text: 'Horizontal' },
+            { mode: 'grid', title: 'Grid Layout', text: 'Grid' }
+        ];
+
+        modes.forEach(({ mode, title, text }) => {
+            const button = document.createElement('button');
+            button.className = `view-mode-btn ${this.currentViewMode === mode ? 'active' : ''}`;
+            button.setAttribute('data-mode', mode);
+            button.setAttribute('title', title);
+            button.textContent = text;
+            viewModeButtons.appendChild(button);
+        });
+
+        // Assemble the structure
+        viewModeControls.appendChild(viewModeButtons);
+        leftSection.appendChild(viewModeControls);
 
         // Add to tool header after tool-description
         const toolHeader = document.querySelector('.tool-header');
@@ -199,6 +208,8 @@ const PanelsService = {
 
     // Initialize UI for panels
     initializeUI() {
+        console.log('[PanelsService] Initializing UI for panels');
+        
         // Load view mode preference
         this.loadViewModePreference();
 
