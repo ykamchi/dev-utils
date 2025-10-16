@@ -5,6 +5,7 @@ window.pc_details = {
     description: 'Comprehensive hardware and operating system information',
     currentTab: 'hardware',
     container: null,
+    intervalId: null,
 
     // Initialize the panel
     init(container) {
@@ -17,6 +18,7 @@ window.pc_details = {
     // Destroy the panel (cleanup)
     destroy(container) {
         console.log('[PC Details Panel] Destroying...');
+        this.stopIntervals();
     },
     
     // Buttons for collapsed mode (secondary toolbar)
@@ -40,11 +42,13 @@ window.pc_details = {
     // onExpand event triggered
     async onExpand() {
         console.log('[PC Details Panel] Expanded');
+        await this.startIntervals();
     },
 
     // onCollapse event triggered
     onCollapse() {
         console.log('[PC Details Panel] Collapsed');
+        this.stopIntervals();
     },
 
 
@@ -171,6 +175,25 @@ window.pc_details = {
     // Refresh data
     async refreshData() {
         await this.loadData();
+    },
+
+    // Start automatic data updates
+    async startIntervals() {
+        // Initial load
+        await this.refreshData();
+
+        // Set up interval for updates every 30 seconds
+        this.intervalId = setInterval(async () => {
+            await this.refreshData();
+        }, 30000);
+    },
+
+    // Stop automatic data updates
+    stopIntervals() {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = null;
+        }
     },
 
     // Load hardware information
