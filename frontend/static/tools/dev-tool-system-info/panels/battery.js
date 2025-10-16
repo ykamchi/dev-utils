@@ -39,6 +39,17 @@ window.battery = {
         }
     ],
 
+    // onExpand event triggered
+    async onExpand() {
+        console.log('[Battery Panel] Expanded');
+    },
+
+    // onCollapse event triggered
+    onCollapse() {
+        console.log('[Battery Panel] Collapsed');
+    },
+
+
     // Panel state
     showDetails: true,
 

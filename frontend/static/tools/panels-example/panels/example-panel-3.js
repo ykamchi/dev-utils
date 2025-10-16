@@ -46,6 +46,16 @@ window.example_panel_3 = {
         }
     ],
 
+    // onExpand event triggered
+    async onExpand() {
+        console.log('[Panel 3] Expanded');
+    },
+
+    // onCollapse event triggered
+    onCollapse() {
+        console.log('[Panel 3] Collapsed');
+    },
+
     // Render the panel content
     render() {
         return `

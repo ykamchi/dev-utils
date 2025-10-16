@@ -22,9 +22,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.log('[main] Tools Service init called');
 
         // Auto-select last used tool after a short delay
-        setTimeout(() => {
-            ToolsService.autoSelectLastTool();
-        }, 500);
+        ToolsService.autoSelectLastTool();
 
         console.log('[main] Dev Tools App - Initialization complete');
 

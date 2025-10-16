@@ -7,7 +7,7 @@ window.clock = {
     container: null,
 
     // Initialize the panel
-    init(container) {
+    async init(container) {
         console.log('[Clock Panel] Initializing...');
 
         this.container = container;
@@ -38,6 +38,19 @@ window.clock = {
             icon: "⚙️"
         }
     ],
+
+    // onExpand event triggered
+    async onExpand() {
+        console.log('[Clock Panel] Expanded');
+        await this.startClock();
+    },
+
+    // onCollapse event triggered
+    async onCollapse() {
+        console.log('[Clock Panel] Collapsed');
+        this.stopClock();
+    },
+
 
     // Panel state
     use24Hour: true,
@@ -76,7 +89,7 @@ window.clock = {
     async load(container) {
         try {
             container.innerHTML = this.render();
-            await this.startClock();
+            
         } catch (error) {
             container.innerHTML = '<p>Error loading clock panel</p>';
             console.error('Clock panel error:', error);

@@ -39,6 +39,19 @@ window.network = {
         }
     ],
 
+    // onExpand event triggered
+    async onExpand() {
+        console.log('[Network Panel] Expanded');
+        await this.startNetworkMonitor();
+    },
+
+    // onCollapse event triggered
+    async onCollapse() {
+        console.log('[Network Panel] Collapsed');
+        this.stopNetworkMonitor();
+    },
+
+
     // Panel state
     showDetails: true,
 
@@ -91,7 +104,6 @@ window.network = {
     async load(container) {
         try {
             container.innerHTML = this.render();
-            await this.startNetworkMonitor();
         } catch (error) {
             container.innerHTML = '<p>Error loading network panel</p>';
             console.error('Network panel error:', error);

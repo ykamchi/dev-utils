@@ -262,7 +262,7 @@ const ToolsService = {
             // index.html file exists, load it
             const html = await htmlResponse.text();
             toolContainer.innerHTML = html;
-            return true
+            return true;
         } else {
             return false; // Indicate that index.html was not found
         }

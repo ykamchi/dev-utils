@@ -11,9 +11,6 @@ const PanelsService = {
     async init(toolName) {
         console.log(`[PanelsService] Initializing PanelsService for tool: ${toolName}`);
 
-        // Destroy panels from the previous tool before initializing the new one
-        // this.destroyPanels(this.toolName);
-
         // Set new tool name
         this.toolName = toolName; 
 
@@ -33,7 +30,7 @@ const PanelsService = {
         // Always reinitialize UI since DOM may have been recreated
         setTimeout(() => {
             this.initializeUI();    
-        }, 100);
+        });
         
     },
 
@@ -76,7 +73,7 @@ const PanelsService = {
                 try {
                     // Get panel info from the loaded script
                     const panelInfo = await this.getPanelInfo(panelName);
-
+                    
                     // Store panel info
                     this.panelsState.panelsInfo.set(panelName, panelInfo);
                     console.log(`[PanelsService] Loaded panel: ${panelName} with panel info: `, panelInfo);
@@ -131,6 +128,12 @@ const PanelsService = {
         if (!Array.isArray(panelObject.expandModeButtons)) {
             throw new Error(`[PanelsService] Panel ${panelName}: 'expandModeButtons' property is required and must be an array`);
         }
+        if (typeof panelObject.onExpand !== 'function') {
+            throw new Error(`[PanelsService] Panel ${panelName}: 'onExpand' property is required and must be a function`);
+        }
+        if (typeof panelObject.onCollapse !== 'function') {
+            throw new Error(`[PanelsService] Panel ${panelName}: 'onCollapse' property is required and must be a function`);
+        }
 
         return {
             name: panelObject.name,
@@ -139,7 +142,9 @@ const PanelsService = {
             render: panelObject.render.bind(panelObject),
             init: panelObject.init.bind(panelObject),
             collapseModeButtons: panelObject.collapseModeButtons,
-            expandModeButtons: panelObject.expandModeButtons
+            expandModeButtons: panelObject.expandModeButtons,
+            onExpand: panelObject.onExpand.bind(panelObject),
+            onCollapse: panelObject.onCollapse.bind(panelObject)
         };
     },
 
@@ -211,7 +216,7 @@ const PanelsService = {
         console.log('[PanelsService] Initializing UI for panels');
         
         // Load view mode preference
-        this.loadViewModePreference();
+        this.currentViewMode = StorageService.getLocalStorageItem(`panels-view-mode-${this.toolName}`, 'vertical');
 
         // Get fresh DOM references since they may have been recreated
         this.panelsState.secondaryToolbar = document.getElementById('secondaryToolbar');
@@ -246,6 +251,11 @@ const PanelsService = {
 
         // Set initial state - expand first panel
         const firstPanel = this.panelsState.panelsInfo.keys().next().value;
+
+        const panelsContainer = this.createPanelsContainer();
+
+        this.initializeDragAndDrop();
+
         if (firstPanel) {
             this.expandPanel(firstPanel);
         }
@@ -275,6 +285,8 @@ const PanelsService = {
 
     // Create a collapsed panel button for the secondary toolbar
     createCollapsedPanel(panelName, panelInfo) {
+        console.log(`[PanelsService] Creating collapsed panel button for: ${panelName}`);
+
         const panelButton = document.createElement('div');
         panelButton.className = 'collapsed-panel collapsed';
         panelButton.dataset.panelName = panelName;
@@ -319,6 +331,8 @@ const PanelsService = {
 
     // Expand a panel
     expandPanel(panelName) {
+        console.log(`[PanelsService] Expanding panel: ${panelName}`);
+
         const panelInfo = this.panelsState.panelsInfo.get(panelName);
         if (!panelInfo) return;
 
@@ -332,13 +346,21 @@ const PanelsService = {
         }
         this.panelsState.expandOrder.push(panelName);
 
-        // Update UI
-        this.updateCollapsedPanels();
-        this.updatePanelContent();
+        // Update UI - remove from collapsed, add to expanded
+        this.removePanelFromCollapsedContainer(panelName);
+        this.addPanelToPanelsContainer(panelName);        
+        
+        // Trigger onExpand event to the panel
+        panelInfo.onExpand();
     },
 
     // Collapse a specific panel
     collapsePanel(panelName) {
+        console.log(`[PanelsService] Collapsing panel: ${panelName}`);
+
+        const panelInfo = this.panelsState.panelsInfo.get(panelName);
+        if (!panelInfo) return;
+
         // Remove from expanded panels
         this.panelsState.expandedPanels.delete(panelName);
 
@@ -361,33 +383,18 @@ const PanelsService = {
             return;
         }
 
-        // Update UI
-        this.updateCollapsedPanels();
-        this.updatePanelContent();
+        // Update UI - remove from expanded, add to collapsed
+        this.addPanelToCollapsedContainer(panelName);
+        this.removePanelFromPanelsContainer(panelName);        
+        
+        // Trigger onCollapse event to the panel
+        panelInfo.onCollapse();
     },
 
-    // Update collapsed panel states - only show collapsed panels
-    updateCollapsedPanels() {
-        // Clear existing panels
-        const collapsedContainer = this.panelsState.secondaryToolbar.querySelector('#collapsedPanelsContainer');
-        if (collapsedContainer) {
-            collapsedContainer.innerHTML = '';
-        }
+    // Create and setup the panels container
+    createPanelsContainer() {
+        console.log('[PanelsService] Creating panels container');
 
-        // Create panels only for collapsed panels, ordered by collapse order
-        for (const panelName of this.panelsState.collapseOrder) {
-            if (!this.panelsState.expandedPanels.has(panelName)) {
-                const panelInfo = this.panelsState.panelsInfo.get(panelName);
-                if (panelInfo) {
-                    const panelButton = this.createCollapsedPanel(panelName, panelInfo);
-                    collapsedContainer.appendChild(panelButton);
-                }
-            }
-        }
-    },
-
-    // Update all panel content based on expand order
-    updatePanelContent() {
         // Clear content area
         this.panelsState.contentArea.innerHTML = '';
 
@@ -395,26 +402,83 @@ const PanelsService = {
         const panelsContainer = document.createElement('div');
         panelsContainer.className = `expanded-panels-container view-mode-${this.currentViewMode}`;
 
-        // Render expanded panels in expand order
-        for (const panelName of this.panelsState.expandOrder) {
-            if (this.panelsState.expandedPanels.has(panelName)) {
-                const panelElement = this.createPanelElement(panelName);
-                if (panelElement) {
-                    panelsContainer.appendChild(panelElement);
-                } else {
-                    console.error(`Failed to create panel element for: ${panelName}`);
-                }
-            }
-        }
-
         this.panelsState.contentArea.appendChild(panelsContainer);
 
-        // Initialize drag and drop
+        return panelsContainer;
+    },
+
+    // Add a panel to the existing panels container
+    addPanelToPanelsContainer(panelName) {
+        console.log(`[PanelsService] Adding panel to panels container: ${panelName}`);
+
+        const panelsContainer = this.panelsState.contentArea.querySelector('.expanded-panels-container');
+        if (!panelsContainer) {
+            console.error('Panels container not found');
+            return;
+        }
+
+        const panelElement = this.createPanelElement(panelName);
+        if (panelElement) {
+            panelsContainer.appendChild(panelElement);
+        }
+
         this.initializeDragAndDrop();
+    },
+
+    // Remove a panel from the panels container
+    removePanelFromPanelsContainer(panelName) {
+        console.log(`[PanelsService] Removing panel from panels container: ${panelName}`);
+
+        const panelsContainer = this.panelsState.contentArea.querySelector('.expanded-panels-container');
+        if (!panelsContainer) {
+            console.error('Panels container not found');
+            return;
+        }
+
+        const panelElement = panelsContainer.querySelector(`[data-panel-name="${panelName}"]`);
+        if (panelElement) {
+            panelsContainer.removeChild(panelElement);
+        }
+        
+    },
+
+    // Add a panel to the collapsed container
+    addPanelToCollapsedContainer(panelName) {
+        console.log(`[PanelsService] Adding panel to collapsed container: ${panelName}`);
+
+        const collapsedContainer = this.panelsState.secondaryToolbar.querySelector('#collapsedPanelsContainer');
+        if (!collapsedContainer) {
+            console.error('Collapsed container not found');
+            return;
+        }
+
+        const panelInfo = this.panelsState.panelsInfo.get(panelName);
+        if (!panelInfo) return;
+
+        const panelButton = this.createCollapsedPanel(panelName, panelInfo);
+        collapsedContainer.appendChild(panelButton);
+    },
+
+    // Remove a panel from the collapsed container
+    removePanelFromCollapsedContainer(panelName) {
+        console.log(`[PanelsService] Removing panel from collapsed container: ${panelName}`);
+
+        const collapsedContainer = this.panelsState.secondaryToolbar.querySelector('#collapsedPanelsContainer');
+        if (!collapsedContainer) {
+            console.error('Collapsed container not found');
+            return;
+        }
+
+        const panelElement = collapsedContainer.querySelector(`[data-panel-name="${panelName}"]`);
+        if (panelElement) {
+            collapsedContainer.removeChild(panelElement);
+        }
     },
 
     // Create a panel element for expanded display
     createPanelElement(panelName) {
+        console.log(`[PanelsService] Creating panel element for: ${panelName}`);
+
         const panelInfo = this.panelsState.panelsInfo.get(panelName);
         if (!panelInfo) {
             console.error(`Failed to create panel element for: ${panelName}`);
@@ -466,6 +530,8 @@ const PanelsService = {
 
     // Create panel header with emoji, name, and collapse button
     createPanelHeader(panelName) {
+        console.log(`[PanelsService] Creating panel header for: ${panelName}`);
+
         const panelInfo = this.panelsState.panelsInfo.get(panelName);
         if (!panelInfo) {
             console.error(`Failed to create panel header for: ${panelName}`);
@@ -545,43 +611,27 @@ const PanelsService = {
 
     // Set view mode
     setViewMode(mode) {
+        console.log(`[PanelsService] Setting view mode to: ${mode}`);
+
         if (!['vertical', 'horizontal', 'grid'].includes(mode)) {
             console.error(`Invalid view mode: ${mode}`);
             return;
         }
         this.currentViewMode = mode;
-        this.updatePanelContent();
-        this.saveViewModePreference();
-    },
-
-    // Get current view mode
-    getViewMode() {
-        return this.currentViewMode;
-    },
-
-    // Save view mode preference to localStorage
-    saveViewModePreference() {
-        try {
-            localStorage.setItem(`panels-view-mode-${this.toolName}`, this.currentViewMode);
-        } catch (error) {
-            console.warn('Failed to save view mode preference:', error);
+        
+        // Update the class on the existing panels container instead of re-rendering
+        const container = this.panelsState.contentArea.querySelector('.expanded-panels-container');
+        if (container) {
+            container.className = `expanded-panels-container view-mode-${mode}`;
         }
-    },
-
-    // Load view mode preference from localStorage
-    loadViewModePreference() {
-        try {
-            const saved = localStorage.getItem(`panels-view-mode-${this.toolName}`);
-            if (saved && ['vertical', 'horizontal', 'grid'].includes(saved)) {
-                this.currentViewMode = saved;
-            }
-        } catch (error) {
-            console.warn('Failed to load view mode preference:', error);
-        }
+        
+        StorageService.setLocalStorageItem(`panels-view-mode-${this.toolName}`, this.currentViewMode);
     },
 
     // Initialize drag and drop for panels
     initializeDragAndDrop() {
+        console.log('[PanelsService] Initializing drag and drop for panels');
+
         const container = this.panelsState.contentArea.querySelector('.expanded-panels-container');
         if (!container) return;
 
@@ -650,15 +700,29 @@ const PanelsService = {
 
         const dropPanel = dropTarget.dataset.panelName;
         
-        // Reorder panels
-        this.reorderPanels(draggedPanel, dropPanel);
+        // Determine if we should insert before or after based on mouse position
+        const rect = dropTarget.getBoundingClientRect();
+        const isAfter = e.clientX > rect.left + rect.width / 2;
         
-        // Update UI
-        this.updatePanelContent();
+        // Reorder panels
+        this.reorderPanels(draggedPanel, dropPanel, isAfter);
+        
+        // Move the DOM element instead of recreating all panels
+        const draggedElement = this.dragState.draggedElement;
+        if (draggedElement && dropTarget) {
+            const parent = dropTarget.parentNode;
+            if (isAfter) {
+                parent.insertBefore(draggedElement, dropTarget.nextSibling);
+            } else {
+                parent.insertBefore(draggedElement, dropTarget);
+            }
+        }
     },
 
     // Reorder panels in expand order
-    reorderPanels(draggedPanel, targetPanel) {
+    reorderPanels(draggedPanel, targetPanel, insertAfter = false) {
+        console.log(`[PanelsService] Reordering panels: ${draggedPanel} -> ${targetPanel}, insertAfter: ${insertAfter}`);
+
         const currentIndex = this.panelsState.expandOrder.indexOf(draggedPanel);
         const targetIndex = this.panelsState.expandOrder.indexOf(targetPanel);
 
@@ -667,8 +731,9 @@ const PanelsService = {
         // Remove dragged panel from current position
         this.panelsState.expandOrder.splice(currentIndex, 1);
 
-        // Insert at target position
-        this.panelsState.expandOrder.splice(targetIndex, 0, draggedPanel);
+        // Insert at target position (after if insertAfter is true)
+        const insertPosition = insertAfter ? targetIndex + 1 : targetIndex;
+        this.panelsState.expandOrder.splice(insertPosition, 0, draggedPanel);
     }
 };
 

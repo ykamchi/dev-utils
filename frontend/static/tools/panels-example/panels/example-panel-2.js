@@ -8,7 +8,6 @@ window.example_panel_2 = {
     init(container) {
         console.log('[Panel 2] Initializing...');
         this.container = container;
-        this.load(container);
     },
 
     // Destroy the panel (cleanup)
@@ -46,6 +45,16 @@ window.example_panel_2 = {
             icon: "📤"
         }
     ],
+
+    // onExpand event triggered
+    async onExpand() {
+        console.log('[Panel 2] Expanded');
+    },
+
+    // onCollapse event triggered
+    onCollapse() {
+        console.log('[Panel 2] Collapsed');
+    },
 
     // Render the panel content
     render() {

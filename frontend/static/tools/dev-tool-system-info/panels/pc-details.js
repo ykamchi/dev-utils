@@ -37,6 +37,17 @@ window.pc_details = {
         }
     ],
 
+    // onExpand event triggered
+    async onExpand() {
+        console.log('[PC Details Panel] Expanded');
+    },
+
+    // onCollapse event triggered
+    onCollapse() {
+        console.log('[PC Details Panel] Collapsed');
+    },
+
+
     // Render the panel content
     render() {
         return `
