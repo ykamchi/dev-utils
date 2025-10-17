@@ -22,18 +22,12 @@ window.clock = {
     },
 
     // Buttons for collapsed mode (secondary toolbar)
-    collapseModeButtons: [
-        {
-            callback: function() { window.clock.refreshTime(); },
-            title: "Refresh Time",
-            icon: "🔄"
-        }
-    ],
+    collapseModeButtons: [],
 
     // Buttons for expanded mode (panel header)
     expandModeButtons: [
         {
-            callback: function() { window.clock.toggleFormat(); },
+            callback: function() { this.toggleFormat(); },
             title: "Toggle Format",
             icon: "⚙️"
         }

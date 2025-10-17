@@ -21,12 +21,12 @@ window.example_panel_2 = {
     // Buttons for collapsed mode (secondary toolbar)
     collapseModeButtons: [
         {
-            callback: function() { panel_2.updateMetrics(); },
+            callback: function() { this.updateMetrics(); },
             title: "Update",
             icon: "📊"
         },
         {
-            callback: function() { panel_2.saveConfig(); },
+            callback: function() { this.saveConfig(); },
             title: "Save",
             icon: "💾"
         }
@@ -35,12 +35,12 @@ window.example_panel_2 = {
     // Buttons for expanded mode (panel header)
     expandModeButtons: [
         {
-            callback: function() { panel_2.resetChart(); },
+            callback: function() { this.resetChart(); },
             title: "Reset Chart",
             icon: "📈"
         },
         {
-            callback: function() { panel_2.exportChart(); },
+            callback: function() { this.exportChart(); },
             title: "Export",
             icon: "📤"
         }

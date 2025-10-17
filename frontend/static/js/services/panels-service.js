@@ -262,11 +262,15 @@ const PanelsService = {
     },
 
     // Helper function to generate button elements from button objects
-    generateButtons(buttons) {
+    generateButtons(buttons, panelName) {
         if (!buttons || !Array.isArray(buttons)) return null;
 
         const container = document.createElement('div');
         container.className = 'panel-buttons';
+
+        // Get the panel object from the global window
+        const panelObjectName = panelName.replace(/-/g, '_');
+        const panelObject = window[panelObjectName];
 
         buttons.forEach((button, index) => {
             const btnElement = document.createElement('button');
@@ -275,7 +279,9 @@ const PanelsService = {
             btnElement.textContent = button.icon;
             btnElement.addEventListener('click', (e) => {
                 e.stopPropagation();
-                button.callback();
+                if (panelObject && typeof button.callback === 'function') {
+                    button.callback.call(panelObject);
+                }
             });
             container.appendChild(btnElement);
         });
@@ -303,7 +309,7 @@ const PanelsService = {
 
         // Add buttons if they exist
         if (panelInfo.collapseModeButtons) {
-            const buttonsContainer = this.generateButtons(panelInfo.collapseModeButtons);
+            const buttonsContainer = this.generateButtons(panelInfo.collapseModeButtons, panelName);
             if (buttonsContainer) {
                 buttonsContainer.className = 'collapsed-panel-buttons';
                 panelButton.appendChild(buttonsContainer);
@@ -566,13 +572,25 @@ const PanelsService = {
         // Create buttons container or a placeholder div if no buttons are defined for expandModeButtons
         let buttonsContainer;
         if (panelInfo.expandModeButtons) {
-            buttonsContainer = this.generateButtons(panelInfo.expandModeButtons);
+            buttonsContainer = this.generateButtons(panelInfo.expandModeButtons, panelName);
         } else {
             buttonsContainer = document.createElement('div');
         }
 
         if (buttonsContainer) {
             buttonsContainer.className = 'panel-header-buttons';
+
+            // Add information button
+            const infoBtn = document.createElement('button');
+            infoBtn.className = 'panel-header-button';
+            infoBtn.title = 'Panel information';
+            infoBtn.dataset.panel = panelName;
+            infoBtn.textContent = '❔';
+            infoBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.showPanelInfo(panelName, infoBtn);
+            });
+            buttonsContainer.appendChild(infoBtn);
 
             // Add collapse button to the same container
             const collapseBtn = document.createElement('button');
@@ -734,6 +752,84 @@ const PanelsService = {
         // Insert at target position (after if insertAfter is true)
         const insertPosition = insertAfter ? targetIndex + 1 : targetIndex;
         this.panelsState.expandOrder.splice(insertPosition, 0, draggedPanel);
+    },
+
+    // Show panel information popup
+    showPanelInfo(panelName, buttonElement) {
+        const panelInfo = this.panelsState.panelsInfo.get(panelName);
+        if (!panelInfo) return;
+
+        // Remove any existing popup
+        const existingPopup = document.querySelector('.panel-info-popup');
+        if (existingPopup) {
+            existingPopup.remove();
+        }
+
+        // Create popup element
+        const popup = document.createElement('div');
+        popup.className = 'panel-info-popup';
+
+        // Create close button
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'close-button';
+        closeBtn.textContent = '✕';
+        closeBtn.onclick = () => popup.remove();
+
+        // Create content
+        const title = document.createElement('h3');
+        title.className = 'popup-title';
+        title.innerHTML = `${panelInfo.icon} ${panelInfo.name}`;
+
+        const description = document.createElement('p');
+        description.className = 'popup-description';
+        description.textContent = panelInfo.description;
+
+        // Assemble popup
+        popup.appendChild(closeBtn);
+        popup.appendChild(title);
+        popup.appendChild(description);
+
+        // Add to body first to get correct dimensions
+        document.body.appendChild(popup);
+
+        // Position the popup near the button
+        if (buttonElement) {
+            const buttonRect = buttonElement.getBoundingClientRect();
+            const popupRect = popup.getBoundingClientRect();
+
+            // Position below the button, aligned to the left
+            popup.style.left = `${buttonRect.left}px`;
+            popup.style.top = `${buttonRect.bottom + 5}px`;
+
+            // Ensure popup doesn't go off-screen
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const popupWidth = popup.offsetWidth;
+            const popupHeight = popup.offsetHeight;
+
+            // Check if popup goes off the right edge
+            if (buttonRect.left + popupWidth > viewportWidth) {
+                popup.style.left = `${viewportWidth - popupWidth - 10}px`;
+            }
+
+            // Check if popup goes off the bottom edge
+            if (buttonRect.bottom + popupHeight + 5 > viewportHeight) {
+                popup.style.top = `${buttonRect.top - popupHeight - 5}px`;
+            }
+        }
+
+        // Close on outside click
+        const closeOnOutsideClick = (e) => {
+            if (!popup.contains(e.target) && e.target !== buttonElement) {
+                popup.remove();
+                document.removeEventListener('click', closeOnOutsideClick);
+            }
+        };
+
+        // Delay adding the click listener to avoid immediate closure
+        setTimeout(() => {
+            document.addEventListener('click', closeOnOutsideClick);
+        }, 10);
     }
 };
 

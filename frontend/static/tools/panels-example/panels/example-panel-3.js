@@ -21,12 +21,12 @@ window.example_panel_3 = {
     // Buttons for collapsed mode (secondary toolbar)
     collapseModeButtons: [
         {
-            callback: function() { panel_3.refreshAgents(); },
+            callback: function() { this.refreshAgents(); },
             title: "Refresh",
             icon: "🔄"
         },
         {
-            callback: function() { panel_3.addAgent(); },
+            callback: function() { this.addAgent(); },
             title: "Add Agent",
             icon: "➕"
         }
@@ -35,12 +35,12 @@ window.example_panel_3 = {
     // Buttons for expanded mode (panel header)
     expandModeButtons: [
         {
-            callback: function() { panel_3.optimizeAll(); },
+            callback: function() { this.optimizeAll(); },
             title: "Optimize",
             icon: "⚡"
         },
         {
-            callback: function() { panel_3.viewLogs(); },
+            callback: function() { this.viewLogs(); },
             title: "Logs",
             icon: "📋"
         }

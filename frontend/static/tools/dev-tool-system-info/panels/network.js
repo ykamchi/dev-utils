@@ -22,20 +22,19 @@ window.network = {
     },
 
     // Buttons for collapsed mode (secondary toolbar)
-    collapseModeButtons: [
-        {
-            callback: function() { window.network.refreshNetwork(); },
-            title: "Refresh Network",
-            icon: "🔄"
-        }
-    ],
+    collapseModeButtons: [],
 
     // Buttons for expanded mode (panel header)
     expandModeButtons: [
         {
-            callback: function() { window.network.toggleDetails(); },
+            callback: function() { this.toggleDetails(); },
             title: "Toggle Details",
             icon: "ℹ️"
+        },
+        {
+            callback: function() { this.refreshNetwork(); },
+            title: "Refresh Network",
+            icon: "🔄"
         }
     ],
 
@@ -52,8 +51,8 @@ window.network = {
     },
 
 
-    // Panel state
-    showDetails: true,
+    // Panel state - false means show interfaces, true means show detailed traffic stats
+    showDetails: false,
 
     // Render the panel content
     render() {
@@ -104,6 +103,8 @@ window.network = {
     async load(container) {
         try {
             container.innerHTML = this.render();
+            // Set initial visibility state
+            this.updateVisibility();
         } catch (error) {
             container.innerHTML = '<p>Error loading network panel</p>';
             console.error('Network panel error:', error);
@@ -268,17 +269,25 @@ window.network = {
         adviceElement.className = adviceClass;
     },
 
-    // Toggle details visibility
+    // Toggle details visibility - replaces content instead of just showing/hiding
     toggleDetails() {
         this.showDetails = !this.showDetails;
+        this.updateVisibility();
+    },
+
+    // Update visibility of interface list vs details based on showDetails state
+    updateVisibility() {
+        const interfacesElement = this.container.querySelector('#network-interfaces');
         const detailsElement = this.container.querySelector('#network-details');
 
-        if (detailsElement) {
-            if (this.showDetails) {
-                detailsElement.style.display = 'block';
-            } else {
-                detailsElement.style.display = 'none';
-            }
+        if (this.showDetails) {
+            // Show detailed traffic stats, hide interfaces list
+            if (interfacesElement) interfacesElement.style.display = 'none';
+            if (detailsElement) detailsElement.style.display = 'block';
+        } else {
+            // Show interfaces list, hide detailed traffic stats
+            if (interfacesElement) interfacesElement.style.display = 'block';
+            if (detailsElement) detailsElement.style.display = 'none';
         }
     },
 

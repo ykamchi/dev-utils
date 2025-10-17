@@ -22,18 +22,17 @@ window.pc_details = {
     },
     
     // Buttons for collapsed mode (secondary toolbar)
-    collapseModeButtons: [
-        {
-            callback: function() { window.pc_details.refreshData(); },
-            title: "Refresh Data",
-            icon: "🔄"
-        }
-    ],
+    collapseModeButtons: [],
 
     // Buttons for expanded mode (panel header)
     expandModeButtons: [
         {
-            callback: function() { window.pc_details.exportInfo(); },
+            callback: function() { this.refreshData(); },
+            title: "Refresh Data",
+            icon: "🔄"
+        },
+        {
+            callback: function() { this.exportInfo(); },
             title: "Export Info",
             icon: "📤"
         }

@@ -21,26 +21,21 @@ window.example_panel_1 = {
     // Buttons for collapsed mode (secondary toolbar)
     collapseModeButtons: [
         {
-            callback: function() { panel_1.refreshData(); },
-            title: "Refresh",
-            icon: "🔄"
-        },
-        {
-            callback: function() { panel_1.exportData(); },
-            title: "Export",
-            icon: "📤"
+            callback: function() { this.showDetails(); },
+            title: "Details",
+            icon: "ℹ️"
         }
     ],
 
     // Buttons for expanded mode (panel header)
     expandModeButtons: [
         {
-            callback: function() { panel_1.showDetails(); },
+            callback: function() { this.showDetails(); },
             title: "Details",
             icon: "ℹ️"
         },
         {
-            callback: function() { panel_1.resetStats(); },
+            callback: function() { this.resetStats(); },
             title: "Reset",
             icon: "🔄"
         }

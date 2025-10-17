@@ -1,0 +1,53 @@
+/* Panel Information Popup Styles */
+
+.panel-info-popup {
+    position: absolute;
+    background: var(--color-card-background);
+    border: 1px solid var(--color-border-light);
+    border-radius: 8px;
+    padding: 15px;
+    max-width: 300px;
+    box-shadow: var(--shadow-card-main);
+    z-index: 1000;
+    color: var(--color-text-dark);
+    font-size: 14px;
+}
+
+.panel-info-popup .close-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    color: var(--color-text-dark);
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.panel-info-popup .close-button:hover {
+    background: var(--color-positive-bg-light);
+}
+
+.panel-info-popup .popup-title {
+    margin: 0 0 10px 0;
+    color: var(--color-text-dark);
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.panel-info-popup .popup-description {
+    margin: 0;
+    color: var(--color-secondary-accent);
+    line-height: 1.4;
+}

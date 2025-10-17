@@ -22,18 +22,17 @@ window.battery = {
     },
 
     // Buttons for collapsed mode (secondary toolbar)
-    collapseModeButtons: [
-        {
-            callback: function() { window.batteryPanel.refreshBattery(); },
-            title: "Refresh Battery",
-            icon: "🔄"
-        }
-    ],
+    collapseModeButtons: [],
 
     // Buttons for expanded mode (panel header)
     expandModeButtons: [
         {
-            callback: function() { window.batteryPanel.toggleDetails(); },
+            callback: function() { this.refreshBattery(); },
+            title: "Refresh Battery",
+            icon: "🔄"
+        },
+        {
+            callback: function() { this.toggleDetails(); },
             title: "Toggle Details",
             icon: "ℹ️"
         }
