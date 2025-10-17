@@ -7,9 +7,10 @@ window.battery = {
     container: null,
 
     // Initialize the panel
-    init(container) {
+    init(container, headerStatusContainer) {
         console.log('[Battery Panel] Initializing...');
         this.container = container;
+        this.headerStatusContainer = headerStatusContainer;
         this.load(container);
     },
 
@@ -44,7 +45,7 @@ window.battery = {
     },
 
     // onCollapse event triggered
-    onCollapse() {
+    onCollapse(collapsedStatusContainer) {
         console.log('[Battery Panel] Collapsed');
     },
 

@@ -7,11 +7,13 @@ window.clock = {
     container: null,
 
     // Initialize the panel
-    async init(container) {
+    async init(container, headerStatusContainer) {
         console.log('[Clock Panel] Initializing...');
 
         this.container = container;
+        this.headerStatusContainer = headerStatusContainer;
         this.load(container);
+        await this.startClock();
     },
 
     // Destroy the panel (cleanup)
@@ -36,13 +38,13 @@ window.clock = {
     // onExpand event triggered
     async onExpand() {
         console.log('[Clock Panel] Expanded');
-        await this.startClock();
     },
 
     // onCollapse event triggered
-    async onCollapse() {
+    async onCollapse(collapsedStatusContainer) {
         console.log('[Clock Panel] Collapsed');
-        this.stopClock();
+        this.collapsedStatusContainer = collapsedStatusContainer;
+        this.startClock();
     },
 
 
@@ -98,6 +100,9 @@ window.clock = {
 
     // Start the clock updates
     async startClock() {
+        if (this.intervalId) {
+            return; // Already running
+        }
         // Initial load
         await this.refreshTime();
 
@@ -134,21 +139,33 @@ window.clock = {
 
     // Update the display with new time data
     updateDisplay(timeData) {
-        const container = this.container;
-        const timeElement = container.querySelector('.current-time');
-        const dateElement = container.querySelector('.current-date');
-        const dayElement = container.querySelector('.day-name');
-        const timezoneElement = container.querySelector('.timezone');
-        const formatElement = container.querySelector('.time-format');
+        // Update the panel content only if container is available
+        if (this.container) {
+            const timeElement = this.container.querySelector('.current-time');
+            const dateElement = this.container.querySelector('.current-date');
+            const dayElement = this.container.querySelector('.day-name');
+            const timezoneElement = this.container.querySelector('.timezone');
+            const formatElement = this.container.querySelector('.time-format');
 
-        if (timeElement && dateElement && dayElement && timezoneElement && formatElement) {
-            // Format time based on preferences
-            const timeStr = this.formatTime(timeData.time);
-            timeElement.textContent = timeStr;
-            dateElement.textContent = timeData.date;
-            dayElement.textContent = timeData.day;
-            timezoneElement.textContent = `UTC${timeData.utc_offset >= 0 ? '+' : ''}${timeData.utc_offset}`;
-            formatElement.textContent = this.use24Hour ? '24-hour' : '12-hour';
+            if (timeElement && dateElement && dayElement && timezoneElement && formatElement) {
+                // Format time based on preferences
+                const timeStr = this.formatTime(timeData.time);
+                timeElement.textContent = timeStr;
+                dateElement.textContent = timeData.date;
+                dayElement.textContent = timeData.day;
+                timezoneElement.textContent = `UTC${timeData.utc_offset >= 0 ? '+' : ''}${timeData.utc_offset}`;
+                formatElement.textContent = this.use24Hour ? '24-hour' : '12-hour';
+            }
+        }
+
+        // Update header status with current time
+        if (this.headerStatusContainer) {
+            this.headerStatusContainer.textContent = this.formatTime(timeData.time);
+        }
+
+        // Update collapsed status with current time
+        if (this.collapsedStatusContainer) {
+            this.collapsedStatusContainer.textContent = this.formatTime(timeData.time);
         }
     },
 

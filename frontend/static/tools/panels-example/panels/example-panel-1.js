@@ -5,9 +5,10 @@ window.example_panel_1 = {
     description: 'Basic information and statistics',
 
     // Initialize the panel
-    init(container) {
+    init(container, headerStatusContainer) {
         console.log('[Panel 1] Initializing...');
         this.container = container;
+        this.headerStatusContainer = headerStatusContainer;
     },
 
     // Destroy the panel (cleanup)
@@ -47,7 +48,7 @@ window.example_panel_1 = {
     },
 
     // onCollapse event triggered
-    onCollapse() {
+    onCollapse(collapsedStatusContainer) {
         console.log('[Panel 1] Collapsed');
     },
 

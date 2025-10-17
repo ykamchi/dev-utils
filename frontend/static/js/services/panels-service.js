@@ -301,10 +301,24 @@ const PanelsService = {
         // Create panel info section
         const infoDiv = document.createElement('div');
         infoDiv.className = 'collapsed-panel-info';
-        infoDiv.innerHTML = `
-            <div class="collapsed-panel-icon">${panelInfo.icon}</div>
-            <div class="collapsed-panel-name">${panelInfo.name}</div>
-        `;
+
+        // Create icon div
+        const iconDiv = document.createElement('div');
+        iconDiv.className = 'collapsed-panel-icon';
+        iconDiv.textContent = panelInfo.icon;
+        infoDiv.appendChild(iconDiv);
+
+        // Create name div
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'collapsed-panel-name';
+        nameDiv.textContent = panelInfo.name;
+        infoDiv.appendChild(nameDiv);
+
+        // Create status div
+        const statusDiv = document.createElement('div');
+        statusDiv.className = 'collapsed-panel-status';
+        infoDiv.appendChild(statusDiv);
+
         panelButton.appendChild(infoDiv);
 
         // Add buttons if they exist
@@ -320,6 +334,9 @@ const PanelsService = {
         panelButton.addEventListener('click', () => {
             this.togglePanel(panelName);
         });
+
+        // Trigger onCollapse event for the panel
+        panelInfo.onCollapse(statusDiv);
 
         return panelButton;
     },
@@ -393,8 +410,6 @@ const PanelsService = {
         this.addPanelToCollapsedContainer(panelName);
         this.removePanelFromPanelsContainer(panelName);        
         
-        // Trigger onCollapse event to the panel
-        panelInfo.onCollapse();
     },
 
     // Create and setup the panels container
@@ -497,7 +512,7 @@ const PanelsService = {
         panelElement.draggable = true;
 
         // Create panel header
-        const panelHeader = this.createPanelHeader(panelName);
+        const { header: panelHeader, statusDiv: headerStatusContainer } = this.createPanelHeader(panelName);
         if (panelHeader) {
             panelElement.appendChild(panelHeader);
         } else {
@@ -526,7 +541,7 @@ const PanelsService = {
 
         // Initialize panel
         try {
-            panelInfo.init(contentContainer);
+            panelInfo.init(contentContainer, headerStatusContainer);
         } catch (error) {
             console.error(`Error initializing panel ${panelName}:`, error);
         }
@@ -564,6 +579,11 @@ const PanelsService = {
         leftDiv.appendChild(titleSpan);
 
         header.appendChild(leftDiv);
+
+        // Create status section
+        const statusDiv = document.createElement('div');
+        statusDiv.className = 'panel-status';
+        header.appendChild(statusDiv);
 
         // Create right section
         const rightDiv = document.createElement('div');
@@ -609,7 +629,7 @@ const PanelsService = {
 
         header.appendChild(rightDiv);
 
-        return header;
+        return { header, statusDiv };
     },
 
     // Get current expanded panels for a tool

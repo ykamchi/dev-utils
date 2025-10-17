@@ -7,10 +7,11 @@ window.network = {
     container: null,
 
     // Initialize the panel
-    init(container) {
+    init(container, headerStatusContainer) {
         console.log('[Network Panel] Initializing...');
 
         this.container = container;
+        this.headerStatusContainer = headerStatusContainer;
         this.load(container);
     },
 
@@ -45,7 +46,7 @@ window.network = {
     },
 
     // onCollapse event triggered
-    async onCollapse() {
+    async onCollapse(collapsedStatusContainer) {
         console.log('[Network Panel] Collapsed');
         this.stopNetworkMonitor();
     },

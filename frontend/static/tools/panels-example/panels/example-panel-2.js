@@ -5,9 +5,10 @@ window.example_panel_2 = {
     description: 'Interactive controls and settings',
 
     // Initialize the panel
-    init(container) {
+    init(container, headerStatusContainer) {
         console.log('[Panel 2] Initializing...');
         this.container = container;
+        this.headerStatusContainer = headerStatusContainer;
     },
 
     // Destroy the panel (cleanup)
@@ -52,7 +53,7 @@ window.example_panel_2 = {
     },
 
     // onCollapse event triggered
-    onCollapse() {
+    onCollapse(collapsedStatusContainer) {
         console.log('[Panel 2] Collapsed');
     },
 

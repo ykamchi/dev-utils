@@ -8,10 +8,11 @@ window.pc_details = {
     intervalId: null,
 
     // Initialize the panel
-    init(container) {
+    init(container, headerStatusContainer) {
         console.log('[PC Details Panel] Initializing...');
 
         this.container = container;
+        this.headerStatusContainer = headerStatusContainer;
         this.load(container);
     },
     
@@ -45,7 +46,7 @@ window.pc_details = {
     },
 
     // onCollapse event triggered
-    onCollapse() {
+    onCollapse(collapsedStatusContainer) {
         console.log('[PC Details Panel] Collapsed');
         this.stopIntervals();
     },

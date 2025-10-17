@@ -5,8 +5,10 @@ window.example_panel_3 = {
     description: 'AI Agents and automation tools',
 
     // Initialize the panel
-    init(container) {
+    init(container, headerStatusContainer) {
         console.log('[Panel 3] Initializing...');
+        this.container = container;
+        this.headerStatusContainer = headerStatusContainer;
         // Start activity feed updates
         this.startActivityFeed();
     },
@@ -52,7 +54,7 @@ window.example_panel_3 = {
     },
 
     // onCollapse event triggered
-    onCollapse() {
+    onCollapse(collapsedStatusContainer) {
         console.log('[Panel 3] Collapsed');
     },
 
