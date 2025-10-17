@@ -55,6 +55,9 @@
     padding: 8px 20px;
     overflow-x: auto;
     flex-shrink: 0;
+    height: 60px; /* Static height */
+    min-height: 60px; /* Ensure minimum height */
+    position: relative; /* For absolute positioned message */
 }
 
 .toolbar-left-section {
@@ -70,6 +73,21 @@
     overflow-x: auto;
     flex: 1;
     justify-content: flex-start;
+}
+
+/* All Panels Expanded Message */
+.all-panels-expanded-message {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--color-secondary-accent, #4A6C7E);
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0.8;
+    pointer-events: none;
+    z-index: 10;
+    white-space: nowrap;
 }
 
 .collapsed-panel-info {
@@ -109,12 +127,31 @@
 }
 
 .collapsed-panel:hover.collapsed {
-    background: var(--color-positive-bg-light, rgba(168, 144, 83, 0.1));
+    background: color-mix(in srgb, var(--color-primary-accent) 80%, white);
     transform: translateY(-1px);
+    box-shadow: var(--shadow-collapse-button-hover);
 }
 
 .collapsed-panel-icon {
     font-size: 20px;
+}
+
+.collapsed-panel-name {
+    font-size: 16px;
+    font-weight: 900;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.collapsed-panel-status {
+    font-size: 14px;
+    font-weight: 400;
+    opacity: 0.8;
+    text-align: right;
+    margin-left: 16px;
 }
 
 /* View Mode Controls */
@@ -337,7 +374,7 @@
 }
 
 .panel-header-button {
-    font-size: 20px;
+    font-size: 16px;
     background: transparent;
     outline: transparent;
     border-color: transparent;

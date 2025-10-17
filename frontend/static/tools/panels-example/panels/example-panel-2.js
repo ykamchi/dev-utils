@@ -1,7 +1,7 @@
 // Panel 2 - Interactive Controls Panel
 window.example_panel_2 = {
     name: 'Panel 2',
-    icon: '🎛️',
+    icon: '📗',
     description: 'Interactive controls and settings',
 
     // Initialize the panel

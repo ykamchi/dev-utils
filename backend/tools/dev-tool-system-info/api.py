@@ -3,7 +3,7 @@ System Info Tool - API Endpoints
 """
 
 from flask import jsonify
-from .tool import get_current_time, get_battery_info, get_hardware_info, get_os_info, get_network_info
+from . import tool
 
 def register_apis(app, base_path):
     """Register system-info API endpoints"""
@@ -12,7 +12,7 @@ def register_apis(app, base_path):
     def get_time():
         """Get current time information"""
         try:
-            time_data = get_current_time()
+            time_data = tool.get_current_time()
             return jsonify({
                 'success': True,
                 'data': time_data
@@ -27,7 +27,7 @@ def register_apis(app, base_path):
     def get_battery():
         """Get battery status information"""
         try:
-            battery_data = get_battery_info()
+            battery_data = tool.get_battery_info()
             return jsonify({
                 'success': True,
                 'data': battery_data
@@ -42,7 +42,7 @@ def register_apis(app, base_path):
     def get_hardware():
         """Get hardware information"""
         try:
-            hardware_data = get_hardware_info()
+            hardware_data = tool.get_hardware_info()
             return jsonify({
                 'success': True,
                 'data': hardware_data
@@ -57,7 +57,7 @@ def register_apis(app, base_path):
     def get_os():
         """Get OS information"""
         try:
-            os_data = get_os_info()
+            os_data = tool.get_os_info()
             return jsonify({
                 'success': True,
                 'data': os_data
@@ -72,7 +72,7 @@ def register_apis(app, base_path):
     def get_network():
         """Get network interface information"""
         try:
-            network_data = get_network_info()
+            network_data = tool.get_network_info()
             return jsonify({
                 'success': True,
                 'data': network_data

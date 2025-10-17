@@ -18,7 +18,7 @@ if env_file.exists():
 def get_tool_info():
     """Return tool metadata"""
     return {
-        'name': 'Dev Tool Stocks',
+        'name': 'Stocks',
         'description': 'Real-time stock prices and market data',
         'category': 'finance',
         'icon': '📈',

@@ -5,14 +5,21 @@ window.network = {
     description: 'Network interfaces and connection information',
     intervalId: null,
     container: null,
+    headerStatusContainer: null,
+    collapsedStatusContainer: null,
 
     // Initialize the panel
-    init(container, headerStatusContainer) {
+    async init(container, headerStatusContainer) {
         console.log('[Network Panel] Initializing...');
 
+        // Store container reference - this container holds the panel content
         this.container = container;
+
+        // Store header status container reference - this container holds the status in the panel header 
         this.headerStatusContainer = headerStatusContainer;
-        this.load(container);
+
+        // Start the network monitoring
+        await this.startNetworkMonitor();
     },
 
     // Destroy the panel (cleanup)
@@ -48,7 +55,12 @@ window.network = {
     // onCollapse event triggered
     async onCollapse(collapsedStatusContainer) {
         console.log('[Network Panel] Collapsed');
-        this.stopNetworkMonitor();
+
+        // Store collapsed status container reference - this container holds the status in collapsed mode   
+        this.collapsedStatusContainer = collapsedStatusContainer;
+
+        // Start the network monitoring
+        this.startNetworkMonitor();
     },
 
 
@@ -57,6 +69,8 @@ window.network = {
 
     // Render the panel content
     render() {
+        console.log('[Network Panel] Rendering content...');
+
         return `
             <div class="network-panel">
                 <div class="network-summary">
@@ -156,36 +170,61 @@ window.network = {
 
     // Update the display with new network data
     updateDisplay(networkData) {
-        const container = this.container;
+        // Update the panel content only if container is available
+        if (this.container) {
+            if (networkData.error) {
+                this.showError(networkData.error);
+                return;
+            }
 
-        if (networkData.error) {
-            this.showError(networkData.error);
-            return;
+            const interfacesCount = this.container.querySelector('.network-interfaces-count');
+            const statusElement = this.container.querySelector('.network-status');
+            const interfacesContainer = this.container.querySelector('#network-interfaces');
+
+            // Update summary
+            const activeInterfaces = networkData.interfaces.filter(iface => iface.stats.isup).length;
+            if (interfacesCount) {
+                interfacesCount.textContent = `${networkData.interfaces.length} interfaces (${activeInterfaces} active)`;
+            }
+            if (statusElement) {
+                statusElement.textContent = activeInterfaces > 0 ? 'Connected' : 'No active connections';
+            }
+
+            // Update interfaces list
+            if (interfacesContainer) {
+                interfacesContainer.innerHTML = networkData.interfaces.map(iface => this.renderInterface(iface)).join('');
+            }
+
+            // Update totals
+            this.updateTotals(networkData.total_counters);
+
+            // Show advice
+            this.updateAdvice(networkData);
         }
 
-        const interfacesCount = container.querySelector('.network-interfaces-count');
-        const statusElement = container.querySelector('.network-status');
-        const interfacesContainer = container.querySelector('#network-interfaces');
-
-        // Update summary
-        const activeInterfaces = networkData.interfaces.filter(iface => iface.stats.isup).length;
-        if (interfacesCount) {
-            interfacesCount.textContent = `${networkData.interfaces.length} interfaces (${activeInterfaces} active)`;
-        }
-        if (statusElement) {
-            statusElement.textContent = activeInterfaces > 0 ? 'Connected' : 'No active connections';
-        }
-
-        // Update interfaces list
-        if (interfacesContainer) {
-            interfacesContainer.innerHTML = networkData.interfaces.map(iface => this.renderInterface(iface)).join('');
+        // Update header status with network status
+        if (this.headerStatusContainer) {
+            const activeInterfaces = networkData.interfaces.filter(iface => iface.stats.isup).length;
+            if (activeInterfaces === 0) {
+                this.headerStatusContainer.textContent = "🔴 No connection";
+            } else {
+                const sent = this.formatBytes(networkData.total_counters.bytes_sent || 0);
+                const recv = this.formatBytes(networkData.total_counters.bytes_recv || 0);
+                this.headerStatusContainer.innerHTML = `<img src="/static/assets/icons/triangle-up-red.svg" style="width: 16px; height: 16px; vertical-align: middle;" alt="↑"> ${sent} <img src="/static/assets/icons/triangle-down-blue.svg" style="width: 16px; height: 16px; vertical-align: middle;" alt="↓"> ${recv}`;
+            }
         }
 
-        // Update totals
-        this.updateTotals(networkData.total_counters);
-
-        // Show advice
-        this.updateAdvice(networkData);
+        // Update collapsed status with network status
+        if (this.collapsedStatusContainer) {
+            const activeInterfaces = networkData.interfaces.filter(iface => iface.stats.isup).length;
+            if (activeInterfaces === 0) {
+                this.collapsedStatusContainer.textContent = "🔴 No connection";
+            } else {
+                const sent = this.formatBytes(networkData.total_counters.bytes_sent || 0);
+                const recv = this.formatBytes(networkData.total_counters.bytes_recv || 0);
+                this.collapsedStatusContainer.innerHTML = `<img src="/static/assets/icons/triangle-up-red.svg" style="width: 16px; height: 16px; vertical-align: middle;" alt="↑"> ${sent} <img src="/static/assets/icons/triangle-down-blue.svg" style="width: 16px; height: 16px; vertical-align: middle;" alt="↓"> ${recv}`;
+            }
+        }
     },
 
     // Render a single network interface
@@ -247,6 +286,8 @@ window.network = {
 
     // Update network advice
     updateAdvice(networkData) {
+        if (!this.container) return;
+        
         const adviceElement = this.container.querySelector('#network-advice');
         if (!adviceElement) return;
 
@@ -272,12 +313,16 @@ window.network = {
 
     // Toggle details visibility - replaces content instead of just showing/hiding
     toggleDetails() {
+        if (!this.container) return;
+        
         this.showDetails = !this.showDetails;
         this.updateVisibility();
     },
 
     // Update visibility of interface list vs details based on showDetails state
     updateVisibility() {
+        if (!this.container) return;
+        
         const interfacesElement = this.container.querySelector('#network-interfaces');
         const detailsElement = this.container.querySelector('#network-details');
 
@@ -320,16 +365,30 @@ window.network = {
 
     // Show error state
     showError(message) {
-        const container = this.container;
-        const interfacesCount = container.querySelector('.network-interfaces-count');
-        const statusElement = container.querySelector('.network-status');
-        const adviceElement = container.querySelector('#network-advice');
+        // Update main panel content
+        if (this.container) {
+            const interfacesCount = this.container.querySelector('.network-interfaces-count');
+            const statusElement = this.container.querySelector('.network-status');
+            const adviceElement = this.container.querySelector('#network-advice');
 
-        if (interfacesCount) interfacesCount.textContent = '-- interfaces';
-        if (statusElement) statusElement.textContent = `❌ ${message}`;
-        if (adviceElement) {
-            adviceElement.textContent = 'Unable to monitor network status';
-            adviceElement.className = 'network-advice error';
+            if (interfacesCount) interfacesCount.textContent = '-- interfaces';
+            if (statusElement) statusElement.textContent = `❌ ${message}`;
+            if (adviceElement) {
+                adviceElement.textContent = 'Unable to monitor network status';
+                adviceElement.className = 'network-advice error';
+            }
+        }
+
+        // Update header status with error
+        if (this.headerStatusContainer) {
+            this.headerStatusContainer.textContent = "🚫 Error";
+            this.headerStatusContainer.title = message;
+        }
+
+        // Update collapsed status with error
+        if (this.collapsedStatusContainer) {
+            this.collapsedStatusContainer.textContent = "🚫 Error";
+            this.collapsedStatusContainer.title = message;
         }
     }
 };

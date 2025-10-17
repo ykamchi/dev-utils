@@ -5,10 +5,10 @@ window.example_panel_1 = {
     description: 'Basic information and statistics',
 
     // Initialize the panel
-    init(container, headerStatusContainer) {
+    init(container) {
         console.log('[Panel 1] Initializing...');
         this.container = container;
-        this.headerStatusContainer = headerStatusContainer;
+        this.load(container);
     },
 
     // Destroy the panel (cleanup)
@@ -22,35 +22,30 @@ window.example_panel_1 = {
     // Buttons for collapsed mode (secondary toolbar)
     collapseModeButtons: [
         {
-            callback: function() { this.showDetails(); },
-            title: "Details",
-            icon: "ℹ️"
+            callback: function() { panel_1.refreshData(); },
+            title: "Refresh",
+            icon: "🔄"
+        },
+        {
+            callback: function() { panel_1.exportData(); },
+            title: "Export",
+            icon: "📤"
         }
     ],
 
     // Buttons for expanded mode (panel header)
     expandModeButtons: [
         {
-            callback: function() { this.showDetails(); },
+            callback: function() { panel_1.showDetails(); },
             title: "Details",
             icon: "ℹ️"
         },
         {
-            callback: function() { this.resetStats(); },
+            callback: function() { panel_1.resetStats(); },
             title: "Reset",
             icon: "🔄"
         }
     ],
-
-    // onExpand event triggered
-    async onExpand() {
-        console.log('[Panel 1] Expanded');
-    },
-
-    // onCollapse event triggered
-    onCollapse(collapsedStatusContainer) {
-        console.log('[Panel 1] Collapsed');
-    },
 
     // Render the panel content
     render() {

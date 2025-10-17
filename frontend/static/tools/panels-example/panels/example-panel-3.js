@@ -1,7 +1,7 @@
 // Panel 3 - Special Agents Panel
 window.example_panel_3 = {
-    name: 'Agents',
-    icon: '🤖',
+    name: 'Panel 3',
+    icon: '📙',
     description: 'AI Agents and automation tools',
 
     // Initialize the panel

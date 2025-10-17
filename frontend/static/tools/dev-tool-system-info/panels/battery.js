@@ -5,13 +5,21 @@ window.battery = {
     description: 'Battery status and power information',
     intervalId: null,
     container: null,
+    headerStatusContainer: null,
+    collapsedStatusContainer: null,
 
     // Initialize the panel
-    init(container, headerStatusContainer) {
+    async init(container, headerStatusContainer) {
         console.log('[Battery Panel] Initializing...');
+
+        // Store container reference - this container holds the panel content
         this.container = container;
+
+        // Store header status container reference - this container holds the status in the panel header 
         this.headerStatusContainer = headerStatusContainer;
-        this.load(container);
+
+        // Start the battery monitoring
+        await this.startBatteryMonitor();
     },
 
     // Destroy the panel (cleanup)
@@ -45,8 +53,14 @@ window.battery = {
     },
 
     // onCollapse event triggered
-    onCollapse(collapsedStatusContainer) {
+    async onCollapse(collapsedStatusContainer) {
         console.log('[Battery Panel] Collapsed');
+
+        // Store collapsed status container reference - this container holds the status in collapsed mode   
+        this.collapsedStatusContainer = collapsedStatusContainer;
+
+        // Start the battery monitoring
+        this.startBatteryMonitor();
     },
 
 
@@ -55,6 +69,8 @@ window.battery = {
 
     // Render the panel content
     render() {
+        console.log('[Battery Panel] Rendering content...');
+
         return `
             <div class="battery-panel">
                 <div class="battery-header">
@@ -95,23 +111,6 @@ window.battery = {
         `;
     },
 
-    // Load panel content
-    async load(container) {
-        try {
-            container.innerHTML = this.render();
-            await this.startBatteryMonitor();
-        } catch (error) {
-            container.innerHTML = '<p>Error loading battery panel</p>';
-            console.error('Battery panel error:', error);
-        }
-    },
-
-    // Unload panel (cleanup)
-    unload(container) {
-        this.stopBatteryMonitor();
-        console.log('Battery panel unloaded');
-    },
-
     // Start battery monitoring
     async startBatteryMonitor() {
         // Initial load
@@ -150,81 +149,105 @@ window.battery = {
 
     // Update the display with new battery data
     updateDisplay(batteryData) {
-        const container = this.container;
-        const percentageElement = container.querySelector('.battery-percentage');
-        const statusElement = container.querySelector('.battery-status');
-        const iconElement = container.querySelector('.battery-icon');
-        const progressFill = container.querySelector('.battery-progress-fill');
-        const chargingElement = container.querySelector('#charging-status');
-        const timeElement = container.querySelector('#time-remaining');
-        const powerElement = container.querySelector('#power-source');
-        const criticalElement = container.querySelector('#critical-status');
-        const adviceElement = container.querySelector('.battery-advice');
+        // Update the panel content only if container is available
+        if (this.container) {
+            const percentageElement = this.container.querySelector('.battery-percentage');
+            const statusElement = this.container.querySelector('.battery-status');
+            const iconElement = this.container.querySelector('.battery-icon');
+            const progressFill = this.container.querySelector('.battery-progress-fill');
+            const chargingElement = this.container.querySelector('#charging-status');
+            const timeElement = this.container.querySelector('#time-remaining');
+            const powerElement = this.container.querySelector('#power-source');
+            const criticalElement = this.container.querySelector('#critical-status');
+            const adviceElement = this.container.querySelector('.battery-advice');
 
-        if (!batteryData.available) {
-            // No battery available (desktop system)
-            if (percentageElement) percentageElement.textContent = 'N/A';
-            if (statusElement) statusElement.textContent = 'No Battery';
-            if (iconElement) iconElement.textContent = '🖥️';
-            if (progressFill) progressFill.style.width = '0%';
-            if (adviceElement) {
-                adviceElement.textContent = 'This system does not have a battery (likely a desktop computer)';
-                adviceElement.className = 'battery-advice info';
+            if (!batteryData.available) {
+                // No battery available (desktop system)
+                if (percentageElement) percentageElement.textContent = 'N/A';
+                if (statusElement) statusElement.textContent = 'No Battery';
+                if (iconElement) iconElement.textContent = '🖥️';
+                if (progressFill) progressFill.style.width = '0%';
+                if (adviceElement) {
+                    adviceElement.textContent = 'This system does not have a battery (likely a desktop computer)';
+                    adviceElement.className = 'battery-advice info';
+                }
+                this.hideDetails();
+                return;
             }
-            this.hideDetails();
-            return;
-        }
 
-        // Update main display
-        if (percentageElement) percentageElement.textContent = `${batteryData.percent}%`;
-        if (progressFill) {
-            progressFill.style.width = `${batteryData.percent}%`;
-            // Color based on percentage
-            if (batteryData.percent < 20) {
-                progressFill.style.backgroundColor = 'var(--color-warning-error)';
-            } else if (batteryData.percent < 50) {
-                progressFill.style.backgroundColor = 'var(--color-highlight-gold)';
+            // Update main display
+            if (percentageElement) percentageElement.textContent = `${batteryData.percent}%`;
+            if (progressFill) {
+                progressFill.style.width = `${batteryData.percent}%`;
+                // Color based on percentage
+                if (batteryData.percent < 20) {
+                    progressFill.style.backgroundColor = 'var(--color-warning-error)';
+                } else if (batteryData.percent < 50) {
+                    progressFill.style.backgroundColor = 'var(--color-highlight-gold)';
+                } else {
+                    progressFill.style.backgroundColor = 'var(--color-positive-bg-strong)';
+                }
+            }
+
+            // Update status and icon
+            let statusText = '';
+            let iconText = '🔋';
+
+            if (batteryData.charging) {
+                statusText = 'Charging';
+                iconText = '🔌';
+            } else if (batteryData.percent < 10) {
+                statusText = 'Critical';
+                iconText = '🪫';
+            } else if (batteryData.percent < 20) {
+                statusText = 'Low';
+                iconText = '🪫';
+            } else if (batteryData.percent > 95) {
+                statusText = 'Full';
+                iconText = '🔋';
             } else {
-                progressFill.style.backgroundColor = 'var(--color-positive-bg-strong)';
+                statusText = 'Discharging';
+            }
+
+            if (statusElement) statusElement.textContent = statusText;
+            if (iconElement) iconElement.textContent = iconText;
+
+            // Update details
+            if (chargingElement) chargingElement.textContent = batteryData.charging ? 'Yes' : 'No';
+            if (timeElement) timeElement.textContent = batteryData.time_left_formatted || 'Unknown';
+            if (powerElement) powerElement.textContent = batteryData.power_plugged ? 'AC Power' : 'Battery';
+            if (criticalElement) criticalElement.textContent = batteryData.critical ? 'Yes' : 'No';
+
+            // Show advice
+            this.updateAdvice(batteryData);
+        }
+
+        // Update header status with battery percentage
+        if (this.headerStatusContainer) {
+            if (!batteryData.available) {
+                this.headerStatusContainer.textContent = "🖥️ No Battery";
+            } else {
+                const icon = batteryData.charging ? '🔌' : (batteryData.percent < 20 ? '🪫' : '🔋');
+                this.headerStatusContainer.textContent = `${icon} ${batteryData.percent}%`;
             }
         }
 
-        // Update status and icon
-        let statusText = '';
-        let iconText = '🔋';
-
-        if (batteryData.charging) {
-            statusText = 'Charging';
-            iconText = '🔌';
-        } else if (batteryData.percent < 10) {
-            statusText = 'Critical';
-            iconText = '🪫';
-        } else if (batteryData.percent < 20) {
-            statusText = 'Low';
-            iconText = '🪫';
-        } else if (batteryData.percent > 95) {
-            statusText = 'Full';
-            iconText = '🔋';
-        } else {
-            statusText = 'Discharging';
+        // Update collapsed status with battery percentage
+        if (this.collapsedStatusContainer) {
+            if (!batteryData.available) {
+                this.collapsedStatusContainer.textContent = "🖥️ No Battery";
+            } else {
+                const icon = batteryData.charging ? '🔌' : (batteryData.percent < 20 ? '🪫' : '🔋');
+                this.collapsedStatusContainer.textContent = `${icon} ${batteryData.percent}%`;
+            }
         }
-
-        if (statusElement) statusElement.textContent = statusText;
-        if (iconElement) iconElement.textContent = iconText;
-
-        // Update details
-        if (chargingElement) chargingElement.textContent = batteryData.charging ? 'Yes' : 'No';
-        if (timeElement) timeElement.textContent = batteryData.time_left_formatted || 'Unknown';
-        if (powerElement) powerElement.textContent = batteryData.power_plugged ? 'AC Power' : 'Battery';
-        if (criticalElement) criticalElement.textContent = batteryData.critical ? 'Yes' : 'No';
-
-        // Show advice
-        this.updateAdvice(batteryData);
     },
 
     // Update battery advice
     updateAdvice(batteryData) {
-        const adviceElement = document.getElementById('battery-advice');
+        if (!this.container) return;
+        
+        const adviceElement = this.container.querySelector('.battery-advice');
         if (!adviceElement) return;
 
         let advice = '';
@@ -257,8 +280,10 @@ window.battery = {
 
     // Toggle details visibility
     toggleDetails() {
+        if (!this.container) return;
+        
         this.showDetails = !this.showDetails;
-        const detailsElement = document.getElementById('battery-details');
+        const detailsElement = this.container.querySelector('.battery-details');
 
         if (detailsElement) {
             if (this.showDetails) {
@@ -280,16 +305,30 @@ window.battery = {
 
     // Show error state
     showError(message) {
-        const container = this.container;
-        const percentageElement = container.querySelector('.battery-percentage');
-        const statusElement = container.querySelector('.battery-status');
-        const adviceElement = container.querySelector('.battery-advice');
+        // Update main panel content
+        if (this.container) {
+            const percentageElement = this.container.querySelector('.battery-percentage');
+            const statusElement = this.container.querySelector('.battery-status');
+            const adviceElement = this.container.querySelector('.battery-advice');
 
-        if (percentageElement) percentageElement.textContent = '--%';
-        if (statusElement) statusElement.textContent = `❌ ${message}`;
-        if (adviceElement) {
-            adviceElement.textContent = 'Unable to monitor battery status';
-            adviceElement.className = 'battery-advice error';
+            if (percentageElement) percentageElement.textContent = '--%';
+            if (statusElement) statusElement.textContent = `❌ ${message}`;
+            if (adviceElement) {
+                adviceElement.textContent = 'Unable to monitor battery status';
+                adviceElement.className = 'battery-advice error';
+            }
+        }
+
+        // Update header status with error
+        if (this.headerStatusContainer) {
+            this.headerStatusContainer.textContent = "🚫 Error";
+            this.headerStatusContainer.title = message;
+        }
+
+        // Update collapsed status with error
+        if (this.collapsedStatusContainer) {
+            this.collapsedStatusContainer.textContent = "🚫 Error";
+            this.collapsedStatusContainer.title = message;
         }
     }
 };

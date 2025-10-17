@@ -10,9 +10,13 @@ window.clock = {
     async init(container, headerStatusContainer) {
         console.log('[Clock Panel] Initializing...');
 
+        // Store container reference - this container holds the panel content
         this.container = container;
+
+        // Store header status container reference - this container holds the status in the panel header 
         this.headerStatusContainer = headerStatusContainer;
-        this.load(container);
+
+        // Start the clock updates
         await this.startClock();
     },
 
@@ -20,11 +24,18 @@ window.clock = {
     destroy(container) {
         console.log('[Clock Panel] Destroying...');
 
+        // Stop the clock updates
         this.stopClock();
     },
 
     // Buttons for collapsed mode (secondary toolbar)
-    collapseModeButtons: [],
+    collapseModeButtons: [
+        {
+            callback: function() { this.toggleFormat(); },
+            title: "Toggle Format",
+            icon: "⚙️"
+        }
+    ],
 
     // Buttons for expanded mode (panel header)
     expandModeButtons: [
@@ -43,17 +54,18 @@ window.clock = {
     // onCollapse event triggered
     async onCollapse(collapsedStatusContainer) {
         console.log('[Clock Panel] Collapsed');
+
+        // Store collapsed status container reference - this container holds the status in collapsed mode   
         this.collapsedStatusContainer = collapsedStatusContainer;
+
+        // Start the clock updates
         this.startClock();
     },
 
-
-    // Panel state
-    use24Hour: true,
-    showSeconds: true,
-
     // Render the panel content
     render() {
+        console.log('[Clock Panel] Rendering content...');
+
         return `
             <div class="clock-panel">
                 <div class="time-display">
@@ -81,39 +93,33 @@ window.clock = {
         `;
     },
 
-    // Load panel content
-    async load(container) {
-        try {
-            container.innerHTML = this.render();
-            
-        } catch (error) {
-            container.innerHTML = '<p>Error loading clock panel</p>';
-            console.error('Clock panel error:', error);
-        }
-    },
 
-    // Unload panel (cleanup)
-    unload(container) {
-        this.stopClock();
-        console.log('Clock panel unloaded');
-    },
+    // Panel state
+    use24Hour: true,
+    showSeconds: true,
 
     // Start the clock updates
     async startClock() {
+        console.log('[Clock Panel] Starting clock updates...');
+
         if (this.intervalId) {
+            console.log('[Clock Panel] Clock updates already running. Aborting start.');
             return; // Already running
         }
+
         // Initial load
         await this.refreshTime();
 
         // Set up interval for updates every second
         this.intervalId = setInterval(async () => {
             await this.refreshTime();
-        }, 1000);
+        }, this.showSeconds ? 1000 : 60000);
     },
 
     // Stop the clock updates
     stopClock() {
+        console.log('[Clock Panel] Stopping clock updates...');
+
         if (this.intervalId) {
             clearInterval(this.intervalId);
             this.intervalId = null;
@@ -132,7 +138,7 @@ window.clock = {
                 this.showError('Failed to load time data');
             }
         } catch (error) {
-            this.showError('Network error loading time');
+            this.showError('Error loading time: ' + error.message);
             console.error('Time refresh error:', error);
         }
     },
@@ -187,23 +193,39 @@ window.clock = {
 
     // Toggle between 24-hour and 12-hour format
     toggleFormat() {
+        console.log('[Clock Panel] Toggling time format...');
+
         this.use24Hour = !this.use24Hour;
+
         // Refresh immediately to show new format
         this.refreshTime();
     },
 
     // Show error state
     showError(message) {
-        const container = this.container;
-        const timeElement = container.querySelector('.current-time');
-        const statusElement = container.querySelector('.clock-status');
+        if (this.container) {
+            const timeElement = this.container.querySelector('.current-time');
+            const statusElement = this.container.querySelector('.clock-status');
 
-        if (timeElement) {
-            timeElement.textContent = '--:--:--';
+            if (timeElement) {
+                timeElement.textContent = '--:--:--';
+            }
+            if (statusElement) {
+                statusElement.textContent = `❌ ${message}`;
+                statusElement.style.color = 'var(--color-warning-error)';
+            }
         }
-        if (statusElement) {
-            statusElement.textContent = `❌ ${message}`;
-            statusElement.style.color = 'var(--color-warning-error)';
+
+        // Update header status with current time
+        if (this.headerStatusContainer) {
+            this.headerStatusContainer.textContent = "🚫 Error";
+            this.headerStatusContainer.title = message;
+        }
+
+        // Update collapsed status with current time
+        if (this.collapsedStatusContainer) {
+            this.collapsedStatusContainer.textContent = " 🚫 Error";
+            this.collapsedStatusContainer.title = message;
         }
     }
 };

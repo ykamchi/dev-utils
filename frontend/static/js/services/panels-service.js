@@ -259,6 +259,9 @@ const PanelsService = {
         if (firstPanel) {
             this.expandPanel(firstPanel);
         }
+
+        // Initialize secondary toolbar message
+        this.updateSecondaryToolbarMessage();
     },
 
     // Helper function to generate button elements from button objects
@@ -375,6 +378,9 @@ const PanelsService = {
         
         // Trigger onExpand event to the panel
         panelInfo.onExpand();
+
+        // Update secondary toolbar message
+        this.updateSecondaryToolbarMessage();
     },
 
     // Collapse a specific panel
@@ -410,6 +416,34 @@ const PanelsService = {
         this.addPanelToCollapsedContainer(panelName);
         this.removePanelFromPanelsContainer(panelName);        
         
+        // Update secondary toolbar message
+        this.updateSecondaryToolbarMessage();
+    },
+
+    // Update secondary toolbar message based on panel states
+    updateSecondaryToolbarMessage() {
+        const toolbar = this.panelsState.secondaryToolbar;
+        if (!toolbar) return;
+
+        // Remove existing message if any
+        const existingMessage = toolbar.querySelector('.all-panels-expanded-message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+
+        // Check if all panels are expanded
+        const allExpanded = this.panelsState.expandedPanels.size === this.panelsState.panelsInfo.size;
+
+        if (allExpanded && this.panelsState.panelsInfo.size > 1) {
+            // Create message element
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'all-panels-expanded-message';
+            messageDiv.textContent = 'All panels are expanded';
+
+            // Add message to toolbar
+            toolbar.style.position = 'relative';
+            toolbar.appendChild(messageDiv);
+        }
     },
 
     // Create and setup the panels container
@@ -529,12 +563,19 @@ const PanelsService = {
             contentContainer.innerHTML = content;
         } else {
             console.error(`Panel ${panelName}: render() must return a string, got ${typeof content}`);
-            contentContainer.innerHTML = `
-                <div class="panel-placeholder">
-                    <h3>${panelInfo.name}</h3>
-                    <p>Panel render error: render() must return a string.</p>
-                </div>
-            `;
+            // Create error placeholder using createElement
+            const placeholderDiv = document.createElement('div');
+            placeholderDiv.className = 'panel-placeholder';
+
+            const titleElement = document.createElement('h3');
+            titleElement.textContent = panelInfo.name;
+            placeholderDiv.appendChild(titleElement);
+
+            const errorPara = document.createElement('p');
+            errorPara.textContent = 'Panel render error: render() must return a string.';
+            placeholderDiv.appendChild(errorPara);
+
+            contentContainer.appendChild(placeholderDiv);
         }
 
         panelElement.appendChild(contentContainer);

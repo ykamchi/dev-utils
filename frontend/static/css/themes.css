@@ -29,6 +29,7 @@
     --color-border-light: rgba(0, 0, 0, 0.1);
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+    --shadow-collapse-button-hover: 0 2px 6px rgba(28, 28, 28, 0.4);
 }
 
 /* 2. Traditional Mahogany (Warm Earth Tones) */
@@ -58,6 +59,7 @@
     --color-border-light: rgba(0, 0, 0, 0.1);
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+    --shadow-collapse-button-hover: 0 2px 6px rgba(93, 64, 55, 0.4);
 }
 
 /* 3. Regal Dark Mode (Deep Green/Silver) */
@@ -87,6 +89,7 @@
     --color-border-light: rgba(0, 0, 0, 0.1);
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+    --shadow-collapse-button-hover: 0 2px 6px rgba(0, 77, 64, 0.4);
 }
 
 /* 4. Soft Sage & Stone (Muted Natural) */
@@ -116,6 +119,7 @@
     --color-border-light: rgba(0, 0, 0, 0.1);
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+    --shadow-collapse-button-hover: 0 2px 6px rgba(74, 87, 78, 0.4);
 }
 
 /* 5. French Provincial (Light Blue/Pastel) */
@@ -145,6 +149,7 @@
     --color-border-light: rgba(0, 0, 0, 0.1);
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+    --shadow-collapse-button-hover: 0 2px 6px rgba(70, 130, 180, 0.4);
 }
 
 /* 6. Dark Modern (VS Code Dark+) */
@@ -174,6 +179,7 @@
     --color-border-light: rgba(0, 0, 0, 0.1);
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+    --shadow-collapse-button-hover: 0 2px 6px rgba(0, 122, 204, 0.4);
 }
 
 /* 7. Light Modern (VS Code Light+) */
@@ -203,6 +209,7 @@
     --color-border-light: rgba(0, 0, 0, 0.1);
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+    --shadow-collapse-button-hover: 0 2px 6px rgba(0, 102, 204, 0.4);
 }
 
 /* 8. GitHub Dark */
@@ -232,6 +239,7 @@
     --color-border-light: rgba(0, 0, 0, 0.1);
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+    --shadow-collapse-button-hover: 0 2px 6px rgba(88, 166, 255, 0.4);
 }
 
 /* 9. Solarized Dark */
@@ -261,6 +269,7 @@
     --color-border-light: rgba(0, 0, 0, 0.1);
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+    --shadow-collapse-button-hover: 0 2px 6px rgba(38, 139, 210, 0.4);
 }
 
 /* 10. Dracula */
@@ -290,6 +299,7 @@
     --color-border-light: rgba(0, 0, 0, 0.1);
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+    --shadow-collapse-button-hover: 0 2px 6px rgba(189, 147, 249, 0.4);
 }
 
 /* 11. One Dark Pro */
@@ -319,4 +329,5 @@
     --color-border-light: rgba(0, 0, 0, 0.1);
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
+    --shadow-collapse-button-hover: 0 2px 6px rgba(97, 218, 251, 0.4);
 }

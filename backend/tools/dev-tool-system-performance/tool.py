@@ -9,7 +9,7 @@ import platform
 def get_tool_info():
     """Return tool metadata"""
     return {
-        'name': 'Dev Tool System Performance',
+        'name': 'System Performance',
         'description': 'Show system performance metrics including CPU and memory usage',
         'category': 'system',
         'icon': '📊',

@@ -3,8 +3,21 @@ Dev Tool Weather - Core Logic
 """
 
 import requests
-import os
 from datetime import datetime, timedelta
+
+def get_tool_info():
+    """Return tool metadata"""
+    return {
+        'name': 'Weather',
+        'description': 'Display current weather information and forecast',
+        'category': 'utility',
+        'icon': '🌤️',
+        'version': '1.0.0',
+        'endpoints': [
+            'GET /api/dev-tool-weather/current',
+            'GET /api/dev-tool-weather/forecast'
+        ]
+    }
 
 def get_city_coordinates(city):
     """Get latitude and longitude for a city name using Open-Meteo geocoding"""
@@ -109,20 +122,6 @@ def get_weather_icon(weathercode):
         99: "11d"
     }
     return icon_map.get(weathercode, "01d")
-
-def get_tool_info():
-    """Return tool metadata"""
-    return {
-        'name': 'Dev Tool Weather',
-        'description': 'Display current weather information and forecast',
-        'category': 'utility',
-        'icon': '🌤️',
-        'version': '1.0.0',
-        'endpoints': [
-            'GET /api/dev-tool-weather/current',
-            'GET /api/dev-tool-weather/forecast'
-        ]
-    }
 
 def get_weather_data(city="New York", api_key=None):
     """Get weather data from Open-Meteo API (no API key required)"""
