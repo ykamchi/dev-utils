@@ -1,52 +1,515 @@
 # Dev Tools App
 
-**Dev Tools App** is a revolutionary framework that makes it incredibly easy to create, deploy, and manage custom development tools. With just a few files and zero configuration, you can transform any idea into a professional tool that integrates seamlessly into a unified development environment.
+A modular, extensible development tools application built with Flask backend and vanilla JavaScript frontend. This platform provides a unified interface for various development utilities, allowing developers to easily create and integrate new tools.
 
-## The Framework That Makes Tool Creation Effortless
+![Dev Tools App Screenshot](screenshot.png)
+*Screenshot showing the System Info tool with multiple view modes available, including flexible layout with drag-and-drop panels*
 
-Dev Tools App eliminates the complexity of building development tools from scratch. Instead of wrestling with UI frameworks, theming systems, and deployment headaches, focus purely on your tool's logic. The framework handles everything else - from beautiful interfaces to persistent storage to multi-panel layouts.
+## Features
 
-### How Easy Is It Really?
+- **Modular Architecture**: Tools are self-contained modules that can be added or removed independently
+- **Two Tool Types**: Support for both regular tools and panel-based tools with collapsible panels
+- **Advanced Panel Views**: Panel-based tools support multiple view modes (vertical, horizontal, grid, flexible) with drag-and-drop and resizing capabilities
+- **Flexible Layout Mode**: Freely position and resize panels anywhere on screen with absolute positioning
+- **Theme System**: Multiple built-in themes including dark and light modes
+- **Responsive Design**: Works on desktop and mobile devices
+- **RESTful API**: Clean API endpoints for tool communication
+- **Dynamic Loading**: Tools are loaded on-demand without page refreshes
 
-**Create a complete tool in 5 minutes:**
-1. Create two directories (backend + frontend)
-2. Write your business logic in Python
-3. Add HTML/CSS/JS for the interface
-4. Restart the server - your tool is live!
+## Project Structure
 
-No configuration files, no complex setup, no framework learning curve. Just pure productivity.
+```
+dev_utils/
+├── backend/
+│   ├── main.py                 # Flask application entry point
+│   ├── tool_manager.py         # Tool discovery and registration
+│   ├── requirements.txt        # Python dependencies
+│   └── tools/                  # Tool modules
+│       └── dev-tool-*/         # Individual tool directories
+│           ├── tool.py         # Tool metadata and backend logic
+│           ├── api.py          # API endpoints registration
+│           └── requirements.txt # Tool-specific dependencies (optional)
+├── frontend/
+│   ├── index.html              # Main application template
+│   └── static/
+│       ├── css/                # Stylesheets
+│       ├── js/                 # JavaScript modules
+│       │   └── services/       # Service modules
+│       └── tools/              # Frontend tool implementations
+│           └── dev-tool-*/     # Tool frontend code
+│               ├── index.html  # Tool UI (for regular tools)
+│               ├── script.js   # Tool logic (for regular tools)
+│               ├── style.css   # Tool styles (optional)
+│               └── panels/     # Panel files (for panel-based tools)
+│                   └── *.js    # Individual panel implementations
+```
 
-### What Kind of Tools Can You Build?
+## Installation
 
-The framework is designed for any tool that benefits from a web interface. Here are some examples:
+### Prerequisites
 
-#### Development Tools
-- **Git Repository Analyzer**: Visualize commit patterns, contributor stats, and branch health
-- **API Response Validator**: Test and validate REST API responses with custom schemas
-- **Code Review Dashboard**: Track pull requests, review comments, and merge conflicts
-- **Dependency Vulnerability Scanner**: Check project dependencies against security databases
-- **Build Pipeline Monitor**: Real-time status of CI/CD pipelines with failure analysis
+- Python 3.8+
+- pip (Python package manager)
 
-#### Productivity Tools
-- **Meeting Scheduler**: Coordinate team availability with calendar integration
-- **Task Time Tracker**: Log and analyze time spent on different project tasks
-- **Code Snippet Manager**: Organize and search reusable code snippets
-- **Documentation Generator**: Auto-generate API docs from code comments
-- **Team Standup Organizer**: Manage daily standup notes and action items
+### Setup Steps
 
-#### Data & Analytics Tools
-- **Database Query Builder**: Visual SQL query construction with result visualization
-- **Log File Analyzer**: Parse and visualize application logs with filtering and search
-- **Performance Metrics Dashboard**: Track application KPIs and user engagement
-- **Data Import/Export Wizard**: Handle file uploads, validation, and format conversion
-- **Chart & Graph Generator**: Create custom visualizations from CSV or API data
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd dev_utils
+   ```
 
-#### Creative & Utility Tools
-- **Color Palette Generator**: Create and export color schemes for design projects
-- **Font Preview Tool**: Test typography combinations with live text rendering
-- **Image Optimization Checker**: Analyze and optimize images for web performance
-- **Regex Tester**: Test and debug regular expressions with live matching
-- **Unit Converter**: Convert between different units with custom conversion formulas
+2. **Install backend dependencies**
+   ```bash
+   cd backend
+   pip install -r requirements.txt
+   ```
+
+3. **Install tool-specific dependencies** (if any)
+   ```bash
+   # For each tool that has requirements.txt
+   cd tools/dev-tool-<name>
+   pip install -r requirements.txt
+   ```
+
+4. **Start the application**
+   ```bash
+   cd backend
+   python main.py
+   ```
+
+5. **Open in browser**
+   ```
+   http://127.0.0.1:5000
+   ```
+
+### Configuration
+
+The project includes a `.env` file in the repository root that contains default configuration settings. You can edit this file to customize the application behavior:
+
+```env
+# Server Configuration
+HOST=127.0.0.1          # Server host (default: 127.0.0.1)
+PORT=5000              # Server port (default: 5000)
+DEBUG=True             # Enable debug mode (default: True)
+```
+
+Edit the `.env` file directly to change these settings before starting the server.
+
+## Usage
+
+1. **Select Tools**: Use the drawer on the left to browse available tools
+2. **Switch Themes**: Use the theme selector in the top-right corner
+3. **Tool Interaction**: Each tool provides its own interface and functionality
+
+## Panel View Modes
+
+Panel-based tools support multiple layout modes that can be switched using the view mode buttons in the secondary toolbar:
+
+### Vertical Mode (Default)
+- Panels are stacked vertically in a single column
+- Best for focused, sequential workflows
+- Panels expand to full width
+
+### Horizontal Mode
+- Panels are arranged side-by-side in a single row
+- Ideal for comparing related information
+- Equal width distribution with horizontal scrolling if needed
+
+### Grid Mode
+- Panels are arranged in a 2x2 grid layout
+- Perfect for dashboard-style displays
+- Balanced layout for multiple data sources
+
+### Flexible Mode
+- **Absolute Positioning**: Panels can be freely positioned anywhere on screen
+- **Drag & Drop**: Click and drag panels to reposition them
+- **Resizing**: Drag panel borders/corners to resize panels
+- **Persistent Layout**: Panel positions and sizes are saved and restored
+- **Multi-directional Resize**: Resize from any border (top, bottom, left, right) or corner
+- **Layer Management**: Most recently moved/resized panels appear on top
+
+#### Flexible Mode Controls:
+- **Drag**: Click and hold panel header to drag
+- **Resize**: Hover near panel borders/corners, cursor changes to indicate resize direction
+- **Reset**: Switch view modes to reset layout (positions persist per tool)
+
+## Developer Guide
+
+### Creating a New Tool
+
+This guide provides step-by-step instructions for creating both regular tools and panel-based tools.
+
+#### Step 1: Choose Tool Type
+
+**Regular Tool**: Single-page interface with custom HTML/CSS/JS
+- Best for: Simple utilities, forms, data display
+- Example: Welcome message, weather display
+
+**Panel-Based Tool**: Multiple collapsible panels with shared toolbar and advanced view modes
+- Best for: Complex dashboards with customizable layouts
+- Features: Multiple view modes (vertical, horizontal, grid, flexible), drag-and-drop positioning, panel resizing
+- Example: System information with separate battery, network, hardware panels that can be freely arranged
+
+#### Step 2: Backend Implementation
+
+1. **Create tool directory**
+   ```bash
+   mkdir backend/tools/dev-tool-mytool
+   cd backend/tools/dev-tool-mytool
+   ```
+
+2. **Create `tool.py`**
+   ```python
+   def get_tool_info():
+       return {
+           'name': 'My Tool',
+           'description': 'Description of what my tool does',
+           'category': 'utility',  # or 'system', 'productivity', etc.
+           'icon': '🔧',  # Any emoji or symbol
+           'version': '1.0.0',
+           # For panel-based tools, add:
+           'has_panels': True,  # Set to True for panel-based tools
+           'panels': ['panel1', 'panel2'],  # List of panel names
+       }
+   ```
+
+3. **Create `api.py`**
+   ```python
+   from flask import Blueprint, jsonify
+
+   def register_apis(app, base_path):
+       @app.route(f'{base_path}/data', methods=['GET'])
+       def get_data():
+           return jsonify({
+               'success': True,
+               'data': {'message': 'Hello from my tool!'}
+           })
+   ```
+
+4. **Optional: Create `requirements.txt`** for tool-specific dependencies
+   ```
+   requests==2.31.0
+   ```
+
+#### Step 3: Frontend Implementation
+
+##### For Regular Tools
+
+1. **Create frontend directory**
+   ```bash
+   mkdir -p frontend/static/tools/dev-tool-mytool
+   cd frontend/static/tools/dev-tool-mytool
+   ```
+
+2. **Create `index.html`**
+   ```html
+   <div class="my-tool">
+       <div class="tool-body">
+           <h3>My Tool Interface</h3>
+           <div id="content">Loading...</div>
+       </div>
+   </div>
+   ```
+
+3. **Create `script.js`**
+   ```javascript
+   window.tool_script = {
+       container: null,
+
+       // Initialize the tool (MANDATORY - called when tool is loaded)
+       async init(container) {
+           this.container = container;
+           await this.loadData();
+       },
+
+       // Destroy the tool (MANDATORY - called when tool is unloaded)
+       destroy(container) {
+           // Clean up event listeners, intervals, etc.
+       },
+
+       async loadData() {
+           try {
+               const response = await fetch('/api/dev-tool-mytool/data');
+               const result = await response.json();
+               if (result.success) {
+                   this.displayData(result.data);
+               }
+           } catch (error) {
+               console.error('Error loading data:', error);
+           }
+       },
+
+       displayData(data) {
+           const content = this.container.querySelector('#content');
+           content.textContent = data.message;
+       }
+   };
+   ```
+   
+   > **Mandatory Functions:** Every regular tool must implement `init(container)` and `destroy(container)` functions. The `init` function is called when the tool is loaded and receives the tool container element. The `destroy` function is called when the tool is unloaded and should clean up any resources like event listeners or timers.
+
+4. **Optional: Create `style.css`**
+   ```css
+   .my-tool {
+       padding: 20px;
+   }
+
+   .tool-body {
+       background: var(--bg-color);
+       border-radius: 8px;
+       padding: 16px;
+   }
+   ```
+   
+   > **Note:** Avoid overriding existing framework CSS classes (like `.tool-container`, `.tool-header`, `.tool-body`, etc.) unless absolutely necessary. Create custom CSS classes and add them to your HTML elements to ensure compatibility with framework updates.
+
+##### For Panel-Based Tools
+
+1. **Create frontend directory**
+   ```bash
+   mkdir -p frontend/static/tools/dev-tool-mytool/panels
+   cd frontend/static/tools/dev-tool-mytool
+   ```
+
+2. **Create panel files** (one JS file per panel)
+   ```javascript
+   // panels/panel1.js
+   window.panel1 = {
+       // MANDATORY: Panel display name (string)
+       name: 'Panel 1',
+       
+       // MANDATORY: Panel icon (string - emoji or symbol)
+       icon: '📊',
+       
+       // MANDATORY: Panel description (string)
+       description: 'First panel description',
+       
+       // MANDATORY: Initialize panel (function called when panel loads)
+       async init(container, headerStatusContainer) {
+           this.container = container;
+           this.headerStatusContainer = headerStatusContainer;
+           await this.loadData();
+       },
+
+       // MANDATORY: Destroy panel (function called when panel unloads)
+       destroy() {
+           if (this.intervalId) {
+               clearInterval(this.intervalId);
+           }
+       },
+
+       // MANDATORY: Buttons shown when panel is collapsed (array)
+       collapseModeButtons: [],
+
+       // MANDATORY: Buttons shown when panel is expanded (array)
+       expandModeButtons: [
+           {
+               callback: function() { this.refresh(); },
+               title: "Refresh",
+               icon: "🔄"
+           }
+       ],
+
+       // MANDATORY: Called when panel expands (function)
+       onExpand() {
+           console.log('Panel expanded');
+       },
+
+       // MANDATORY: Called when panel collapses (function)
+       onCollapse() {
+           console.log('Panel collapsed');
+       },
+
+       async loadData() {
+           // Load and display data
+           const response = await fetch('/api/dev-tool-mytool/panel1-data');
+           const data = await response.json();
+           this.container.innerHTML = `<p>${data.message}</p>`;
+       },
+
+       refresh() {
+           this.loadData();
+       }
+   };
+   ```
+   
+   > **Mandatory Fields and Functions:** Every panel must implement these required properties:
+   > - `name` (string): Display name for the panel
+   > - `icon` (string): Icon emoji/symbol for the panel
+   > - `description` (string): Brief description of the panel
+   > - `init(container, headerStatusContainer)` (function): Called when panel loads
+   > - `destroy()` (function): Called when panel unloads for cleanup
+   > - `collapseModeButtons` (array): Buttons shown in collapsed state
+   > - `expandModeButtons` (array): Buttons shown in expanded state
+   > - `onExpand()` (function): Called when panel expands
+   > - `onCollapse()` (function): Called when panel collapses
+
+3. **Optional: Create `style.css`** for panel styling
+
+   ```css
+   /* Custom styles for dev-tool-mytool - DO NOT override framework classes */
+   
+   /* Add custom classes to your panel HTML elements */
+   .my-tool-custom-header {
+       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+       color: white;
+       padding: 12px 16px;
+       border-radius: 8px 8px 0 0;
+       font-weight: bold;
+   }
+   
+   .my-tool-data-grid {
+       display: grid;
+       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+       gap: 12px;
+       margin: 16px 0;
+   }
+   
+   .my-tool-data-card {
+       background: rgba(255, 255, 255, 0.9);
+       border: 1px solid #e0e0e0;
+       border-radius: 8px;
+       padding: 12px;
+       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+       transition: transform 0.2s ease;
+   }
+   
+   .my-tool-data-card:hover {
+       transform: translateY(-2px);
+       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+   }
+   
+   .my-tool-metric-value {
+       font-size: 24px;
+       font-weight: bold;
+       color: #4CAF50;
+       margin: 8px 0;
+   }
+   
+   .my-tool-status-indicator {
+       display: inline-block;
+       width: 8px;
+       height: 8px;
+       border-radius: 50%;
+       margin-right: 8px;
+   }
+   
+   .my-tool-status-indicator.online {
+       background-color: #4CAF50;
+   }
+   
+   .my-tool-status-indicator.offline {
+       background-color: #f44336;
+   }
+   
+   .my-tool-button-primary {
+       background: linear-gradient(45deg, #2196F3, #1976D2);
+       border: none;
+       border-radius: 6px;
+       color: white;
+       padding: 10px 20px;
+       cursor: pointer;
+       font-weight: 500;
+       transition: all 0.3s ease;
+       box-shadow: 0 2px 4px rgba(33, 150, 243, 0.3);
+   }
+   
+   .my-tool-button-primary:hover {
+       transform: translateY(-1px);
+       box-shadow: 0 4px 8px rgba(33, 150, 243, 0.4);
+   }
+   
+   /* Responsive adjustments */
+   @media (max-width: 768px) {
+       .my-tool-data-grid {
+           grid-template-columns: 1fr;
+       }
+       
+       .my-tool-metric-value {
+           font-size: 20px;
+       }
+   }
+   ```
+   
+   > **Note:** Avoid overriding existing framework CSS classes (like `.panel-container`, `.panel-header`, etc.) unless absolutely necessary. Instead, create custom CSS classes and add them to your HTML elements. This ensures compatibility with framework updates and maintains consistent styling across the application.
+
+#### Step 4: Testing Your Tool
+
+1. **Restart the backend** to load the new tool
+2. **Check the tools drawer** - your tool should appear
+3. **Test functionality** - click on your tool and verify it works
+4. **Test API endpoints** - use browser dev tools or curl to test endpoints
+
+#### Step 5: Best Practices
+
+- **Error Handling**: Always handle API errors gracefully
+- **Loading States**: Show loading indicators during async operations
+- **Cleanup**: Implement destroy methods for panel-based tools
+- **Responsive**: Ensure your UI works on different screen sizes
+- **Documentation**: Add comments explaining complex logic
+- **Versioning**: Update version numbers when making changes
+
+### Tool Categories
+
+Choose appropriate categories for your tools:
+- `utility`: General utilities
+- `system`: System information and monitoring
+- `productivity`: Productivity enhancers
+- `development`: Development-specific tools
+- `network`: Network-related utilities
+
+## Example Tools
+
+| Tool Name | Type | Description |
+|-----------|------|-------------|
+| Welcome | Regular | Simple welcome message with server information |
+| Stocks | Regular | Stock market data and charts |
+| System Info | Panel-based | System information with battery, clock, hardware, and network panels - supports all view modes including flexible drag-and-drop layout |
+| System Performance | Regular | Real-time system performance metrics |
+| Weather | Regular | Weather information and forecasts |
+| Senseip | Panel-based | Job monitoring system with job status and information panels - fully customizable layout |
+| Panels Example | Panel-based | Example implementation showcasing panel-based tool architecture with multiple view modes |
+
+## API Reference
+
+### Core Endpoints
+
+- `GET /api/tools` - List all available tools
+- `GET /api/tools/{tool_name}/panels` - List panels for a tool
+- `GET /api/health` - Health check
+
+### Tool Endpoints
+
+Each tool registers its own endpoints under `/api/{tool_name}/...`
+
+## Contributing
+
+1. Follow the tool creation guide above
+2. Test your tool thoroughly
+3. Ensure code quality and documentation
+4. Submit a pull request with your new tool
+
+## Troubleshooting
+
+### Tool Not Appearing
+- Check that `tool.py` has correct `get_tool_info()` function
+- Verify tool directory naming: `dev-tool-*`
+- Restart the backend server
+
+### API Errors
+- Check browser console for JavaScript errors
+- Verify API endpoints are correctly registered
+- Test endpoints directly with curl or browser
+
+### Panel Issues
+- Ensure panel JS files are in `panels/` directory
+- Check that panel names match those in `tool.py`
+- Verify panel objects are attached to `window`
+
+## License
+
+[Add your license information here]
 
 ### Framework Superpowers
 
@@ -992,7 +1455,7 @@ if (toolInfo.has_panels) {
 - `--color-primary-accent`: Main brand color (default: #192A56)
 - `--color-primary-accent-hover`: Hover state for primary color
 - `--color-secondary-accent`: Secondary color (default: #4A6C7E)
-- `--color-highlight-gold`: Accent/highlight color (default: #A89053)
+- `--color-highlight`: Accent/highlight color (default: #A89053)
 - `--color-text-dark`: Dark text color (default: #2C3E50)
 - `--color-text-light`: Light/muted text color (default: #FBFBF2)
 - `--color-card-background`: Card background color
@@ -1022,7 +1485,7 @@ Always use CSS custom properties (theme variables) instead of hardcoded colors t
 - `--color-primary-accent`: Main brand color (default: #192A56)
 - `--color-primary-accent-hover`: Hover state for primary color
 - `--color-secondary-accent`: Secondary color (default: #4A6C7E)
-- `--color-highlight-gold`: Accent/highlight color (default: #A89053)
+- `--color-highlight`: Accent/highlight color (default: #A89053)
 - `--color-text-dark`: Dark text color (default: #2C3E50)
 - `--color-text-light`: Light/muted text color (default: #FBFBF2)
 - `--color-card-background`: Card background color
@@ -1057,7 +1520,7 @@ Always use CSS custom properties (theme variables) instead of hardcoded colors t
 - Use `var(--color-primary-accent)` for primary buttons and links
 - Use `var(--color-primary-accent-hover)` for hover states of primary elements
 - Use `var(--color-secondary-accent)` for secondary elements and borders
-- Use `var(--color-highlight-gold)` for highlights, success states, and important data
+- Use `var(--color-highlight)` for highlights, success states, and important data
 - Use `var(--color-text-dark)` for primary text and headings
 - Use `var(--color-text-light)` for muted text, secondary content, and light backgrounds
 - Use `var(--color-card-background)` for card/container backgrounds

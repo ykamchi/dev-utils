@@ -319,7 +319,7 @@
 }
 
 .forecast-high {
-    color: var(--color-highlight-gold);
+    color: var(--color-highlight);
     font-weight: 500;
 }
 

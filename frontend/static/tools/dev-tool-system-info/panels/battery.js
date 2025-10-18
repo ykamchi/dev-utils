@@ -183,7 +183,7 @@ window.battery = {
                 if (batteryData.percent < 20) {
                     progressFill.style.backgroundColor = 'var(--color-warning-error)';
                 } else if (batteryData.percent < 50) {
-                    progressFill.style.backgroundColor = 'var(--color-highlight-gold)';
+                    progressFill.style.backgroundColor = 'var(--color-highlight)';
                 } else {
                     progressFill.style.backgroundColor = 'var(--color-positive-bg-strong)';
                 }

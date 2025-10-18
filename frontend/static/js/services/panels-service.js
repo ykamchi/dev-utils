@@ -5,7 +5,6 @@ const PanelsService = {
     panelsState: null, // Current tool's panel data
     toolName: null,
     currentViewMode: 'horizontal', // 'vertical', 'horizontal', 'grid'
-    dragState: null, // For drag and drop
 
     // Initialize panel service for a specific tool
     async init(toolName) {
@@ -18,6 +17,7 @@ const PanelsService = {
         this.panelsState = {
             panelsInfo: new Map(), // panelName -> panel info
             expandedPanels: new Set(), // Set of currently expanded panel names
+            fullscreenPanel: null, // Currently fullscreen panel name
             expandOrder: [], // Array to track expand order
             collapseOrder: [], // Array to track collapse order for toolbar
             secondaryToolbar: null,
@@ -174,7 +174,8 @@ const PanelsService = {
         const modes = [
             { mode: 'vertical', title: 'Vertical Layout', text: 'Vertical' },
             { mode: 'horizontal', title: 'Horizontal Layout', text: 'Horizontal' },
-            { mode: 'grid', title: 'Grid Layout', text: 'Grid' }
+            { mode: 'grid', title: 'Grid Layout', text: 'Grid' },
+            { mode: 'flexible', title: 'Flexible Layout', text: 'Flexible' }
         ];
 
         modes.forEach(({ mode, title, text }) => {
@@ -249,15 +250,32 @@ const PanelsService = {
             collapsedContainerRef.appendChild(panelButton);
         }
 
-        // Set initial state - expand first panel
-        const firstPanel = this.panelsState.panelsInfo.keys().next().value;
-
+        // Create panels container
         const panelsContainer = this.createPanelsContainer();
 
-        this.initializeDragAndDrop();
+        PanelsDragDropService.initialize(this);
 
-        if (firstPanel) {
-            this.expandPanel(firstPanel);
+        // Load and restore saved panel state, or expand first panel if no saved state
+        const savedPanelState = this.loadPanelState();
+        if (savedPanelState && savedPanelState.expandedPanels) {
+            // Restore saved panel state (even if no panels are expanded)
+            this.panelsState.expandOrder = savedPanelState.expandOrder || [];
+            this.panelsState.collapseOrder = savedPanelState.collapseOrder || [];
+
+            // Expand the saved panels that still exist
+            savedPanelState.expandedPanels.forEach(panelName => {
+                if (this.panelsState.panelsInfo.has(panelName)) {
+                    this.expandPanel(panelName);
+                }
+            });
+
+            // Restore fullscreen state if it exists
+            if (savedPanelState.fullscreenPanel && this.panelsState.panelsInfo.has(savedPanelState.fullscreenPanel)) {
+                // Delay fullscreen restoration to ensure panel is rendered first
+                setTimeout(() => {
+                    this.enterFullscreen(savedPanelState.fullscreenPanel);
+                }, 100);
+            }
         }
 
         // Initialize secondary toolbar message
@@ -381,6 +399,9 @@ const PanelsService = {
 
         // Update secondary toolbar message
         this.updateSecondaryToolbarMessage();
+
+        // Save panel state to storage
+        this.savePanelState();
     },
 
     // Collapse a specific panel
@@ -389,6 +410,11 @@ const PanelsService = {
 
         const panelInfo = this.panelsState.panelsInfo.get(panelName);
         if (!panelInfo) return;
+
+        // Exit fullscreen if this panel is in fullscreen
+        if (this.panelsState.fullscreenPanel === panelName) {
+            this.exitFullscreen();
+        }
 
         // Remove from expanded panels
         this.panelsState.expandedPanels.delete(panelName);
@@ -406,18 +432,93 @@ const PanelsService = {
         }
         this.panelsState.collapseOrder.push(panelName);
 
-        // If no panels are expanded, don't expand any
-        if (this.panelsState.expandedPanels.size === 0) {
-            // Don't expand any panel automatically
-            return;
-        }
-
         // Update UI - remove from expanded, add to collapsed
         this.addPanelToCollapsedContainer(panelName);
         this.removePanelFromPanelsContainer(panelName);        
         
         // Update secondary toolbar message
         this.updateSecondaryToolbarMessage();
+
+        // Save panel state to storage
+        this.savePanelState();
+    },
+
+    // Toggle fullscreen mode for a panel
+    toggleFullscreen(panelName) {
+        console.log(`[PanelsService] Toggling fullscreen for panel: ${panelName}`);
+
+        if (this.panelsState.fullscreenPanel === panelName) {
+            // Exit fullscreen
+            this.exitFullscreen();
+        } else {
+            // Enter fullscreen
+            this.enterFullscreen(panelName);
+        }
+    },
+
+    // Enter fullscreen mode for a panel
+    enterFullscreen(panelName) {
+        console.log(`[PanelsService] Entering fullscreen for panel: ${panelName}`);
+
+        // Exit any existing fullscreen first
+        if (this.panelsState.fullscreenPanel) {
+            this.exitFullscreen();
+        }
+
+        const panelElement = this.panelsState.contentArea.querySelector(`[data-panel-name="${panelName}"]`);
+        if (!panelElement) return;
+
+        // Set fullscreen state
+        this.panelsState.fullscreenPanel = panelName;
+
+        // Apply fullscreen class
+        panelElement.classList.add('panel-fullscreen');
+
+        // Update fullscreen button icon
+        this.updateFullscreenButton(panelName, true);
+
+        // Save panel state
+        this.savePanelState();
+    },
+
+    // Exit fullscreen mode
+    exitFullscreen() {
+        console.log('[PanelsService] Exiting fullscreen');
+
+        const panelName = this.panelsState.fullscreenPanel;
+        if (!panelName) return;
+
+        const panelElement = this.panelsState.contentArea.querySelector(`[data-panel-name="${panelName}"]`);
+        if (!panelElement) return;
+
+        // Remove fullscreen class
+        panelElement.classList.remove('panel-fullscreen');
+
+        // Clear fullscreen state
+        this.panelsState.fullscreenPanel = null;
+
+        // Update fullscreen button icon
+        this.updateFullscreenButton(panelName, false);
+
+        // Save panel state
+        this.savePanelState();
+    },
+
+        // Update fullscreen button appearance
+    updateFullscreenButton(panelName, isFullscreen) {
+        const panelElement = this.panelsState.contentArea.querySelector(`[data-panel-name="${panelName}"]`);
+        if (!panelElement) return;
+
+        const fullscreenBtn = panelElement.querySelector('.panel-header-button[title*="screen"]');
+        if (fullscreenBtn) {
+            if (isFullscreen) {
+                fullscreenBtn.title = 'Exit fullscreen';
+                fullscreenBtn.innerHTML = SVGService.getSVGContent('exit-fullscreen');
+            } else {
+                fullscreenBtn.title = 'Fullscreen panel';
+                fullscreenBtn.innerHTML = SVGService.getSVGContent('fullscreen');
+            }
+        }
     },
 
     // Update secondary toolbar message based on panel states
@@ -477,7 +578,7 @@ const PanelsService = {
             panelsContainer.appendChild(panelElement);
         }
 
-        this.initializeDragAndDrop();
+        PanelsDragDropService.initialize(this);
     },
 
     // Remove a panel from the panels container
@@ -587,7 +688,44 @@ const PanelsService = {
             console.error(`Error initializing panel ${panelName}:`, error);
         }
 
+        // Set default position for flexible mode
+        if (this.currentViewMode === 'flexible') {
+            this.setDefaultPanelPosition(panelElement, panelName);
+        }
+
         return panelElement;
+    },
+
+    // Set default position for panel in flexible mode
+    setDefaultPanelPosition(panelElement, panelName) {
+        const toolName = this.toolName;
+        const positions = StorageService.getToolState(toolName, {}).panelPositions || {};
+        const dimensions = StorageService.getToolState(toolName, {}).panelDimensions || {};
+
+        if (positions[panelName]) {
+            // Use saved position
+            panelElement.style.left = positions[panelName].left;
+            panelElement.style.top = positions[panelName].top;
+        } else {
+            // Position new panels at 0,0 instead of spreading them out
+            panelElement.style.left = '0px';
+            panelElement.style.top = '0px';
+
+            // Save the default position
+            PanelsDragDropService.savePanelPosition(panelName, '0px', '0px');
+        }
+
+        if (dimensions[panelName]) {
+            // Use saved dimensions
+            panelElement.style.width = dimensions[panelName].width;
+            panelElement.style.height = dimensions[panelName].height;
+        } else {
+            // Apply default dimensions since no saved dimensions exist
+            panelElement.style.width = '400px';
+            panelElement.style.height = '300px';
+            // Save the default dimensions
+            PanelsDragDropService.savePanelDimensions(panelName, '400px', '300px');
+        }
     },
 
     // Create panel header with emoji, name, and collapse button
@@ -646,7 +784,7 @@ const PanelsService = {
             infoBtn.className = 'panel-header-button';
             infoBtn.title = 'Panel information';
             infoBtn.dataset.panel = panelName;
-            infoBtn.textContent = '❔';
+            infoBtn.innerHTML = SVGService.getSVGContent('info');
             infoBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.showPanelInfo(panelName, infoBtn);
@@ -658,12 +796,24 @@ const PanelsService = {
             collapseBtn.className = 'panel-header-button';
             collapseBtn.title = 'Collapse panel';
             collapseBtn.dataset.panel = panelName;
-            collapseBtn.textContent = '📁';
+            collapseBtn.innerHTML = SVGService.getSVGContent('collapse');
             collapseBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.collapsePanel(panelName);
             });
             buttonsContainer.appendChild(collapseBtn);
+
+            // Add fullscreen button
+            const fullscreenBtn = document.createElement('button');
+            fullscreenBtn.className = 'panel-header-button';
+            fullscreenBtn.title = 'Fullscreen panel';
+            fullscreenBtn.dataset.panel = panelName;
+            fullscreenBtn.innerHTML = SVGService.getSVGContent('fullscreen');
+            fullscreenBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleFullscreen(panelName);
+            });
+            buttonsContainer.appendChild(fullscreenBtn);
 
             rightDiv.appendChild(buttonsContainer);
         }
@@ -692,127 +842,65 @@ const PanelsService = {
     setViewMode(mode) {
         console.log(`[PanelsService] Setting view mode to: ${mode}`);
 
-        if (!['vertical', 'horizontal', 'grid'].includes(mode)) {
+        if (!['vertical', 'horizontal', 'grid', 'flexible'].includes(mode)) {
             console.error(`Invalid view mode: ${mode}`);
             return;
         }
+
+        const previousMode = this.currentViewMode;
         this.currentViewMode = mode;
-        
+
         // Update the class on the existing panels container instead of re-rendering
         const container = this.panelsState.contentArea.querySelector('.expanded-panels-container');
         if (container) {
             container.className = `expanded-panels-container view-mode-${mode}`;
-        }
-        
-        StorageService.setLocalStorageItem(`panels-view-mode-${this.toolName}`, this.currentViewMode);
-    },
 
-    // Initialize drag and drop for panels
-    initializeDragAndDrop() {
-        console.log('[PanelsService] Initializing drag and drop for panels');
-
-        const container = this.panelsState.contentArea.querySelector('.expanded-panels-container');
-        if (!container) return;
-
-        // Make panels draggable
-        const panels = container.querySelectorAll('.expanded-panel');
-        panels.forEach(panel => {
-            panel.draggable = true;
-            panel.addEventListener('dragstart', this.handleDragStart.bind(this));
-            panel.addEventListener('dragend', this.handleDragEnd.bind(this));
-        });
-
-        // Make container a drop zone
-        container.addEventListener('dragover', this.handleDragOver.bind(this));
-        container.addEventListener('drop', this.handleDrop.bind(this));
-    },
-
-    // Handle drag start
-    handleDragStart(e) {
-        this.dragState = {
-            draggedPanel: e.target.dataset.panelName,
-            draggedElement: e.target
-        };
-        e.target.style.opacity = '0.5';
-        e.target.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-    },
-
-    // Handle drag end
-    handleDragEnd(e) {
-        if (this.dragState) {
-            e.target.style.opacity = '1';
-            e.target.classList.remove('dragging');
-            this.dragState = null;
-        }
-        
-        // Remove drag-over class from container
-        const container = this.panelsState.contentArea.querySelector('.expanded-panels-container');
-        if (container) {
-            container.classList.remove('drag-over');
-        }
-    },
-
-    // Handle drag over
-    handleDragOver(e) {
-        e.preventDefault(); // Allow drop
-        e.dataTransfer.dropEffect = 'move';
-        
-        // Add visual feedback
-        const container = e.currentTarget;
-        container.classList.add('drag-over');
-    },
-
-    // Handle drop
-    handleDrop(e) {
-        e.preventDefault();
-        
-        if (!this.dragState) return;
-
-        const container = e.currentTarget;
-        const draggedPanel = this.dragState.draggedPanel;
-        const dropTarget = e.target.closest('.expanded-panel');
-
-        if (!dropTarget || dropTarget.dataset.panelName === draggedPanel) {
-            return;
-        }
-
-        const dropPanel = dropTarget.dataset.panelName;
-        
-        // Determine if we should insert before or after based on mouse position
-        const rect = dropTarget.getBoundingClientRect();
-        const isAfter = e.clientX > rect.left + rect.width / 2;
-        
-        // Reorder panels
-        this.reorderPanels(draggedPanel, dropPanel, isAfter);
-        
-        // Move the DOM element instead of recreating all panels
-        const draggedElement = this.dragState.draggedElement;
-        if (draggedElement && dropTarget) {
-            const parent = dropTarget.parentNode;
-            if (isAfter) {
-                parent.insertBefore(draggedElement, dropTarget.nextSibling);
-            } else {
-                parent.insertBefore(draggedElement, dropTarget);
+            // If switching to flexible mode, restore positions
+            if (mode === 'flexible' && previousMode !== 'flexible') {
+                PanelsDragDropService.restorePanelPositions();
+            }
+            
+            // If switching away from flexible mode, clear positioning and sizing styles
+            if (mode !== 'flexible' && previousMode === 'flexible') {
+                const panels = container.querySelectorAll('.expanded-panel');
+                panels.forEach(panel => {
+                    panel.style.removeProperty('left');
+                    panel.style.removeProperty('top');
+                    panel.style.removeProperty('width');
+                    panel.style.removeProperty('height');
+                });
             }
         }
+
+        StorageService.setLocalStorageItem(`panels-view-mode-${this.toolName}`, this.currentViewMode);
+
+        // Update active state of view mode buttons
+        this.updateViewModeButtonStates();
     },
 
-    // Reorder panels in expand order
-    reorderPanels(draggedPanel, targetPanel, insertAfter = false) {
-        console.log(`[PanelsService] Reordering panels: ${draggedPanel} -> ${targetPanel}, insertAfter: ${insertAfter}`);
+    // Update the active state of view mode buttons
+    updateViewModeButtonStates() {
+        const buttons = document.querySelectorAll('.view-mode-btn');
+        buttons.forEach(button => {
+            const buttonMode = button.dataset.mode;
+            if (buttonMode === this.currentViewMode) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+        });
+    },
 
-        const currentIndex = this.panelsState.expandOrder.indexOf(draggedPanel);
-        const targetIndex = this.panelsState.expandOrder.indexOf(targetPanel);
+    // Initialize keyboard event listeners
+    initializeKeyboardEvents() {
+        console.log('[PanelsService] Initializing keyboard events');
 
-        if (currentIndex === -1 || targetIndex === -1) return;
-
-        // Remove dragged panel from current position
-        this.panelsState.expandOrder.splice(currentIndex, 1);
-
-        // Insert at target position (after if insertAfter is true)
-        const insertPosition = insertAfter ? targetIndex + 1 : targetIndex;
-        this.panelsState.expandOrder.splice(insertPosition, 0, draggedPanel);
+        // Add global keyboard event listener for Escape key to exit fullscreen
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.panelsState.fullscreenPanel) {
+                this.exitFullscreen();
+            }
+        });
     },
 
     // Show panel information popup
@@ -820,77 +908,55 @@ const PanelsService = {
         const panelInfo = this.panelsState.panelsInfo.get(panelName);
         if (!panelInfo) return;
 
-        // Remove any existing popup
-        const existingPopup = document.querySelector('.panel-info-popup');
-        if (existingPopup) {
-            existingPopup.remove();
-        }
+        // Create description element
+        const descriptionElement = document.createElement('p');
+        descriptionElement.className = 'panel-info-description';
+        descriptionElement.textContent = panelInfo.description;
 
-        // Create popup element
-        const popup = document.createElement('div');
-        popup.className = 'panel-info-popup';
+        // Create content container with only description
+        const contentContainer = document.createElement('div');
+        contentContainer.appendChild(descriptionElement);
 
-        // Create close button
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'close-button';
-        closeBtn.textContent = '✕';
-        closeBtn.onclick = () => popup.remove();
+        // Create popup
+        const popup = new PopupComponent({
+            icon: panelInfo.icon,
+            title: panelInfo.name,
+            content: contentContainer,
+            closable: true, // Use built-in close button
+            overlay: false, // No overlay for info popups
+            closeOnOutsideClick: true, // Close when clicking outside
+            width: 300, // Fixed width for info popups
+            height: 'auto', // Auto height
+            anchorElement: buttonElement // Position relative to button
+        });
 
-        // Create content
-        const title = document.createElement('h3');
-        title.className = 'popup-title';
-        title.innerHTML = `${panelInfo.icon} ${panelInfo.name}`;
+        // Show popup
+        popup.show();
+    },
 
-        const description = document.createElement('p');
-        description.className = 'popup-description';
-        description.textContent = panelInfo.description;
+    // Save panel state to storage
+    savePanelState() {
+        if (!this.toolName || !this.panelsState) return;
 
-        // Assemble popup
-        popup.appendChild(closeBtn);
-        popup.appendChild(title);
-        popup.appendChild(description);
-
-        // Add to body first to get correct dimensions
-        document.body.appendChild(popup);
-
-        // Position the popup near the button
-        if (buttonElement) {
-            const buttonRect = buttonElement.getBoundingClientRect();
-            const popupRect = popup.getBoundingClientRect();
-
-            // Position below the button, aligned to the left
-            popup.style.left = `${buttonRect.left}px`;
-            popup.style.top = `${buttonRect.bottom + 5}px`;
-
-            // Ensure popup doesn't go off-screen
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
-            const popupWidth = popup.offsetWidth;
-            const popupHeight = popup.offsetHeight;
-
-            // Check if popup goes off the right edge
-            if (buttonRect.left + popupWidth > viewportWidth) {
-                popup.style.left = `${viewportWidth - popupWidth - 10}px`;
-            }
-
-            // Check if popup goes off the bottom edge
-            if (buttonRect.bottom + popupHeight + 5 > viewportHeight) {
-                popup.style.top = `${buttonRect.top - popupHeight - 5}px`;
-            }
-        }
-
-        // Close on outside click
-        const closeOnOutsideClick = (e) => {
-            if (!popup.contains(e.target) && e.target !== buttonElement) {
-                popup.remove();
-                document.removeEventListener('click', closeOnOutsideClick);
-            }
+        const panelState = {
+            expandedPanels: Array.from(this.panelsState.expandedPanels),
+            fullscreenPanel: this.panelsState.fullscreenPanel,
+            expandOrder: [...this.panelsState.expandOrder],
+            collapseOrder: [...this.panelsState.collapseOrder]
         };
 
-        // Delay adding the click listener to avoid immediate closure
-        setTimeout(() => {
-            document.addEventListener('click', closeOnOutsideClick);
-        }, 10);
+        StorageService.setToolState(this.toolName, {
+            ...StorageService.getToolState(this.toolName, {}),
+            panelState: panelState
+        });
+    },
+
+    // Load panel state from storage
+    loadPanelState() {
+        if (!this.toolName) return null;
+
+        const toolState = StorageService.getToolState(this.toolName, {});
+        return toolState.panelState || null;
     }
 };
 

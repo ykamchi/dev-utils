@@ -64,6 +64,12 @@ const ThemeService = {
             this.saveTheme();
             this.applyTheme();
             this.updateSelector();
+            
+            // Keep focus on the theme selector for better UX
+            const selector = document.getElementById('theme-select');
+            if (selector) {
+                selector.focus();
+            }
         }
     },
 

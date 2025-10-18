@@ -13,7 +13,7 @@ window.tool_script = {
     memoryChartColors: [
         'var(--color-primary-accent)',
         'var(--color-secondary-accent)',
-        'var(--color-highlight-gold)',
+        'var(--color-highlight)',
         'var(--color-warning-error)',
         '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'
     ],

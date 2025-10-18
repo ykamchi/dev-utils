@@ -168,6 +168,38 @@ window.network = {
         }
     },
 
+    // Helper function to update a status container with network status
+    updateStatusContainer(statusContainer, networkData) {
+        const activeInterfaces = networkData.interfaces.filter(iface => iface.stats.isup).length;
+        if (activeInterfaces === 0) {
+            statusContainer.textContent = "🔴 No connection";
+        } else {
+            const sent = this.formatBytes(networkData.total_counters.bytes_sent || 0);
+            const recv = this.formatBytes(networkData.total_counters.bytes_recv || 0);
+            
+            // Clear existing content
+            statusContainer.innerHTML = '';
+            
+            // Create triangle up span
+            const triangleUpSpan = document.createElement('span');
+            triangleUpSpan.className = 'network-triangle-up';
+            triangleUpSpan.innerHTML = SVGService.getSVGContent('triangle-up');
+            statusContainer.appendChild(triangleUpSpan);
+            
+            // Add space and sent text
+            statusContainer.appendChild(document.createTextNode(' ' + sent + ' '));
+            
+            // Create triangle down span
+            const triangleDownSpan = document.createElement('span');
+            triangleDownSpan.className = 'network-triangle-down';
+            triangleDownSpan.innerHTML = SVGService.getSVGContent('triangle-down');
+            statusContainer.appendChild(triangleDownSpan);
+            
+            // Add space and recv text
+            statusContainer.appendChild(document.createTextNode(' ' + recv));
+        }
+    },
+
     // Update the display with new network data
     updateDisplay(networkData) {
         // Update the panel content only if container is available
@@ -204,26 +236,12 @@ window.network = {
 
         // Update header status with network status
         if (this.headerStatusContainer) {
-            const activeInterfaces = networkData.interfaces.filter(iface => iface.stats.isup).length;
-            if (activeInterfaces === 0) {
-                this.headerStatusContainer.textContent = "🔴 No connection";
-            } else {
-                const sent = this.formatBytes(networkData.total_counters.bytes_sent || 0);
-                const recv = this.formatBytes(networkData.total_counters.bytes_recv || 0);
-                this.headerStatusContainer.innerHTML = `<img src="/static/assets/icons/triangle-up-red.svg" style="width: 16px; height: 16px; vertical-align: middle;" alt="↑"> ${sent} <img src="/static/assets/icons/triangle-down-blue.svg" style="width: 16px; height: 16px; vertical-align: middle;" alt="↓"> ${recv}`;
-            }
+            this.updateStatusContainer(this.headerStatusContainer, networkData);
         }
 
         // Update collapsed status with network status
         if (this.collapsedStatusContainer) {
-            const activeInterfaces = networkData.interfaces.filter(iface => iface.stats.isup).length;
-            if (activeInterfaces === 0) {
-                this.collapsedStatusContainer.textContent = "🔴 No connection";
-            } else {
-                const sent = this.formatBytes(networkData.total_counters.bytes_sent || 0);
-                const recv = this.formatBytes(networkData.total_counters.bytes_recv || 0);
-                this.collapsedStatusContainer.innerHTML = `<img src="/static/assets/icons/triangle-up-red.svg" style="width: 16px; height: 16px; vertical-align: middle;" alt="↑"> ${sent} <img src="/static/assets/icons/triangle-down-blue.svg" style="width: 16px; height: 16px; vertical-align: middle;" alt="↓"> ${recv}`;
-            }
+            this.updateStatusContainer(this.collapsedStatusContainer, networkData);
         }
     },
 

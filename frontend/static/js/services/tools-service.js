@@ -243,7 +243,7 @@ const ToolsService = {
 
                 // Fail to load index.html or panels, show error
                 console.error(`[ToolsService] Failed to load both index.html and panels for tool: ${toolName}`);
-                toolContainer.innerHTML = `<div class="tool-error"><h3>Failed to load tool</h3><p>Could not load index.html or panels for tool: ${toolName}</p><p>Error: ${error.message}</p></div>`;
+                toolContainer.innerHTML = `<div class="tool-error"><h3>Failed to load tool</h3><p>Could not load index.html or panels for tool: ${toolName}</p></div>`;
                 return; 
             }
         } catch (error) {

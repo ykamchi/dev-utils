@@ -232,7 +232,6 @@
 .view-mode-horizontal .expanded-panel {
     flex: 1;
     min-width: 300px;
-    max-width: 50%;
     display: flex;
     flex-direction: column;
     border-right: 1px solid var(--border-color, #e9ecef);
@@ -261,6 +260,35 @@
     overflow: hidden;
 }
 
+/* Flexible Layout */
+.expanded-panels-container.view-mode-flexible {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+    padding: 24px;
+}
+
+.view-mode-flexible .expanded-panel {
+    position: absolute;
+    min-width: 300px;
+    min-height: 200px;
+    border: 1px solid var(--color-secondary-accent, #4A6C7E);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: var(--panel-bg-primary, #ffffff);
+    z-index: 1;
+    cursor: move;
+    /* Remove browser resize handle, we'll handle it manually */
+    resize: none;
+    overflow: hidden;
+}
+
+.view-mode-flexible .expanded-panel.dragging {
+    z-index: 1000;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
 /* Drag and Drop Styles */
 .expanded-panel[draggable="true"] {
     cursor: grab;
@@ -269,6 +297,11 @@
 
 .expanded-panel[draggable="true"]:active {
     cursor: grabbing;
+}
+
+/* Disable transitions during resize for smooth performance */
+.expanded-panel.resizing {
+    transition: none !important;
 }
 
 .expanded-panel.dragging {
@@ -319,7 +352,7 @@
     flex: 1;
     padding: 20px;
     overflow-y: auto;
-    background: var(--bg-primary, #ffffff);
+    background: var(--panel-bg-primary, #ffffff);
 }
 
 /* Panel Content Styles */
@@ -371,13 +404,33 @@
         border-right: none;
         border-bottom: 1px solid var(--color-secondary-accent, #4A6C7E);
     }
+
+    /* Tablet: Flexible mode adjusts panel sizes */
+    .view-mode-flexible .expanded-panel {
+        width: 350px;
+        height: 250px;
+    }
 }
 
 .panel-header-button {
-    font-size: 16px;
+    font-size: 18px;
     background: transparent;
     outline: transparent;
     border-color: transparent;
+}
+
+/* Container for panel header buttons */
+.panel-header-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Make SVG icons adaptive to font size */
+.panel-header-button svg {
+    width: 1em;
+    height: 1em;
+    vertical-align: middle;
 }
 
 @media (max-width: 480px) {
@@ -388,4 +441,60 @@
     .expanded-panels-container.view-mode-grid {
         grid-template-rows: repeat(4, 200px);
     }
+
+    /* Mobile: Flexible mode becomes stacked */
+    .expanded-panels-container.view-mode-flexible {
+        position: static;
+        padding: 16px;
+    }
+
+    .view-mode-flexible .expanded-panel {
+        position: static;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 200px;
+        margin-bottom: 16px;
+    }
+}
+
+/* Fullscreen Panel Styles */
+.expanded-panel.panel-fullscreen {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 9999 !important;
+    background-color: var(--bg-color) !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    max-height: none !important;
+}
+
+.panel-fullscreen .panel-header {
+    background-color: var(--color-secondary-accent) !important;
+    background-image: linear-gradient(180deg,
+        color-mix(in srgb, var(--color-secondary-accent) 80%, white) 0%,
+        var(--color-secondary-accent) 100%) !important;
+}
+
+/* Panel header button styling */
+.panel-header-button {
+    font-size: 16px;
+    background: transparent;
+    outline: transparent;
+    border-color: transparent;
+}
+
+/* Make SVG icons adaptive to font size and themed */
+.panel-header-button svg {
+    width: 1em;
+    height: 1em;
+    vertical-align: middle;
+}
+
+.panel-header-button {
+    color: var(--color-highlight); /* Theme-specific icon coloring */
 }

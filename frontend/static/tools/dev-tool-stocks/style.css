@@ -198,7 +198,7 @@
 
 .stock-change.positive {
     background: var(--color-positive-bg-strong);
-    color: var(--color-highlight-gold);
+    color: var(--color-highlight);
 }
 
 .stock-change.negative {
@@ -261,7 +261,7 @@
 }
 
 .detail-value.positive {
-    color: var(--color-highlight-gold);
+    color: var(--color-highlight);
 }
 
 .detail-value.negative {
@@ -331,7 +331,7 @@
 
 .market-stock-change.positive {
     background: var(--color-positive-bg-light);
-    color: var(--color-highlight-gold);
+    color: var(--color-highlight);
 }
 
 .market-stock-change.negative {

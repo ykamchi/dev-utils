@@ -1,0 +1,238 @@
+/* Framework Table Component - Reusable table styling */
+/* Uses theme variables for consistent theming across all tools */
+
+/* Table container */
+.framework-table-container {
+    overflow-x: auto;
+    border-radius: 8px;
+    box-shadow: var(--shadow-card-light);
+    background: var(--color-card-background);
+}
+
+/* Table styling */
+.framework-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    background: var(--color-card-background);
+}
+
+/* Table header */
+.framework-table thead th {
+    padding: 12px 8px;
+    background: var(--color-primary-accent);
+    color: var(--color-text-light);
+    text-align: left;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.framework-table thead th.sortable {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.framework-table thead th.sortable:hover {
+    background: var(--color-primary-accent-hover);
+}
+
+/* Resize handle styling */
+.resize-handle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    cursor: col-resize;
+    background: transparent;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.framework-table thead th:hover .resize-handle {
+    opacity: 1;
+}
+
+.resize-handle:hover,
+.resize-handle:active {
+    background: var(--color-primary-accent);
+    opacity: 0.8;
+}
+
+/* Sort emoji positioning */
+.framework-table thead th .sort-emoji {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.7;
+    font-size: 10px;
+    transition: opacity 0.2s ease;
+}
+
+.framework-table thead th .sort-emoji.active {
+    opacity: 1;
+    font-size: 12px;
+}
+
+/* Table body */
+.framework-table tbody tr {
+    border-bottom: 1px solid var(--color-border-light);
+    transition: background-color 0.15s ease;
+}
+
+.framework-table tbody tr:hover {
+    background: var(--color-positive-bg-light);
+}
+
+.framework-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+/* Table cells */
+.framework-table td {
+    padding: 10px 8px;
+    border: none;
+    vertical-align: top;
+    color: var(--color-text-dark);
+}
+
+/* Cell content truncation */
+.framework-table td span[title] {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    vertical-align: top;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .framework-table {
+        font-size: 11px;
+    }
+
+    .framework-table thead th,
+    .framework-table td {
+        padding: 6px 4px;
+    }
+}
+
+/* Loading state */
+.framework-table-loading-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--color-secondary-accent);
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--color-border-light);
+    border-radius: 50%;
+    border-top-color: var(--color-primary-accent);
+    animation: table-spin 1s ease-in-out infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes table-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Error state */
+.framework-table-error-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--color-warning-error);
+}
+
+.framework-table-error-state .framework-table-retry-btn {
+    padding: 8px 16px;
+    background: var(--color-primary-accent);
+    color: var(--color-text-light);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.2s ease;
+    margin-top: 12px;
+}
+
+.framework-table-error-state .framework-table-retry-btn:hover {
+    background: var(--color-primary-accent-hover);
+}
+
+/* Empty state */
+.framework-table-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--color-secondary-accent);
+    font-style: italic;
+}
+
+/* Tooltip styling for truncated content */
+.framework-table td span[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    left: 8px;
+    top: 100%;
+    background: var(--color-overlay-dark);
+    color: var(--color-text-light);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: normal;
+    max-width: 300px;
+    word-wrap: break-word;
+    z-index: 1000;
+    box-shadow: var(--shadow-card-hover);
+    pointer-events: none;
+}
+
+/* Cell content popup for truncated content */
+.cell-content-popup {
+    position: fixed;
+    background: var(--color-card-background);
+    border: 1px solid var(--color-border-light);
+    border-radius: 8px;
+    box-shadow: var(--shadow-card-hover);
+    padding: 16px;
+    max-width: 400px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 2000;
+    font-size: 12px;
+    color: var(--color-text-dark);
+}
+
+.cell-content-popup .close-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: var(--color-secondary-accent);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.cell-content-popup .close-button:hover {
+    background: var(--color-negative-bg-light);
+    color: var(--color-warning-error);
+}
+
+.cell-content-popup .cell-content {
+    margin-top: 8px;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}

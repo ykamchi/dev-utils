@@ -1,0 +1,136 @@
+/* Framework Popup Component - Reusable popup/modal styling */
+/* Uses theme variabtheming across all tools */
+
+/* Overlay */
+.framework-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    backdrop-filter: blur(2px);
+}
+
+/* Popup container */
+.framework-popup {
+    position: fixed;
+    background: var(--color-card-background);
+    border: 1px solid var(--color-border-light);
+    border-radius: 8px;
+    box-shadow: var(--shadow-card-main);
+    z-index: 1000;
+    min-width: 200px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Popup header */
+.framework-popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px 10px 20px;
+    border-bottom: 1px solid var(--color-border-light);
+    background: var(--color-primary-accent);
+    color: var(--color-text-light);
+    margin: -1px -1px 0 -1px;
+    border-radius: 8px 8px 0 0;
+}
+
+.framework-popup-header .framework-popup-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.framework-popup-close-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    color: var(--color-text-light);
+    padding: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.framework-popup-close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Standalone close button for popups without header */
+.framework-popup .standalone-close-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 1;
+}
+
+/* Popup content */
+.framework-popup-content {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+    color: var(--color-text-dark);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .framework-popup {
+        min-width: 90vw;
+        max-width: 95vw;
+        max-height: 95vh;
+    }
+
+    .framework-popup-header {
+        padding: 12px 15px 8px 15px;
+    }
+
+    .framework-popup-content {
+        padding: 15px;
+    }
+}
+
+/* Animations */
+.framework-popup {
+    animation: framework-popup-fade-in 0.2s ease-out;
+}
+
+.framework-popup-overlay {
+    animation: framework-popup-overlay-fade-in 0.2s ease-out;
+}
+
+@keyframes framework-popup-fade-in {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes framework-popup-overlay-fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}

@@ -1,6 +1,8 @@
-<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-  <g fill="currentColor">
-    <rect x="2" y="2" width="12" height="5"/>
-    <rect x="2" y="9" width="12" height="5"/>
+<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" stroke="currentColor" stroke-width="0.125em">
+    <!-- Bottom window frame -->
+    <rect x="1" y="5" width="10" height="10"/>
+    <!-- Top window frame (same size, slightly offset) -->
+    <rect x="4" y="2" width="10" height="10"/>
   </g>
 </svg>
