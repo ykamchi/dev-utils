@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "name": "Leo",
+    "gender": "Man",
+    "age": 32,
+    "location": "Denver, CO",
+    "height_in_inches": 71,
+    "eye_color": "Green",
+    "hair_color": "Brown",
+    "occupation": "Park Ranger",
+    "bio": "When I'm not working, I'm out hiking, camping, or planning my next big trip. I thrive on new experiences and love living life at full speed. My ideal partner is an enthusiastic traveler who's ready to take on the next adventure with me, whether it's exploring a new city or just finding the best local coffee spot."
+  },
+  {
+    "id": 2,
+    "name": "Maya",
+    "gender": "Woman",
+    "age": 28,
+    "location": "Seattle, WA",
+    "height_in_inches": 65,
+    "eye_color": "Hazel",
+    "hair_color": "Black",
+    "occupation": "Librarian",
+    "bio": "I'm an easygoing person who enjoys simple pleasures like reading, watching shows, and trying new recipes. I'm seeking a genuine connection with someone who appreciates quiet moments and meaningful conversations."
+  },
+  {
+    "id": 3,
+    "name": "Ben",
+    "gender": "Man",
+    "age": 35,
+    "location": "New York, NY",
+    "height_in_inches": 70,
+    "eye_color": "Blue",
+    "hair_color": "Blonde",
+    "occupation": "Software Engineer",
+    "bio": "I'm a sarcastic and optimistic individual who enjoys laughter and stimulating discussions. If you appreciate dry humor and enjoy debating various topics, we might connect. I'm looking for someone who offers intellectual challenges."
+  },
+  {
+    "id": 4,
+    "name": "Sarah",
+    "gender": "Woman",
+    "age": 29,
+    "location": "Charleston, SC",
+    "height_in_inches": 64,
+    "eye_color": "Brown",
+    "hair_color": "Brunette",
+    "occupation": "Wedding Planner",
+    "bio": "I believe in love stories and the magic of new beginnings. I enjoy romantic gestures, walks, and heartfelt conversations. I'm seeking someone who also believes in lasting love and building a beautiful future together."
+  },
+  {
+    "id": 5,
+    "name": "Alex",
+    "gender": "Man",
+    "age": 26,
+    "location": "San Francisco, CA",
+    "height_in_inches": 69,
+    "eye_color": "Blue",
+    "hair_color": "Brown",
+    "occupation": "Graphic Designer",
+    "bio": "As a graphic designer, I also pursue painting, music, and photography in my free time, often inspired by nature. I'm looking for a partner who appreciates the arts, is open to spontaneous adventures, and perhaps can be a source of inspiration."
+  },
+  {
+    "id": 6,
+    "name": "David",
+    "gender": "Man",
+    "age": 41,
+    "location": "Chicago, IL",
+    "height_in_inches": 72,
+    "eye_color": "Brown",
+    "hair_color": "Black",
+    "occupation": "Financial Consultant",
+    "bio": "Having focused on my career, I'm now ready to build a life with someone special. I value ambition, loyalty, and relaxed weekends. I'm seeking a genuine connection and am ready for a committed relationship."
+  },
+  {
+    "id": 7,
+    "name": "Chloe",
+    "gender": "Woman",
+    "age": 24,
+    "location": "Miami, FL",
+    "height_in_inches": 66,
+    "eye_color": "Brown",
+    "hair_color": "Blonde",
+    "occupation": "Bartender",
+    "bio": "I'm an energetic and outgoing person who loves dancing, concerts, and spending time with friends. I'm looking for someone who enjoys a lively lifestyle and is ready to create memorable experiences."
+  },
+  {
+    "id": 8,
+    "name": "Mark",
+    "gender": "Man",
+    "age": 38,
+    "location": "Austin, TX",
+    "height_in_inches": 70,
+    "eye_color": "Blue",
+    "hair_color": "Brown",
+    "occupation": "Gardener",
+    "bio": "I'm a proud dog and plant parent who enjoys a quiet home life and solving puzzles. I value kindness and humor, and I'm good at remembering song lyrics from the '90s. If you appreciate a calm atmosphere and a good joke, feel free to reach out."
+  },
+  {
+    "id": 9,
+    "name": "Elena",
+    "gender": "Woman",
+    "age": 31,
+    "location": "Los Angeles, CA",
+    "height_in_inches": 63,
+    "eye_color": "Brown",
+    "hair_color": "Brunette",
+    "occupation": "Food Blogger",
+    "bio": "As an amateur chef and enthusiastic foodie, I love to travel, explore new cuisines, and watch shows. I'm on a quest to find the best tacos and would love a partner to join me."
+  },
+  {
+    "id": 10,
+    "name": "James",
+    "gender": "Man",
+    "age": 45,
+    "location": "Boston, MA",
+    "height_in_inches": 71,
+    "eye_color": "Gray",
+    "hair_color": "Salt and Pepper",
+    "occupation": "Art Curator",
+    "bio": "I believe in second chances and finding happiness in everyday life. I appreciate art and have learned the importance of asking for help. I'm seeking someone who values meaningful connections over drama."
+  }
+]
