@@ -1,0 +1,296 @@
+{
+  "bbc-news": {
+    "name": "BBC News",
+    "url": "http://feeds.bbci.co.uk/news/rss.xml",
+    "category": "news",
+    "language": "en",
+    "country": "UK",
+    "description": "BBC News - World News",
+    "image": "https://www.bbc.co.uk/news/special/2015/newsspec_10857/bbc_news_logo.png",
+    "usage": 7
+  },
+  "cnn-top": {
+    "name": "CNN Top Stories",
+    "url": "http://rss.cnn.com/rss/edition.rss",
+    "category": "news",
+    "language": "en",
+    "country": "US",
+    "description": "CNN Top Stories",
+    "image": "https://cdn.cnn.com/cnn/.e/img/3.0/global/misc/cnn-logo.png",
+    "usage": 10
+  },
+  "reuters-world": {
+    "name": "Reuters World News",
+    "url": "http://feeds.reuters.com/Reuters/worldNews",
+    "category": "news",
+    "language": "en",
+    "country": "Global",
+    "description": "Reuters World News",
+    "image": "https://www.reuters.com/pf/resources/images/reuters/logo-vertical-default.svg",
+    "usage": 0
+  },
+  "bbc-world": {
+    "name": "BBC World News",
+    "url": "http://feeds.bbci.co.uk/news/world/rss.xml",
+    "category": "news",
+    "language": "en",
+    "country": "UK",
+    "description": "BBC World News",
+    "image": "https://www.bbc.co.uk/news/special/2015/newsspec_10857/bbc_news_logo.png",
+    "usage": 0
+  },
+  "techcrunch": {
+    "name": "TechCrunch",
+    "url": "https://techcrunch.com/feed/",
+    "category": "technology",
+    "language": "en",
+    "country": "US",
+    "description": "TechCrunch - Technology News",
+    "image": "https://techcrunch.com/wp-content/uploads/2018/04/tc-logo-2018-square-reverse2x.png",
+    "usage": 0
+  },
+  "hacker-news": {
+    "name": "Hacker News",
+    "url": "https://hnrss.org/frontpage",
+    "category": "technology",
+    "language": "en",
+    "country": "Global",
+    "description": "Hacker News Front Page",
+    "image": "https://news.ycombinator.com/y18.gif",
+    "usage": 0
+  },
+  "ars-technica": {
+    "name": "Ars Technica",
+    "url": "https://feeds.arstechnica.com/arstechnica/index",
+    "category": "technology",
+    "language": "en",
+    "country": "US",
+    "description": "Ars Technica - Technology News",
+    "usage": 0
+  },
+  "sciencemag": {
+    "name": "Science Magazine",
+    "url": "https://www.sciencemag.org/rss/news_current.xml",
+    "category": "science",
+    "language": "en",
+    "country": "US",
+    "description": "Science Magazine News",
+    "usage": 1
+  },
+  "nature-news": {
+    "name": "Nature News",
+    "url": "https://www.nature.com/nature.rss",
+    "category": "science",
+    "language": "en",
+    "country": "UK",
+    "description": "Nature Journal News",
+    "usage": 1
+  },
+  "bloomberg": {
+    "name": "Bloomberg",
+    "url": "https://feeds.bloomberg.com/markets/news.rss",
+    "category": "business",
+    "language": "en",
+    "country": "US",
+    "description": "Bloomberg Markets News",
+    "usage": 0
+  },
+  "espn-top": {
+    "name": "ESPN Top Headlines",
+    "url": "https://www.espn.com/espn/rss/news",
+    "category": "sports",
+    "language": "en",
+    "country": "US",
+    "description": "ESPN Top Sports Headlines",
+    "usage": 0
+  },
+  "variety": {
+    "name": "Variety",
+    "url": "https://variety.com/feed/",
+    "category": "entertainment",
+    "language": "en",
+    "country": "US",
+    "description": "Variety - Entertainment News",
+    "usage": 1
+  },
+  "ynet-news": {
+    "name": "Ynet News",
+    "url": "https://www.ynet.co.il/Integration/StoryRss2.xml",
+    "category": "news",
+    "language": "he",
+    "country": "Israel",
+    "description": "Ynet - Leading Israeli News (Hebrew)",
+    "usage": 25
+  },
+  "israel-hayom": {
+    "name": "Israel Hayom",
+    "url": "https://www.israelhayom.co.il/rss.xml",
+    "category": "news",
+    "language": "he",
+    "country": "Israel",
+    "description": "Israel Hayom - Israeli News (Hebrew)",
+    "usage": 2
+  },
+  "maariv-news": {
+    "name": "Maariv News",
+    "url": "https://www.maariv.co.il/Rss/RssFeedsMaariv",
+    "category": "news",
+    "language": "he",
+    "country": "Israel",
+    "description": "Maariv - Israeli News (Hebrew)",
+    "usage": 1
+  },
+  "walla-news": {
+    "name": "Walla News",
+    "url": "https://rss.walla.co.il/feed/1",
+    "category": "news",
+    "language": "he",
+    "country": "Israel",
+    "description": "Walla - Israeli News Portal (Hebrew)",
+    "usage": 1
+  },
+  "one-news": {
+    "name": "One.co.il News",
+    "url": "https://www.one.co.il/cat/rss",
+    "category": "news",
+    "language": "he",
+    "country": "Israel",
+    "description": "One.co.il - Israeli News (Hebrew)",
+    "usage": 1
+  },
+  "haaretz": {
+    "name": "Haaretz",
+    "url": "https://www.haaretz.com/cmlink/1.5200989",
+    "category": "news",
+    "language": "en",
+    "country": "Israel",
+    "description": "Haaretz - Israeli News (English)",
+    "usage": 1
+  },
+  "jerusalem-post": {
+    "name": "The Jerusalem Post",
+    "url": "https://www.jpost.com/Rss/RssFeedsFrontPage",
+    "category": "news",
+    "language": "en",
+    "country": "Israel",
+    "description": "The Jerusalem Post - Israeli News (English)",
+    "usage": 0
+  },
+  "times-of-israel": {
+    "name": "Times of Israel",
+    "url": "https://www.timesofisrael.com/feed/",
+    "category": "news",
+    "language": "en",
+    "country": "Israel",
+    "description": "Times of Israel - Israeli News (English)",
+    "usage": 0
+  },
+  "arutz-sheva": {
+    "name": "Arutz Sheva (Channel 7/14)",
+    "url": "https://www.israelnationalnews.com/Rss.aspx",
+    "category": "news",
+    "language": "en",
+    "country": "Israel",
+    "description": "Arutz Sheva - Israeli News Network (English) - Includes Channel 14",
+    "usage": 1
+  },
+  "globes": {
+    "name": "Globes",
+    "url": "https://www.globes.co.il/rss/rssfeedxml.ashx?fid=1126",
+    "category": "business",
+    "language": "he",
+    "country": "Israel",
+    "description": "Globes - Israeli Business News (Hebrew)",
+    "usage": 0
+  },
+  "calcalist": {
+    "name": "Calcalist",
+    "url": "https://www.calcalist.co.il/world-news/rss.xml",
+    "category": "business",
+    "language": "he",
+    "country": "Israel",
+    "description": "Calcalist - Israeli Business News (Hebrew)",
+    "usage": 0
+  },
+  "sport5": {
+    "name": "Sport5",
+    "url": "https://www.sport5.co.il/rss.aspx",
+    "category": "sports",
+    "language": "he",
+    "country": "Israel",
+    "description": "Sport5 - Israeli Sports News (Hebrew)",
+    "usage": 0
+  },
+  "one-sport": {
+    "name": "One.co.il Sports",
+    "url": "https://www.one.co.il/cat/2/rss",
+    "category": "sports",
+    "language": "he",
+    "country": "Israel",
+    "description": "One.co.il Sports - Israeli Sports (Hebrew)",
+    "usage": 1
+  },
+  "walla-sport": {
+    "name": "Walla Sports",
+    "url": "https://rss.walla.co.il/feed/3",
+    "category": "sports",
+    "language": "he",
+    "country": "Israel",
+    "description": "Walla Sports - Israeli Sports (Hebrew)",
+    "usage": 1
+  },
+  "ynet-news-flashes": {
+    "name": "Ynet News Flashes",
+    "url": "https://www.ynet.co.il/Integration/StoryRss1854.xml",
+    "category": "news",
+    "language": "he",
+    "country": "Israel",
+    "description": "Ynet - News Flashes (מבזקי החדשות)",
+    "usage": 4
+  },
+  "ynet-blogs": {
+    "name": "Ynet Blogs",
+    "url": "https://www.ynet.co.il/Integration/StoryRss3764.xml",
+    "category": "news",
+    "language": "he",
+    "country": "Israel",
+    "description": "Ynet - Blogs (בלוגוס)",
+    "usage": 1
+  },
+  "ynet-video": {
+    "name": "Ynet Video",
+    "url": "https://www.ynet.co.il/Integration/StoryRssVideo2.xml",
+    "category": "news",
+    "language": "he",
+    "country": "Israel",
+    "description": "Ynet - Video Content (וידיאו)",
+    "usage": 0
+  },
+  "ynet-opinions": {
+    "name": "Ynet Opinions",
+    "url": "https://www.ynet.co.il/Integration/StoryRss194.xml",
+    "category": "news",
+    "language": "he",
+    "country": "Israel",
+    "description": "Ynet - Opinions (דעות)",
+    "usage": 4
+  },
+  "ynet-opinion-diaries": {
+    "name": "Ynet Opinion Diaries",
+    "url": "https://www.ynet.co.il/Integration/StoryRss3487.xml",
+    "category": "news",
+    "language": "he",
+    "country": "Israel",
+    "description": "Ynet - Opinion Diaries (יומני סבר)",
+    "usage": 1
+  },
+  "ynet-consumer": {
+    "name": "Ynet Consumer",
+    "url": "https://www.ynet.co.il/Integration/StoryRss5363.xml",
+    "category": "news",
+    "language": "he",
+    "country": "Israel",
+    "description": "Ynet - Consumer News (צרכנות)",
+    "usage": 3
+  }
+}

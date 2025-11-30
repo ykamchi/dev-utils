@@ -154,41 +154,7 @@
     margin-left: 16px;
 }
 
-/* View Mode Controls */
-.view-mode-controls {
-    display: flex;
-    align-items: center;
-    margin-right: 20px;
-}
-
-.view-mode-buttons {
-    display: flex;
-    gap: 4px;
-    background: var(--color-card-background, #FBFBF2);
-    border: 1px solid var(--color-secondary-accent, #4A6C7E);
-    border-radius: 6px;
-    padding: 2px;
-}
-
-.view-mode-btn {
-    padding: 6px 8px;
-    border: 2px solid var(--color-secondary-accent, #4A6C7E);
-    background: white;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s ease;
-    color: var(--color-secondary-accent, #4A6C7E);
-}
-
-.view-mode-btn:hover {
-    background: var(--color-positive-bg-light, rgba(168, 144, 83, 0.1));
-}
-
-.view-mode-btn.active {
-    background: var(--color-primary-accent, #192A56);
-    color: var(--color-text-light, #FBFBF2);
-}
+/* Responsive Design for View Modes */
 
 /* Panels Content Area */
 .panels-content-area {
@@ -417,6 +383,9 @@
     background: transparent;
     outline: transparent;
     border-color: transparent;
+    cursor: pointer;
+    color: var(--color-highlight); /* Theme-specific icon coloring */
+
 }
 
 /* Container for panel header buttons */
@@ -481,20 +450,3 @@
 }
 
 /* Panel header button styling */
-.panel-header-button {
-    font-size: 16px;
-    background: transparent;
-    outline: transparent;
-    border-color: transparent;
-}
-
-/* Make SVG icons adaptive to font size and themed */
-.panel-header-button svg {
-    width: 1em;
-    height: 1em;
-    vertical-align: middle;
-}
-
-.panel-header-button {
-    color: var(--color-highlight); /* Theme-specific icon coloring */
-}

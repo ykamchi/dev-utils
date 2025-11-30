@@ -11,6 +11,7 @@ A modular, extensible development tools application built with Flask backend and
 - **Two Tool Types**: Support for both regular tools and panel-based tools with collapsible panels
 - **Advanced Panel Views**: Panel-based tools support multiple view modes (vertical, horizontal, grid, flexible) with drag-and-drop and resizing capabilities
 - **Flexible Layout Mode**: Freely position and resize panels anywhere on screen with absolute positioning
+- **Cross-Tool Panel Integration**: Open panels from any tool in popups for enhanced interoperability
 - **Theme System**: Multiple built-in themes including dark and light modes
 - **Responsive Design**: Works on desktop and mobile devices
 - **RESTful API**: Clean API endpoints for tool communication
@@ -470,6 +471,57 @@ Choose appropriate categories for your tools:
 | Weather | Regular | Weather information and forecasts |
 | Senseip | Panel-based | Job monitoring system with job status and information panels - fully customizable layout |
 | Panels Example | Panel-based | Example implementation showcasing panel-based tool architecture with multiple view modes |
+
+## Cross-Tool Panel Integration
+
+The Dev Tools App supports opening panels from any tool in popup windows, enabling powerful cross-tool interactions and enhanced user workflows.
+
+### Opening Panels from Other Tools
+
+Use the `CrossToolService.openPanel()` method to display any panel from any tool in a popup:
+
+```javascript
+// Open battery panel from system-info tool
+await CrossToolService.openPanel('dev-tool-system-info', 'battery', {
+    width: 400,
+    height: 'auto'
+});
+
+// Open clock panel with custom options
+await CrossToolService.openPanel('dev-tool-system-info', 'clock', {
+    width: 350,
+    position: { x: 100, y: 100 }
+});
+```
+
+### Features
+
+- **Dynamic Loading**: Automatically loads panel JavaScript and CSS files on-demand
+- **Resource Management**: Properly initializes and cleans up panel resources
+- **Responsive Design**: Panels adapt to popup container constraints
+- **Theme Integration**: Inherits the application's theming system
+- **Error Handling**: Comprehensive error handling with automatic cleanup
+
+### Use Cases
+
+- **Quick Access**: Access frequently used panels without switching tools
+- **Cross-Reference**: Compare data between different tools
+- **Workflow Integration**: Build interconnected tool experiences
+- **Dashboard Creation**: Create custom views combining panels from multiple tools
+
+### Example Implementation
+
+```javascript
+// In any tool's panel or component
+async openSystemMonitor() {
+    try {
+        await CrossToolService.openPanel('dev-tool-system-info', 'battery');
+        console.log('Battery panel opened successfully');
+    } catch (error) {
+        console.error('Failed to open battery panel:', error);
+    }
+}
+```
 
 ## API Reference
 

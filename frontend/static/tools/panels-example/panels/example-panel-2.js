@@ -88,8 +88,9 @@ window.example_panel_2 = {
                     </div>
                 </div>
                 <div class="panel-actions">
-                    <button class="btn-primary" onclick="panel_2.updateChart()">Update Chart</button>
-                    <button class="btn-secondary" onclick="panel_2.exportData()">Export</button>
+                    <button class="btn-primary" onclick="example_panel_2.updateChart()">Update Chart</button>
+                    <button class="btn-secondary" onclick="example_panel_2.exportData()">Export</button>
+                    <button class="btn-info" onclick="example_panel_2.openBatteryPanel()">🔋 Open Battery Panel</button>
                 </div>
             </div>
         `;
@@ -204,5 +205,22 @@ window.example_panel_2 = {
     exportChart() {
         console.log('Exporting chart...');
         alert('Chart exported!');
+    },
+
+    // Open battery panel from system-info tool in a popup
+    async openBatteryPanel() {
+        console.log('Opening battery panel in popup...');
+
+        try {
+            // Use the new CrossToolService.openPanel method
+            await CrossToolService.openPanel('dev-tool-system-info', 'battery', {
+                width: 400,
+                height: 'auto'
+            });
+
+        } catch (error) {
+            console.error('Error opening battery panel:', error);
+            alert('Error opening battery panel: ' + error.message);
+        }
     }
 };

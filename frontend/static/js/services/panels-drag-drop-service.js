@@ -22,6 +22,11 @@ const PanelsDragDropService = {
             panel.addEventListener('dragstart', this.handleDragStart.bind(this));
             panel.addEventListener('dragend', this.handleDragEnd.bind(this));
 
+            // Add click handler for flexible mode to bring panel to front
+            if (this.panelsService.currentViewMode === 'flexible') {
+                panel.addEventListener('click', this.handlePanelClick.bind(this));
+            }
+
             // Add resize event listeners for flexible mode
             if (this.panelsService.currentViewMode === 'flexible') {
                 this.addResizeListeners(panel);
@@ -36,6 +41,23 @@ const PanelsDragDropService = {
         if (this.panelsService.currentViewMode === 'flexible') {
             this.restorePanelPositions();
             this.restorePanelDimensions();
+        }
+    },
+
+    // Handle panel click in flexible mode to bring to front
+    handlePanelClick(e) {
+        // Only bring to front in flexible mode
+        if (this.panelsService.currentViewMode !== 'flexible') return;
+
+        // Don't bring to front if this was part of a drag operation
+        if (this.dragState) return;
+
+        const panel = e.currentTarget;
+        const container = this.panelsService.panelsState.contentArea.querySelector('.expanded-panels-container');
+        
+        if (container && panel) {
+            // Bring the panel to the front by moving it to the end of the container
+            container.appendChild(panel);
         }
     },
 
