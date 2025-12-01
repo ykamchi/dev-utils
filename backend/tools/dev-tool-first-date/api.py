@@ -58,6 +58,33 @@ def register_apis(app, base_path: str):
                 return jsonify({"success": True, "member": m})
         return jsonify({"success": False, "error": "Member not found"}), 404
 
+    @app.route(f"{base_path}/conversations", methods=["POST"])
+    def get_conversations():
+        """Return conversations for the Conversations panel.
+
+        Expects a JSON payload with `group_name`, mirroring the register endpoint.
+        The request is proxied to upstream `/api/group_conversations` which returns
+        a raw list. We return that list under the `conversations` key. If the
+        caller omits `group_name` we return 400. On upstream failure we fall back
+        to the local hard-coded CONVERSATIONS list.
+        """
+        payload = request.get_json(force=True)
+        group_name = payload.get('group_name') if isinstance(payload, dict) else None
+
+        if not group_name:
+            return jsonify({'success': False, 'error': 'missing group_name'}), 400
+
+        try:
+            upstream_resp = _proxy_post('/api/group_conversations', {'group_name': group_name})
+            # Upstream is expected to return a list of conversations; return it
+            # under the `conversations` key so clients have a consistent shape.
+            return jsonify({'success': True, 'conversations': upstream_resp})
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/group_conversations')
+            # Do NOT fall back to local data; surface the error to the caller so
+            # they can detect upstream unavailability.
+            return jsonify({'success': False, 'error': 'Failed to contact upstream group_conversations'}), 502
+
     @app.route(f"{base_path}/registered", methods=["POST"])
     def check_registered():
         payload = request.get_json(force=True)
@@ -182,3 +209,25 @@ def register_apis(app, base_path: str):
         except RequestException:
             app.logger.exception('Failed to contact upstream /api/conversation_create')
             return jsonify({'success': False, 'error': 'Failed to contact upstream conversation service'}), 502
+
+    @app.route(f"{base_path}/conversation_messages", methods=["POST"])
+    def conversation_messages():
+        """Return messages for a conversation by calling upstream /api/conversation_messages.
+        Expected input: { conversation_id }
+        """
+        payload = request.get_json(force=True)
+        conversation_id = payload.get('conversation_id')
+
+        if not conversation_id:
+            return jsonify({'success': False, 'error': 'missing conversation_id'}), 400
+
+        try:
+            # Upstream expects { conversation_id: ... }
+            upstream_resp = _proxy_post('/api/conversation_messages', {'conversation_id': conversation_id})
+            # Upstream returns a list of dicts directly. Wrap it for consistency if desired,
+            # or return as-is. The prompt implies we delegate the API, so returning the list
+            # wrapped in a success envelope is usually safer for our frontend.
+            return jsonify({'success': True, 'messages': upstream_resp})
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/conversation_messages')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream message service'}), 502

@@ -17,6 +17,13 @@
 .dev-tool-first-date .left-panel { width: 36%; background: var(--panel-bg-primary); border-radius: 6px; padding: 8px; overflow: auto;}
 .dev-tool-first-date .right-panel { flex: 1; background: var(--panel-bg-primary); border-radius: 6px; padding: 12px; overflow: auto;}
 
+.dev-tool-first-date .conversation-details {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: auto;
+}
+
 .dev-tool-first-date .left-header { display:none }
 
 /* Full-width top header above the split */
@@ -39,12 +46,40 @@
 .dev-tool-first-date #startConversationBtn { padding: 8px 12px; border-radius: 8px; background: var(--color-card-background); border: 1px solid var(--color-secondary-accent); color: var(--color-text-primary); cursor: pointer }
 .dev-tool-first-date #startConversationBtn:hover { background: var(--color-primary-accent); color: var(--color-text-light); border-color: var(--color-primary-accent) }
 
-/* Search input now lives under the members list in the left panel footer */
+/* Search input now lives above the members list in the left panel */
 .dev-tool-first-date .left-panel { display: flex; flex-direction: column; }
 .dev-tool-first-date .members-list { list-style:none; margin:0; padding:0; overflow:auto; flex: 1 1 auto; }
-.dev-tool-first-date .members-footer { display:flex; justify-content:flex-start; align-items:flex-end; padding-top:8px; }
-.dev-tool-first-date .members-footer #searchInput { width:100%; min-width: 160px; max-width: 100%; padding:8px 12px; border-radius:8px; border:1px solid var(--color-overlay-border); background: var(--color-card-background); color: var(--color-text-primary); font-size:0.95rem }
-.dev-tool-first-date .members-footer #searchInput:focus { outline: none; border-color: var(--color-primary-accent-hover); box-shadow: var(--shadow-collapse-button-hover); }
+
+.dev-tool-first-date .search-container {
+    display: flex;
+    align-items: center;
+    background: var(--color-card-background);
+    border: 1px solid var(--color-overlay-border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-card-light);
+}
+
+.dev-tool-first-date .search-container:focus-within {
+    border-color: var(--color-primary-accent);
+    box-shadow: var(--shadow-card-hover);
+}
+
+.dev-tool-first-date .search-icon {
+    font-size: 1.2rem;
+    margin-right: 8px;
+    opacity: 0.7;
+}
+
+.dev-tool-first-date .search-container input {
+    border: none;
+    background: transparent;
+    width: 100%;
+    color: var(--color-text-primary);
+    font-size: 0.95rem;
+    outline: none;
+}
 
 .dev-tool-first-date .members-list { list-style:none; margin:0; padding:0; overflow:auto; }
 
@@ -66,6 +101,11 @@
 	transform: translateY(-2px);
 	box-shadow: var(--shadow-card-hover);
 }
+.dev-tool-first-date .member-item.selected {
+	border-color: var(--color-primary-accent);
+	background: var(--color-highlight);
+	box-shadow: var(--shadow-card-hover);
+}
 .dev-tool-first-date .member-item .avatar { width:56px; height:56px; font-size:20px; border-radius:8px; background: var(--color-overlay-border); display:flex; align-items:center; justify-content:center; }
 .dev-tool-first-date .member-item .member-info { flex: 1; min-width: 0 }
 .dev-tool-first-date .member-name { font-weight:600; margin:0; font-size:16px }
@@ -78,7 +118,7 @@
 .dev-tool-first-date .profile-actions { display:flex; gap:8px; align-items:center; }
 
 /* Position actions relative to the right-panel and anchor to bottom-left */
-.dev-tool-first-date .right-panel { position: relative; }
+.dev-tool-first-date .right-panel { position: relative; display: flex; flex-direction: column; }
 .dev-tool-first-date .profile-actions-left {
 	position: absolute;
 	bottom: 8px;
@@ -140,3 +180,99 @@
 
 .dev-tool-first-date .error { color: var(--color-warning-error); padding:12px }
 .dev-tool-first-date .empty { color: var(--color-text-secondary); padding:12px }
+
+/* Conversation Details Header Styling */
+.dev-tool-first-date .conv-details-header {
+    background: linear-gradient(to bottom right, var(--color-card-background), var(--color-overlay-border));
+    border-bottom: 1px solid var(--color-border-light);
+    padding: 20px;
+    margin: -12px -12px 16px -12px;
+    border-radius: 6px 6px 0 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.dev-tool-first-date .conv-header-top {
+    display: flex;
+    gap: 16px;
+    align-items: self-start;
+    margin-bottom: 16px;
+}
+
+.dev-tool-first-date .conv-avatar-large {
+    width: 56px;
+    height: 56px;
+    font-size: 28px;
+    background: linear-gradient(135deg, var(--color-primary-accent), var(--color-secondary-accent));
+    color: var(--color-text-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border: 2px solid var(--color-card-background);
+}
+
+.dev-tool-first-date .conv-info-main h3 {
+    margin: 0 0 6px 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -0.5px;
+}
+
+.dev-tool-first-date .conv-meta-row {
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dev-tool-first-date .conv-members-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border-light);
+}
+
+.dev-tool-first-date .conv-members-area .label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.dev-tool-first-date .members-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.dev-tool-first-date .member-tag {
+    background: var(--color-card-background);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border-light);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
+}
+
+.dev-tool-first-date .member-tag:hover {
+    border-color: var(--color-primary-accent);
+    color: var(--color-primary-accent);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+.dev-tool-first-date .conv-body {
+    padding: 0 8px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: auto;
+}
