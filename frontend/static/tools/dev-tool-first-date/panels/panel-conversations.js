@@ -6,7 +6,7 @@ window.panel_conversations = {
     description: 'List of conversations and detail view',
 
     // Initialize the panel
-    init(container, headerStatusContainer) {
+    async init(container, headerStatusContainer) {
         console.log('[panel_conversations] init');
         this.container = container;
         this.headerStatus = headerStatusContainer;
@@ -17,6 +17,7 @@ window.panel_conversations = {
         this.detailsEl = null;
         this.conversations = [];
         this.currentConversation = null;
+        this.charts = {}; // Store chart instances for cleanup
         this.speechState = {
             messages: [],
             currentIndex: 0,
@@ -26,6 +27,13 @@ window.panel_conversations = {
         };
 
         this._onSearchInput = () => this.renderList();
+
+        // Load Chart.js library
+        try {
+            await this.loadChartJS();
+        } catch (error) {
+            console.error('[panel_conversations] Failed to load Chart.js:', error);
+        }
 
         // Attempt to bind after a short delay in case render isn't inserted immediately
         setTimeout(() => {
@@ -44,8 +52,38 @@ window.panel_conversations = {
     destroy() {
         console.log('[panel_conversations] destroy');
         if (this.searchInput) this.searchInput.removeEventListener('input', this._onSearchInput);
+        
+        // Destroy all Chart.js instances
+        Object.values(this.charts).forEach(chart => {
+            if (chart) chart.destroy();
+        });
+        this.charts = {};
+        
         if (this.container) this.container.innerHTML = '';
         window.speechSynthesis.cancel();
+    },
+
+    /**
+     * Load Chart.js library if not already loaded
+     */
+    loadChartJS() {
+        return new Promise((resolve, reject) => {
+            // Check if Chart.js is already loaded
+            if (typeof Chart !== 'undefined') {
+                resolve();
+                return;
+            }
+
+            // Load Chart.js from CDN
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+            script.onload = () => {
+                console.log('[panel_conversations] Chart.js loaded successfully');
+                resolve();
+            };
+            script.onerror = () => reject(new Error('Failed to load Chart.js'));
+            document.head.appendChild(script);
+        });
     },
 
     // Buttons for collapsed/expanded modes
@@ -86,8 +124,27 @@ window.panel_conversations = {
                     </div>
 
                     <div class="right-panel">
-                        <div id="conversationDetails" class="conversation-details empty">
-                            <p>Select a conversation to view details.</p>
+                        <div id="conversationDetails" class="conversation-details">
+                            <div class="tab-buttons">
+                                <button class="tab-button active" data-tab="details" onclick="window.panel_conversations.switchTab('details')">ℹ️ Details</button>
+                                <button class="tab-button" data-tab="messages" onclick="window.panel_conversations.switchTab('messages')">💬 Messages</button>
+                                <button class="tab-button" data-tab="feedback-members" onclick="window.panel_conversations.switchTab('feedback-members')">👤 By Members</button>
+                                <button class="tab-button" data-tab="feedback-metrics" onclick="window.panel_conversations.switchTab('feedback-metrics')">📊 By Metrics</button>
+                            </div>
+                            <div class="tab-content">
+                                <div id="details-tab" class="tab-pane active">
+                                    <p class="empty-state">Select a conversation to view details.</p>
+                                </div>
+                                <div id="messages-tab" class="tab-pane">
+                                    <p class="empty-state">Select a conversation to view messages.</p>
+                                </div>
+                                <div id="feedback-members-tab" class="tab-pane">
+                                    <p class="empty-state">Select a conversation to view feedback by members.</p>
+                                </div>
+                                <div id="feedback-metrics-tab" class="tab-pane">
+                                    <p class="empty-state">Select a conversation to view feedback by metrics.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -106,8 +163,20 @@ window.panel_conversations = {
             });
             const data = await res.json();
             if (data && data.success && Array.isArray(data.conversations)) {
-                this.conversations = data.conversations;
+                // Sort conversations by created_at descending (latest first)
+                this.conversations = data.conversations.sort((a, b) => {
+                    const dateA = new Date(a.created_at || 0);
+                    const dateB = new Date(b.created_at || 0);
+                    return dateB - dateA; // descending order
+                });
                 this.renderList();
+                
+                // Auto-select the first conversation if any exist
+                if (this.conversations.length > 0) {
+                    const firstConvId = this.conversations[0].conversation_id;
+                    this.showConversation(firstConvId);
+                }
+                
                 // update collapsed status if present
                 if (this.collapsedStatusContainer) {
                     this.collapsedStatusContainer.textContent = `💬 ${this.conversations.length}`;
@@ -124,6 +193,9 @@ window.panel_conversations = {
                     { conversation_id: 'sample-3', created_at: 'offline', members: ['Ben', 'David'] }
                 ];
                 this.renderList();
+                if (this.conversations.length > 0) {
+                    this.showConversation(this.conversations[0].conversation_id);
+                }
                 if (this.listEl) this.listEl.insertAdjacentHTML('beforeend', '<li class="note">(showing sample data — backend returned unexpected payload)</li>');
             }
         } catch (e) {
@@ -136,6 +208,9 @@ window.panel_conversations = {
                 { conversation_id: 'sample-3', created_at: 'offline', members: ['Ben', 'David'] }
             ];
             this.renderList();
+            if (this.conversations.length > 0) {
+                this.showConversation(this.conversations[0].conversation_id);
+            }
             if (this.listEl) this.listEl.insertAdjacentHTML('beforeend', '<li class="note">(showing sample data — failed to contact backend)</li>');
         }
     },
@@ -185,7 +260,7 @@ window.panel_conversations = {
         }
 
         if (filtered.length === 0) {
-            this.listEl.innerHTML = '<li class="empty">No conversations</li>';
+            this.listEl.innerHTML = '<li class="empty">🔍 No conversation found</li>';
         }
     },
 
@@ -215,25 +290,25 @@ window.panel_conversations = {
         if (!this.detailsEl) this.detailsEl = this.container.querySelector('#conversationDetails');
         if (!this.detailsEl) return;
 
-        // populate details
-        this.detailsEl.classList.remove('empty');
-        this.detailsEl.innerHTML = '';
-        
-        const header = document.createElement('div');
-        header.className = 'conv-details-header';
-        
-        const membersList = (conv.members || []).map(m => `<span class="member-tag">${m}</span>`).join('');
-        
-        header.innerHTML = `
-            <div class="conv-header-top">
-                <div class="conv-avatar-large">💬</div>
-                <div class="conv-info-main">
-                    <h3>Conversation #${conv.conversation_id}</h3>
-                    <div class="conv-meta-row">
-                        <span class="date">${new Date(conv.created_at).toLocaleString()}</span>
+        // Build the conversation header (static, outside tabs)
+        const headerHTML = `
+            <div class="conv-details-header">
+                <div class="conv-header-top">
+                    <div class="conv-avatar-large">💬</div>
+                    <div class="conv-info-main">
+                        <h3>Conversation #${conv.conversation_id}</h3>
+                        <div class="conv-meta-row">
+                            <span class="date">${new Date(conv.created_at).toLocaleString()}</span>
+                        </div>
                     </div>
                 </div>
-                <div class="conv-controls" style="margin-left: auto; display: flex; gap: 12px; font-size: 1.5rem; cursor: pointer;">
+            </div>
+        `;
+
+        const controlsHTML = `
+            <div class="player-controls-header">
+                <span class="player-label">🎧 Player</span>
+                <div class="player-buttons">
                     <span id="btnPrev" title="Previous">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em">
                             <path d="M12 5v14l-7-7zm9-1v16h-2V4z"/>
@@ -256,30 +331,46 @@ window.panel_conversations = {
                     </span>
                 </div>
             </div>
-            <div class="conv-members-area">
-                <span class="label">Participants:</span>
-                <div class="members-tags">${membersList}</div>
+        `;
+
+        // Rebuild the entire details element with header + tabs structure
+        this.detailsEl.innerHTML = `
+            ${headerHTML}
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="details" onclick="window.panel_conversations.switchTab('details')">ℹ️ Details</button>
+                <button class="tab-button" data-tab="messages" onclick="window.panel_conversations.switchTab('messages')">💬 Messages</button>
+                <button class="tab-button" data-tab="feedback-members" onclick="window.panel_conversations.switchTab('feedback-members')">👤 By Members</button>
+                <button class="tab-button" data-tab="feedback-metrics" onclick="window.panel_conversations.switchTab('feedback-metrics')">📊 By Metrics</button>
+            </div>
+            <div class="tab-content">
+                <div id="details-tab" class="tab-pane active">
+                    <div class="conv-details-content"><p>Loading details...</p></div>
+                </div>
+                <div id="messages-tab" class="tab-pane">
+                    ${controlsHTML}
+                    <div class="conv-body"><p>Loading messages...</p></div>
+                </div>
+                <div id="feedback-members-tab" class="tab-pane">
+                    <p class="empty-state">Loading feedback by members...</p>
+                </div>
+                <div id="feedback-metrics-tab" class="tab-pane">
+                    <p class="empty-state">Loading feedback by metrics...</p>
+                </div>
             </div>
         `;
-        this.detailsEl.appendChild(header);
 
         // Bind control events
-        const btnPrev = header.querySelector('#btnPrev');
-        const btnPlay = header.querySelector('#btnPlay');
-        const btnPause = header.querySelector('#btnPause');
-        const btnNext = header.querySelector('#btnNext');
+        const btnPrev = this.detailsEl.querySelector('#btnPrev');
+        const btnPlay = this.detailsEl.querySelector('#btnPlay');
+        const btnPause = this.detailsEl.querySelector('#btnPause');
+        const btnNext = this.detailsEl.querySelector('#btnNext');
 
         btnPlay.addEventListener('click', () => this.playConversation());
         btnPause.addEventListener('click', () => this.pauseConversation());
         btnNext.addEventListener('click', () => this.nextMessage());
         btnPrev.addEventListener('click', () => this.prevMessage());
 
-        // placeholder for messages/content
-        const body = document.createElement('div');
-        body.className = 'conv-body';
-        body.innerHTML = '<p>Loading messages...</p>';
-        this.detailsEl.appendChild(body);
-
+        // Load and render messages
         try {
             const res = await fetch('/api/dev-tool-first-date/conversation_messages', {
                 method: 'POST',
@@ -290,19 +381,103 @@ window.panel_conversations = {
             
             if (data.success && Array.isArray(data.messages)) {
                 this.speechState.messages = data.messages;
-                this.renderMessages(body, data.messages);
+                
+                // Populate details tab first
+                this.populateDetailsTab(conv, data.messages);
+                
+                // Populate messages tab
+                const messagesTab = this.container.querySelector('#messages-tab');
+                const body = messagesTab?.querySelector('.conv-body');
+                if (body) {
+                    this.renderMessages(body, data.messages);
+                }
+                
+                // Automatically populate feedback tabs
+                this.populateFeedbackTabs();
             } else {
-                body.innerHTML = '<p class="error">Failed to load messages.</p>';
+                const messagesTab = this.container.querySelector('#messages-tab');
+                const body = messagesTab?.querySelector('.conv-body');
+                if (body) body.innerHTML = '<p class="error">Failed to load messages.</p>';
             }
         } catch (e) {
             console.error('Error loading messages:', e);
-            body.innerHTML = '<p class="error">Error loading messages.</p>';
+            const messagesTab = this.container.querySelector('#messages-tab');
+            const body = messagesTab?.querySelector('.conv-body');
+            if (body) body.innerHTML = '<p class="error">Error loading messages.</p>';
         }
     },
 
+    populateDetailsTab(conv, messages) {
+        const detailsTab = this.container.querySelector('#details-tab .conv-details-content');
+        if (!detailsTab) return;
+
+        // Calculate message counts per member
+        const memberCounts = {};
+        messages.forEach(msg => {
+            const member = msg.member_nick_name;
+            memberCounts[member] = (memberCounts[member] || 0) + 1;
+        });
+
+        // Calculate conversation duration
+        let duration = 'N/A';
+        if (messages.length > 0) {
+            const firstMsg = new Date(messages[0].created_at);
+            const lastMsg = new Date(messages[messages.length - 1].created_at);
+            const diffMs = lastMsg - firstMsg;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMins / 60);
+            const remainingMins = diffMins % 60;
+            
+            if (diffHours > 0) {
+                duration = `${diffHours}h ${remainingMins}m`;
+            } else {
+                duration = `${diffMins}m`;
+            }
+        }
+
+        // Build member tags with message counts
+        const memberTags = (conv.members || []).map(member => {
+            const count = memberCounts[member] || 0;
+            return `<span class="member-tag-detail">${member} <span class="message-count">(${count})</span></span>`;
+        }).join('');
+
+        const detailsHTML = `
+            <div class="details-section">
+                <h3>📋 Overview</h3>
+                <div class="detail-item">
+                    <span class="detail-label">Conversation ID:</span>
+                    <span class="detail-value">#${conv.conversation_id}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Created:</span>
+                    <span class="detail-value">${new Date(conv.created_at).toLocaleString()}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Total Messages:</span>
+                    <span class="detail-value">${messages.length}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Duration:</span>
+                    <span class="detail-value">${duration}</span>
+                </div>
+            </div>
+
+            <div class="details-section">
+                <h3>👥 Participants</h3>
+                <div class="members-tags-detail">
+                    ${memberTags}
+                </div>
+            </div>
+        `;
+
+        detailsTab.innerHTML = detailsHTML;
+    },
+
     playConversation() {
-        const btnPlay = this.detailsEl.querySelector('#btnPlay');
-        const btnPause = this.detailsEl.querySelector('#btnPause');
+        const btnPlay = this.detailsEl?.querySelector('#btnPlay');
+        const btnPause = this.detailsEl?.querySelector('#btnPause');
+        
+        if (!btnPlay || !btnPause) return;
 
         if (window.speechSynthesis.paused) {
             window.speechSynthesis.resume();
@@ -322,8 +497,10 @@ window.panel_conversations = {
     },
 
     pauseConversation() {
-        const btnPlay = this.detailsEl.querySelector('#btnPlay');
-        const btnPause = this.detailsEl.querySelector('#btnPause');
+        const btnPlay = this.detailsEl?.querySelector('#btnPlay');
+        const btnPause = this.detailsEl?.querySelector('#btnPause');
+        
+        if (!btnPlay || !btnPause) return;
         
         window.speechSynthesis.pause();
         this.speechState.isPlaying = false;
@@ -344,8 +521,10 @@ window.panel_conversations = {
         } else {
             // End of conversation
             this.speechState.isPlaying = false;
-            this.detailsEl.querySelector('#btnPlay').style.display = 'inline';
-            this.detailsEl.querySelector('#btnPause').style.display = 'none';
+            const btnPlay = this.detailsEl?.querySelector('#btnPlay');
+            const btnPause = this.detailsEl?.querySelector('#btnPause');
+            if (btnPlay) btnPlay.style.display = 'inline';
+            if (btnPause) btnPause.style.display = 'none';
         }
     },
 
@@ -462,10 +641,491 @@ window.panel_conversations = {
                     <span style="font-weight:600; color:var(--color-text-primary);">${msg.member_nick_name}</span>
                     <span>${new Date(msg.created_at).toLocaleTimeString()}</span>
                 </div>
-                <div style="white-space: pre-wrap;">${msg.message_text}</div>
+                <div style="white-space: pre-wrap; margin-top: 8px;">${msg.message_text}</div>
             `;
             ul.appendChild(li);
         });
         container.appendChild(ul);
+    },
+
+    populateFeedbackTabs() {
+        console.log('[populateFeedbackTabs] Populating feedback tabs...');
+        
+        const feedbackData = this.parseFeedbackData();
+        
+        if (!feedbackData || (feedbackData.members.length === 0 && feedbackData.keys.length === 0)) {
+            const membersTab = this.container.querySelector('#feedback-members-tab');
+            const metricsTab = this.container.querySelector('#feedback-metrics-tab');
+            
+            if (membersTab) membersTab.innerHTML = '<div style="padding: 20px; text-align: center;">No numeric feedback data available</div>';
+            if (metricsTab) metricsTab.innerHTML = '<div style="padding: 20px; text-align: center;">No numeric feedback data available</div>';
+            return;
+        }
+
+        console.log('[populateFeedbackTabs] Feedback data:', feedbackData);
+
+        // Populate By Members tab
+        this.populateFeedbackByMembers(feedbackData);
+        
+        // Populate By Metrics tab
+        this.populateFeedbackByMetrics(feedbackData);
+    },
+
+    populateFeedbackByMembers(feedbackData) {
+        const membersTab = this.container.querySelector('#feedback-members-tab');
+        if (!membersTab) {
+            console.error('[populateFeedbackByMembers] Could not find feedback-members tab');
+            return;
+        }
+
+        // Build HTML structure without charts
+        let html = '<div style="display: flex; flex-direction: column; height: 100%; overflow-y: auto; padding: 20px; gap: 20px;">';
+        
+        // Per-member graphs
+        if (feedbackData.members.length > 0) {
+            feedbackData.members.forEach(member => {
+                const canvasId = `graph-member-${member.replace(/\s+/g, '-')}`;
+                html += `
+                    <div style="flex-shrink: 0; margin-bottom: 20px;">
+                        <h4 class="graph-title">📉 ${member}</h4>
+                        <div style="position: relative; height: 300px; width: 100%;">
+                            <canvas id="${canvasId}"></canvas>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        html += '</div>';
+        membersTab.innerHTML = html;
+        
+        // Now draw the charts after DOM is ready
+        setTimeout(() => {
+            console.log('[populateFeedbackByMembers] Drawing member charts...');
+            
+            feedbackData.members.forEach(member => {
+                const canvasId = `graph-member-${member.replace(/\s+/g, '-')}`;
+                const canvas = document.getElementById(canvasId);
+                if (!canvas) {
+                    console.warn(`[populateFeedbackByMembers] Canvas not found: ${canvasId}`);
+                    return;
+                }
+                
+                const data = feedbackData.points
+                    .filter(p => p.member === member)
+                    .map(p => ({ key: p.key, value: p.value, time: p.time }));
+                
+                console.log(`[populateFeedbackByMembers] Drawing member chart for ${member}:`, data);
+                this.drawLineGraph(canvas, data, feedbackData.keys, 'key');
+            });
+        }, 100);
+    },
+
+    populateFeedbackByMetrics(feedbackData) {
+        const metricsTab = this.container.querySelector('#feedback-metrics-tab');
+        if (!metricsTab) {
+            console.error('[populateFeedbackByMetrics] Could not find feedback-metrics tab');
+            return;
+        }
+
+        // Build HTML structure without charts
+        let html = '<div style="display: flex; flex-direction: column; height: 100%; overflow-y: auto; padding: 20px; gap: 20px;">';
+        
+        // Per-metric graphs
+        if (feedbackData.keys.length > 0) {
+            feedbackData.keys.forEach(key => {
+                const canvasId = `graph-key-${key.replace(/\s+/g, '-')}`;
+                html += `
+                    <div style="flex-shrink: 0; margin-bottom: 20px;">
+                        <h4 class="graph-title">📉 ${key}</h4>
+                        <div style="position: relative; height: 300px; width: 100%;">
+                            <canvas id="${canvasId}"></canvas>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        html += '</div>';
+        metricsTab.innerHTML = html;
+        
+        // Now draw the charts after DOM is ready
+        setTimeout(() => {
+            console.log('[populateFeedbackByMetrics] Drawing metric charts...');
+            
+            feedbackData.keys.forEach(key => {
+                const canvasId = `graph-key-${key.replace(/\s+/g, '-')}`;
+                const canvas = document.getElementById(canvasId);
+                if (!canvas) {
+                    console.warn(`[populateFeedbackByMetrics] Canvas not found: ${canvasId}`);
+                    return;
+                }
+                
+                const data = feedbackData.points
+                    .filter(p => p.key === key)
+                    .map(p => ({ member: p.member, value: p.value, time: p.time }));
+                
+                console.log(`[populateFeedbackByMetrics] Drawing key chart for ${key}:`, data);
+                this.drawLineGraph(canvas, data, feedbackData.members, 'member');
+            });
+        }, 100);
+    },
+
+    switchTab(tabName) {
+        // Update tab buttons
+        const tabButtons = this.container.querySelectorAll('.tab-button');
+        tabButtons.forEach(btn => {
+            if (btn.dataset.tab === tabName) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        // Update tab panes
+        const tabPanes = this.container.querySelectorAll('.tab-pane');
+        tabPanes.forEach(pane => {
+            if (pane.id === `${tabName}-tab`) {
+                pane.classList.add('active');
+            } else {
+                pane.classList.remove('active');
+            }
+        });
+
+        this.currentTab = tabName;
+    },
+
+    parseFeedbackData() {
+        console.log('[parseFeedbackData] Starting to parse feedback from messages...');
+        const data = {
+            members: [],
+            keys: [],
+            points: [] // { member, key, value, time }
+        };
+
+        if (!this.speechState.messages) {
+            console.log('[parseFeedbackData] No messages in speechState');
+            return data;
+        }
+
+        console.log(`[parseFeedbackData] Processing ${this.speechState.messages.length} messages`);
+
+        this.speechState.messages.forEach((msg, idx) => {
+            console.log(`[parseFeedbackData] Message ${idx}:`, msg);
+            
+            if (!msg.feedback) {
+                console.log(`[parseFeedbackData] Message ${idx} has no feedback field or it's null`);
+                return;
+            }
+
+            let feedbackObj = msg.feedback;
+            console.log(`[parseFeedbackData] Message ${idx} feedback type:`, typeof feedbackObj, feedbackObj);
+
+            // If feedback is a string, try to parse it
+            if (typeof feedbackObj === 'string') {
+                try {
+                    feedbackObj = JSON.parse(feedbackObj);
+                    console.log(`[parseFeedbackData] Parsed feedback string to object:`, feedbackObj);
+                } catch (e) {
+                    console.log(`[parseFeedbackData] Failed to parse feedback string:`, e);
+                    return;
+                }
+            }
+
+            if (typeof feedbackObj !== 'object' || feedbackObj === null) {
+                console.log(`[parseFeedbackData] Feedback is not an object after parsing:`, feedbackObj);
+                return;
+            }
+
+            // Backend returns 'member_nick_name', not 'name'
+            const member = msg.member_nick_name || msg.name || 'Unknown';
+            const time = new Date(msg.created_at || msg.timestamp || Date.now());
+
+            console.log(`[parseFeedbackData] Message fields:`, {
+                member_nick_name: msg.member_nick_name,
+                name: msg.name,
+                created_at: msg.created_at,
+                timestamp: msg.timestamp,
+                resolved_member: member,
+                resolved_time: time
+            });
+            console.log(`[parseFeedbackData] Processing feedback for member ${member}:`, feedbackObj);
+
+            // Extract numeric key-value pairs
+            Object.entries(feedbackObj).forEach(([key, value]) => {
+                console.log(`[parseFeedbackData] Checking key "${key}" with value:`, value, typeof value);
+                const numValue = parseFloat(value);
+                if (!isNaN(numValue)) {
+                    console.log(`[parseFeedbackData] Adding numeric point: member=${member}, key=${key}, value=${numValue}`);
+                    
+                    if (!data.members.includes(member)) {
+                        data.members.push(member);
+                    }
+                    if (!data.keys.includes(key)) {
+                        data.keys.push(key);
+                    }
+                    data.points.push({ member, key, value: numValue, time });
+                } else {
+                    console.log(`[parseFeedbackData] Value "${value}" is not numeric, skipping`);
+                }
+            });
+        });
+
+        console.log('[parseFeedbackData] Final parsed data:', data);
+        return data;
+    },
+
+    renderStatisticsContent(feedbackData) {
+        let html = '<div style="display: flex; flex-direction: column; height: 100%; overflow-y: auto; padding: 20px; gap: 20px;">';
+        
+        // Per-member graphs
+        if (feedbackData.members.length > 0) {
+            html += '<div style="flex-shrink: 0;"><h3 style="margin: 0 0 15px 0;">Per Member</h3></div>';
+            feedbackData.members.forEach(member => {
+                html += this.createMemberGraph(member, feedbackData);
+            });
+        }
+        
+        // Per-metric graphs
+        if (feedbackData.keys.length > 0) {
+            html += '<div style="flex-shrink: 0; margin-top: 20px;"><h3 style="margin: 0 0 15px 0;">Per Metric</h3></div>';
+            feedbackData.keys.forEach(key => {
+                html += this.createKeyGraph(key, feedbackData);
+            });
+        }
+        
+        html += '</div>';
+        return html;
+    },
+
+    createMemberGraph(member, feedbackData) {
+        const canvasId = `graph-member-${member.replace(/\s+/g, '-')}`;
+        const html = `
+            <div style="flex-shrink: 0; margin-bottom: 20px;">
+                <h4 style="margin: 0 0 10px 0; font-weight: 600;">${member}</h4>
+                <div style="position: relative; height: 300px; width: 100%;">
+                    <canvas id="${canvasId}"></canvas>
+                </div>
+            </div>
+        `;
+        
+        // Draw after DOM is ready
+        setTimeout(() => {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            
+            const data = feedbackData.points
+                .filter(p => p.member === member)
+                .map(p => ({ key: p.key, value: p.value, time: p.time }));
+            
+            this.drawLineGraph(canvas, data, feedbackData.keys, 'key');
+        }, 10);
+        
+        return html;
+    },
+
+    createKeyGraph(key, feedbackData) {
+        const canvasId = `graph-key-${key.replace(/\s+/g, '-')}`;
+        const html = `
+            <div style="flex-shrink: 0; margin-bottom: 20px;">
+                <h4 style="margin: 0 0 10px 0; font-weight: 600;">${key}</h4>
+                <div style="position: relative; height: 300px; width: 100%;">
+                    <canvas id="${canvasId}"></canvas>
+                </div>
+            </div>
+        `;
+        
+        // Draw after DOM is ready
+        setTimeout(() => {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            
+            const data = feedbackData.points
+                .filter(p => p.key === key)
+                .map(p => ({ member: p.member, value: p.value, time: p.time }));
+            
+            this.drawLineGraph(canvas, data, feedbackData.members, 'member');
+        }, 10);
+        
+        return html;
+    },
+
+    drawLineGraph(canvas, data, categories, categoryField) {
+        const canvasId = canvas.id;
+        
+        // Destroy existing chart if it exists
+        if (this.charts[canvasId]) {
+            this.charts[canvasId].destroy();
+        }
+
+        if (data.length === 0) {
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--color-secondary-accent').trim();
+            ctx.font = '14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('No data available', canvas.width / 2, canvas.height / 2);
+            return;
+        }
+
+        // Group data by category and sort by time
+        const seriesData = {};
+        categories.forEach(cat => {
+            seriesData[cat] = data
+                .filter(d => d[categoryField] === cat)
+                .sort((a, b) => a.time - b.time);
+        });
+
+        // Get all unique time points sorted, and create sequential labels
+        const allTimes = [...new Set(data.map(d => d.time.getTime()))].sort((a, b) => a - b);
+        const labels = allTimes.map((_, index) => `#${index + 1}`); // Message #1, #2, #3, etc.
+
+        // Color palette using theme colors
+        const colors = [
+            getComputedStyle(document.documentElement).getPropertyValue('--color-highlight').trim(),
+            getComputedStyle(document.documentElement).getPropertyValue('--color-primary-accent').trim(),
+            '#10b981',
+            '#f59e0b',
+            '#8b5cf6',
+            '#ec4899',
+            '#06b6d4',
+            '#84cc16'
+        ];
+
+        // Prepare datasets for Chart.js
+        const datasets = categories.map((cat, idx) => {
+            const points = seriesData[cat];
+            if (points.length === 0) return null;
+
+            // Create data array aligned with labels (time-ordered positions)
+            const dataArray = allTimes.map(timestamp => {
+                const point = points.find(p => p.time.getTime() === timestamp);
+                return point ? point.value : null;
+            });
+
+            return {
+                label: cat,
+                data: dataArray,
+                borderColor: colors[idx % colors.length],
+                backgroundColor: colors[idx % colors.length] + '33', // Add transparency
+                borderWidth: 2.5,
+                tension: 0.4,
+                fill: false,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: colors[idx % colors.length],
+                pointBorderColor: colors[idx % colors.length],
+                pointBorderWidth: 2,
+                spanGaps: true // Connect lines even if some points are null
+            };
+        }).filter(ds => ds !== null);
+
+        // Create Chart.js chart
+        const ctx = canvas.getContext('2d');
+        this.charts[canvasId] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 750,
+                    easing: 'easeInOutQuart'
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'right',
+                        labels: {
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--color-text-dark').trim(),
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            },
+                            padding: 10,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--color-card-background').trim(),
+                        titleColor: getComputedStyle(document.documentElement).getPropertyValue('--color-text-dark').trim(),
+                        bodyColor: getComputedStyle(document.documentElement).getPropertyValue('--color-text-dark').trim(),
+                        borderColor: getComputedStyle(document.documentElement).getPropertyValue('--color-border-light').trim(),
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        padding: 12,
+                        displayColors: true,
+                        callbacks: {
+                            title: function(context) {
+                                return `Message ${context[0].label}`;
+                            },
+                            label: function(context) {
+                                if (context.parsed.y === null) return null;
+                                return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Message Sequence',
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--color-text-dark').trim(),
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            }
+                        },
+                        grid: {
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--color-border-light').trim(),
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--color-secondary-accent').trim(),
+                            font: {
+                                size: 11,
+                                weight: '500'
+                            },
+                            maxTicksLimit: 10
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Value',
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--color-text-dark').trim(),
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            }
+                        },
+                        beginAtZero: true,
+                        grid: {
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--color-border-light').trim(),
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--color-secondary-accent').trim(),
+                            font: {
+                                size: 11,
+                                weight: '500'
+                            },
+                            callback: function(value) {
+                                return value.toFixed(1);
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
     }
 };
+

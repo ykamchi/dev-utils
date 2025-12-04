@@ -14,14 +14,18 @@
 }
 
 .dev-tool-first-date .split-container { display: flex; gap: 12px; flex: 1; overflow: auto;}
-.dev-tool-first-date .left-panel { width: 36%; background: var(--panel-bg-primary); border-radius: 6px; padding: 8px; overflow: auto;}
-.dev-tool-first-date .right-panel { flex: 1; background: var(--panel-bg-primary); border-radius: 6px; padding: 12px; overflow: auto;}
+.dev-tool-first-date .left-panel { width: 280px; background: var(--panel-bg-primary); border-radius: 6px; padding: 8px; overflow: auto;}
+.dev-tool-first-date .right-panel { flex: 1; background: var(--panel-bg-primary); border-radius: 6px; padding: 12px; overflow: hidden; display: flex; flex-direction: column;}
 
 .dev-tool-first-date .conversation-details {
     display: flex;
     flex-direction: column;
     flex: 1;
-    overflow: auto;
+    overflow: hidden;
+}
+
+.dev-tool-first-date .conv-details-header {
+    flex-shrink: 0;
 }
 
 .dev-tool-first-date .left-header { display:none }
@@ -270,9 +274,205 @@
 }
 
 .dev-tool-first-date .conv-body {
-    padding: 0 8px;
+    padding: 0;
     display: flex;
     flex-direction: column;
     flex: 1;
     overflow: auto;
+}
+
+.dev-tool-first-date #messages-tab {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+/* Tab Navigation */
+.dev-tool-first-date .tab-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--color-secondary-accent);
+    padding-bottom: 12px;
+    flex-shrink: 0;
+}
+
+.dev-tool-first-date .tab-button {
+    padding: 10px 16px;
+    border: 1px solid var(--color-secondary-accent);
+    background: var(--color-card-background);
+    color: var(--color-text-dark);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.dev-tool-first-date .tab-button:hover {
+    background: var(--color-positive-bg-light);
+    border-color: var(--color-highlight);
+}
+
+.dev-tool-first-date .tab-button.active {
+    background: var(--color-highlight);
+    color: var(--color-text-light);
+    border-color: var(--color-highlight);
+}
+
+.dev-tool-first-date .tab-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.dev-tool-first-date .tab-pane {
+    display: none !important;
+    flex-direction: column;
+    flex: 1;
+    overflow: auto;
+    min-height: 0;
+}
+
+.dev-tool-first-date .tab-pane.active {
+    display: flex !important;
+}
+
+.dev-tool-first-date .tab-pane .empty-state {
+    text-align: center;
+    color: var(--color-text-secondary);
+    padding: 60px 20px;
+    font-size: 1.1rem;
+}
+
+/* Details Tab Styling */
+.dev-tool-first-date .conv-details-content {
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.dev-tool-first-date .details-section {
+    margin-bottom: 30px;
+}
+
+.dev-tool-first-date .details-section:first-child {
+    margin-top: 0;
+}
+
+.dev-tool-first-date .details-section h3 {
+    margin: 0 0 10px 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    border-bottom: 2px solid var(--color-border-light);
+    padding-bottom: 8px;
+    line-height: 1.5;
+}
+
+/* Feedback section titles (matching Details tab style) */
+.dev-tool-first-date .feedback-section-title {
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    border-bottom: 2px solid var(--color-border-light);
+    padding-bottom: 8px;
+}
+
+.dev-tool-first-date .graph-title {
+    margin: 0 0 10px 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    border-bottom: 2px solid var(--color-border-light);
+    padding-bottom: 8px;
+    line-height: 1.5;
+}
+
+/* Player Controls Header - styled to match graph titles */
+.dev-tool-first-date .player-controls-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 0 10px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--color-border-light);
+}
+
+.dev-tool-first-date .player-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    line-height: 1.5;
+}
+
+.dev-tool-first-date .player-buttons {
+    display: flex;
+    gap: 12px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--color-text-primary);
+}
+
+.dev-tool-first-date .player-buttons span {
+    transition: color 0.2s ease;
+}
+
+.dev-tool-first-date .player-buttons span:hover {
+    color: var(--color-highlight);
+}
+
+.dev-tool-first-date .detail-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+.dev-tool-first-date .detail-item:last-child {
+    border-bottom: none;
+}
+
+.dev-tool-first-date .detail-label {
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.dev-tool-first-date .detail-value {
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.dev-tool-first-date .members-tags-detail {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.dev-tool-first-date .member-tag-detail {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: linear-gradient(135deg, var(--color-primary-accent) 0%, var(--color-secondary-accent) 100%);
+    color: var(--color-text-light);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+
+.dev-tool-first-date .member-tag-detail:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.dev-tool-first-date .member-tag-detail .message-count {
+    font-size: 0.85rem;
+    opacity: 0.9;
 }

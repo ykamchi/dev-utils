@@ -52,7 +52,8 @@ const ThemeService = {
             'github-dark', 
             'solarized-dark', 
             'dracula', 
-            'one-dark-pro'
+            'one-dark-pro',
+            'natural-neutral'
         ];
         return validThemes.includes(theme);
     },
