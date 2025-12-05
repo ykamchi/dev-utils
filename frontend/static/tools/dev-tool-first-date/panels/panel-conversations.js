@@ -18,6 +18,7 @@ window.panel_conversations = {
         this.conversations = [];
         this.currentConversation = null;
         this.charts = {}; // Store chart instances for cleanup
+        this.memberProfiles = {}; // Cache for member profiles by nick_name
         this.speechState = {
             messages: [],
             currentIndex: 0,
@@ -262,6 +263,37 @@ window.panel_conversations = {
         if (filtered.length === 0) {
             this.listEl.innerHTML = '<li class="empty">🔍 No conversation found</li>';
         }
+    },
+
+    // Fetch and cache member profile by nick_name
+    async getMemberProfile(nickName) {
+        // Return cached profile if available
+        if (this.memberProfiles[nickName]) {
+            return this.memberProfiles[nickName];
+        }
+
+        try {
+            const res = await fetch('/api/dev-tool-first-date/members');
+            const data = await res.json();
+            
+            if (data.success && Array.isArray(data.members)) {
+                // Find member by name (case-insensitive)
+                const profile = data.members.find(m => 
+                    m.name && m.name.toLowerCase() === nickName.toLowerCase()
+                );
+                
+                if (profile) {
+                    this.memberProfiles[nickName] = profile;
+                    return profile;
+                }
+                
+                console.warn(`Profile not found for ${nickName}`);
+            }
+        } catch (e) {
+            console.error(`Failed to fetch profile for ${nickName}:`, e);
+        }
+        
+        return null;
     },
 
     async showConversation(id) {
@@ -543,7 +575,7 @@ window.panel_conversations = {
         }
     },
 
-    speakMessage(index) {
+    async speakMessage(index) {
         if (index < 0 || index >= this.speechState.messages.length) {
             this.speechState.isPlaying = false;
             const btnPlay = this.detailsEl.querySelector('#btnPlay');
@@ -557,21 +589,46 @@ window.panel_conversations = {
         const text = `${msg.member_nick_name} says: ${msg.message_text}`;
         const utterance = new SpeechSynthesisUtterance(text);
         
-        // Voice selection heuristic
+        // Get member profile to determine voice based on gender
+        const profile = await this.getMemberProfile(msg.member_nick_name);
+        console.log(`[speakMessage] Member: ${msg.member_nick_name}, Profile:`, profile);
+        console.log(`[speakMessage] Gender field:`, profile?.gender);
+        
         const voices = window.speechSynthesis.getVoices();
-        const name = msg.member_nick_name.toLowerCase();
-        // Simple heuristic for demo purposes
-        const isFemale = ['chloe', 'sarah', 'jessica', 'emily'].some(n => name.includes(n));
-        const isMale = ['ben', 'alex', 'david', 'mike'].some(n => name.includes(n));
+        console.log(`[speakMessage] Available voices:`, voices.map(v => `${v.name} (${v.lang})`));
         
         let voice = null;
-        if (isFemale) {
-            voice = voices.find(v => v.name.includes('Female') || v.name.includes('Google US English') || v.name.includes('Samantha'));
-        } else if (isMale) {
-            voice = voices.find(v => v.name.includes('Male') || v.name.includes('Google UK English Male') || v.name.includes('Daniel'));
+        
+        // Try gender-based selection if profile exists
+        if (profile && profile.gender) {
+            const gender = profile.gender.toLowerCase();
+            console.log(`[speakMessage] Gender (lowercase): "${gender}"`);
+            
+            if (gender.includes('woman') || gender.includes('female')) {
+                // Use Google US English voice for females (neutral/female sounding)
+                voice = voices.find(v => v.name === 'Google US English' && v.lang === 'en-US');
+                if (!voice) {
+                    // Fallback to UK Female
+                    voice = voices.find(v => v.name === 'Google UK English Female' && v.lang === 'en-GB');
+                }
+                console.log(`[speakMessage] Selected female voice:`, voice?.name || 'none found');
+            } else if (gender.includes('man') || gender.includes('male')) {
+                // Use Google UK English Male voice
+                voice = voices.find(v => v.name === 'Google UK English Male' && v.lang === 'en-GB');
+                console.log(`[speakMessage] Selected male voice:`, voice?.name || 'none found');
+            }
         }
         
-        if (voice) utterance.voice = voice;
+        // Use default voice if no gender-based voice found
+        if (!voice && voices.length > 0) {
+            voice = voices[0]; // Use first available voice as default
+            console.log(`[speakMessage] Using default voice: ${voice.name}`);
+        }
+        
+        if (voice) {
+            utterance.voice = voice;
+            console.log(`[speakMessage] Final voice set to: ${voice.name}`);
+        }
 
         utterance.onstart = () => {
             this.speechState.startTime = Date.now();
