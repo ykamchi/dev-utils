@@ -18,28 +18,15 @@ State is ephemeral and lives only in memory.
 """
 
 from flask import jsonify, request
-from typing import Any
-import json
-from pathlib import Path
 import requests
 from requests.exceptions import RequestException
 
 
-# Load members from a dedicated JSON file so the data is easier to manage.
-_BASE_DIR = Path(__file__).parent
-_MEMBERS_FILE = _BASE_DIR / "members.json"
-try:
-    with open(_MEMBERS_FILE, "r", encoding="utf-8") as f:
-        MEMBERS = json.load(f)
-except Exception as e:
-    raise RuntimeError(f"Failed to load members from {_MEMBERS_FILE}: {e}")
 
+upstream_base = 'http://127.0.0.1:8443'
 
 def register_apis(app, base_path: str):
     """Register members endpoints on the provided Flask app under base_path."""
-
-    upstream_base = 'http://127.0.0.1:8443'
-
     def _proxy_post(path: str, payload: dict, timeout: float = 5.0):
         """Post JSON to upstream and return parsed JSON or raise RequestException."""
         url = f"{upstream_base}{path}"
@@ -47,16 +34,92 @@ def register_apis(app, base_path: str):
         resp.raise_for_status()
         return resp.json()
 
+    @app.route(f"{base_path}/member_decisions", methods=["POST"])
+    def member_decisions():
+        """Proxy to upstream /api/member_decisions with member_id, returns JSON object."""
+        payload = request.get_json(force=True)
+        member_id = payload.get('member_id')
+        if not member_id:
+            return jsonify({'success': False, 'error': 'missing member_id'}), 400
+        try:
+            upstream_resp = _proxy_post('/api/member_decisions', {'member_id': member_id})
+            return jsonify(upstream_resp)
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/member_decisions')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream member_decisions'}), 502
+
+
+    @app.route(f"{base_path}/member_conversations", methods=["POST"])
+    def member_conversations():
+        """Proxy to upstream /api/member_conversations with member_id, returns JSON object."""
+        payload = request.get_json(force=True)
+        member_id = payload.get('member_id')
+        if not member_id:
+            return jsonify({'success': False, 'error': 'missing member_id'}), 400
+        try:
+            upstream_resp = _proxy_post('/api/member_conversations', {'member_id': member_id})
+            return jsonify(upstream_resp)
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/member_conversations')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream member_conversations'}), 502
+    
+    
+    @app.route(f"{base_path}/decision_start", methods=["POST"])
+    def decision_start():
+        """Start a decision by calling the upstream decision_create endpoint.
+        Expected input (from frontend):
+          { group_name, max_agents, max_messages, context }
+        """
+        payload = request.get_json(force=True)
+        group_name = payload.get('group_name')
+        context = payload.get('context')
+        participant_members_ids = payload.get('participant_members_ids', [12, 22])
+
+        if not group_name:
+            return jsonify({'success': False, 'error': 'missing group_name'}), 400
+        if not context:
+            return jsonify({'success': False, 'error': 'missing context'}), 400
+
+        try:
+            decision_req = {
+                'group_name': group_name,
+                'participant_members_ids': participant_members_ids,
+                'context': context
+            }
+            app.logger.debug('Proxying decision_create with payload: %s', decision_req)
+            upstream_resp = _proxy_post('/api/decision_create', decision_req)
+            return jsonify(upstream_resp)
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/decision_create')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream decision service'}), 502
+
+
     @app.route(f"{base_path}/members", methods=["GET"])
     def get_members():
-        return jsonify({"success": True, "members": MEMBERS})
+        """Proxy to upstream /api/group_members_profiles (POST) with group_name from query param or default."""
+        group_name = request.args.get('group_name', 'first-date')
+        try:
+            upstream_resp = _proxy_post('/api/group_members_profiles', {'group_name': group_name})
+            # Upstream returns a list of profiles; wrap in success envelope for frontend
+            return jsonify({"success": True, "members": upstream_resp})
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/group_members_profiles')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream group_members_profiles'}), 502
+
 
     @app.route(f"{base_path}/members/<int:member_id>", methods=["GET"])
     def get_member(member_id: int):
-        for m in MEMBERS:
-            if m.get("id") == member_id:
-                return jsonify({"success": True, "member": m})
-        return jsonify({"success": False, "error": "Member not found"}), 404
+        """Proxy to upstream /api/member_profile (POST) with member_id."""
+        try:
+            upstream_resp = _proxy_post('/api/member_profile', {'member_id': member_id})
+            # Upstream returns the profile dict or empty dict
+            if upstream_resp:
+                return jsonify({"success": True, "member": upstream_resp})
+            else:
+                return jsonify({"success": False, "error": "Member not found"}), 404
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/member_profile')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream member_profile'}), 502
 
     @app.route(f"{base_path}/conversations", methods=["POST"])
     def get_conversations():
@@ -114,35 +177,9 @@ def register_apis(app, base_path: str):
         if not group_name or not raw_name:
             return jsonify({"success": False, "error": "missing group_name or member_nick_name"}), 400
 
-        raw_name = payload.get('member_nick_name')
-        member_profile = None
-        if raw_name:
-            for m in MEMBERS:
-                if m.get('name') == raw_name:
-                    member_profile = m
-                    break
-            if member_profile is None:
-                rn_norm = str(raw_name).strip().lower()
-                for m in MEMBERS:
-                    if str(m.get('name', '')).strip().lower() == rn_norm:
-                        member_profile = m
-                        break
-
-        if member_profile is None:
-            return jsonify({"success": False, "error": "member profile not found"}), 400
-
-        payload_up = {
-            'group_name': group_name,
-            'member_nick_name': raw_name,
-            'member_profile': member_profile,
-        }
-
-        try:
-            upstream_resp = _proxy_post('/api/register', payload_up)
-            return jsonify(upstream_resp)
-        except RequestException:
-            app.logger.exception('Failed to contact upstream /api/register')
-            return jsonify({'success': False, 'error': 'Failed to contact upstream registration service'}), 502
+        # ...existing code...
+        # MEMBERS logic removed; registration logic may need to be updated to fetch member_profile from upstream if required.
+        return jsonify({"success": False, "error": "member profile not found (MEMBERS lookup removed)"}), 400
 
     @app.route(f"{base_path}/unregister", methods=["POST"])
     def do_unregister():
@@ -192,15 +229,22 @@ def register_apis(app, base_path: str):
         """
         payload = request.get_json(force=True)
         group_name = payload.get('group_name')
+        participant_members_ids = payload.get('participant_members_ids')
+        max_messages = payload.get('max_messages', 20)
+        context = payload.get('context')
 
         if not group_name:
             return jsonify({'success': False, 'error': 'missing group_name'}), 400
 
+        if not context:
+            return jsonify({'success': False, 'error': 'missing context'}), 400 
+        
         try:
             conv_req = {
                 'group_name': group_name,
-                'max_agents': payload.get('max_agents', 2),
-                'max_messages': payload.get('max_messages', 50),
+                'participant_members_ids': participant_members_ids,
+                'max_messages': max_messages,
+                'context': context
             }
 
             app.logger.debug('Proxying conversation_create with payload (caller member_profile/selected_members ignored): %s', conv_req)

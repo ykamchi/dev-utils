@@ -82,7 +82,9 @@
 /* Popup content */
 .framework-popup-content {
     padding: 20px;
-    overflow-y: auto;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
     flex: 1;
     color: var(--color-text-dark);
     font-size: 14px;

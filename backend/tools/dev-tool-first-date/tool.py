@@ -10,5 +10,11 @@ def get_tool_info():
         'version': '1.0.0',
         'author': 'Dev Tools App',
         'category': 'utility',
-        'icon': '👥'
+        'icon': '👥',
+        'imports': [
+            'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
+            'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js',
+            'first-date-utils.js',
+            'components/*.js',
+        ],
     }

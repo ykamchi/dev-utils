@@ -393,3 +393,24 @@
     --color-negative-bg-light: rgba(176, 0, 32, 0.1); /* Based on warning color */
     --color-negative-bg-strong: rgba(176, 0, 32, 0.2);
 }
+
+/* 13. Natural Green */
+.theme-natural-green {
+    /* Subclass .theme-natural-neutral and override only highlight */
+    @extend .theme-natural-neutral;
+    --color-highlight: #2f985c;
+}
+
+/* 14. Natural Blue */
+.theme-natural-blue {
+    /* Subclass .theme-natural-neutral and override only highlight */
+    @extend .theme-natural-neutral;
+    --color-highlight: #2f5597;
+}
+
+/* 15. Natural Blue */
+.theme-natural-red {
+    /* Subclass .theme-natural-neutral and override only highlight */
+    @extend .theme-natural-neutral;
+    --color-highlight: #b02f2f;
+}

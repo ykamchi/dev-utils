@@ -24,6 +24,9 @@ const PanelsService = {
             contentArea: null
         };
 
+        // Load all JS imports for this tool from the framework API
+        await this.loadToolImports(toolName);
+
         // Always discover and load panels for this tool
         await this.discoverPanels();
 
@@ -32,6 +35,32 @@ const PanelsService = {
             this.initializeUI();    
         });
         
+    },
+
+    // Load all JS imports for a tool from the framework API
+    async loadToolImports(toolName) {
+        try {
+            const res = await fetch('/api/tools/imports');
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!data.success || !data.imports || !Array.isArray(data.imports[toolName])) return;
+            for (const scriptUrl of data.imports[toolName]) {
+                const file = scriptUrl.split('/').pop();
+                if (!file.endsWith('.js')) continue;
+                const globalName = file
+                    .replace(/\.js$/, '')
+                    .split('-')
+                    .map((part, i) => part.charAt(0).toUpperCase() + part.slice(1))
+                    .join('');
+                try {
+                    await Utils.loadScriptIfNeeded(scriptUrl, globalName);
+                } catch (err) {
+                    console.warn(`[PanelsService] Failed to load import script: ${scriptUrl}`, err);
+                }
+            }
+        } catch (err) {
+            // Ignore if API does not exist
+        }
     },
 
     // Discover panels for a tool

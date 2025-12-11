@@ -127,7 +127,10 @@ class PopupComponent {
 
         // Add content
         if (this.content) {
-            if (Array.isArray(this.content)) {
+            if (typeof this.content === 'function') {
+                // Call the function with the content area container
+                this.content(contentArea);
+            } else if (Array.isArray(this.content)) {
                 this.content.forEach(element => {
                     if (element instanceof HTMLElement) {
                         contentArea.appendChild(element);
@@ -145,8 +148,10 @@ class PopupComponent {
         // Add to container
         this.container.appendChild(this.popupElement);
 
-        // Position the popup
-        this.updatePosition();
+        setTimeout(() => {
+            this.updatePosition();// Position the popup
+            this.updatePosition();     
+        });
 
         // Setup event listeners
         this.setupEventListeners();

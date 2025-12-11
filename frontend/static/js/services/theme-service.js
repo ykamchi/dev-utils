@@ -53,7 +53,10 @@ const ThemeService = {
             'solarized-dark', 
             'dracula', 
             'one-dark-pro',
-            'natural-neutral'
+            'natural-neutral',
+            'natural-green',
+            'natural-blue',
+            'natural-red'
         ];
         return validThemes.includes(theme);
     },
