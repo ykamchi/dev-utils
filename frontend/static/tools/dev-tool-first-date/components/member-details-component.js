@@ -15,7 +15,7 @@ class MemberDetailsComponent {
         // Create flex column wrapper
         const contentDiv = document.createElement('div');
         contentDiv.className = 'first-date-profile-content';
-        
+
 
         // Create header using MemberHeaderComponent
         const headerDiv = document.createElement('div');
@@ -36,7 +36,7 @@ class MemberDetailsComponent {
         // Use a unique storageKey per member
         const storageKey = this.member ? `member-tabset` : '';
         new window.TabsetComponent(tabsetDiv, tabs, storageKey);
-        
+
         // Create action buttons
         const actionsDiv = document.createElement('div');
         actionsDiv.id = 'first-date-profileActionsLeft';
@@ -135,69 +135,158 @@ class MemberDetailsComponent {
                 viewedProfilesError = '<p>No viewed profiles found.</p>';
             }
         })
-        .catch(e => {
-            viewedProfilesError = '<p>Error loading viewed profiles.</p>';
-        })
-        .finally(() => {
-            c.innerHTML = '';
-            if (membersTagsDiv) {
-                c.appendChild(membersTagsDiv);
-            } else {
-                c.innerHTML = viewedProfilesError;
-            }
-        });
+            .catch(e => {
+                viewedProfilesError = '<p>Error loading viewed profiles.</p>';
+            })
+            .finally(() => {
+                c.innerHTML = '';
+                if (membersTagsDiv) {
+                    c.appendChild(membersTagsDiv);
+                } else {
+                    c.innerHTML = viewedProfilesError;
+                }
+            });
     }
-    
+
     populateFirstDatesTab(c) {
-        let firstDatesData = [];
-        let firstDatesError = '';
-        let firstDatesTagsDiv = null;
-        
+
+    let firstDatesData = [];
+    let firstDatesError = '';
+    let firstDatesTagsDiv = null;
+    let sortBy = 'date';
+    let onlyLast = true;
+    const currentMemberId = this.member ? this.member.id : null;
+    const self = this;
+
+    // Create filter/sort bar container
+    const filterBar = document.createElement('div');
+    filterBar.className = 'first-date-filter-bar';
+
+    // Checkbox for only last date per member
+    const onlyLastLabel = document.createElement('label');
+    onlyLastLabel.className = 'first-date-only-last-label';
+
+    const onlyLastCheckbox = document.createElement('input');
+    onlyLastCheckbox.type = 'checkbox';
+    onlyLastCheckbox.checked = onlyLast;
+    onlyLastCheckbox.style.margin = '0';
+    onlyLastCheckbox.addEventListener('change', function() {
+        onlyLast = onlyLastCheckbox.checked;
+        fetchAndRender();
+    });
+    onlyLastLabel.appendChild(onlyLastCheckbox);
+    onlyLastLabel.appendChild(document.createTextNode('Show only last date per member'));
+    filterBar.appendChild(onlyLastLabel);
+
+    // Sort option buttons with label
+    const sortLabel = document.createElement('span');
+    sortLabel.textContent = 'Sort by:';
+    sortLabel.style.marginRight = '4px';
+    sortLabel.style.fontSize = '1em';
+    sortLabel.style.fontWeight = 'normal';
+    const sortContainer = document.createElement('div');
+    sortContainer.style.display = 'flex';
+    sortContainer.style.alignItems = 'center';
+    sortContainer.style.gap = '8px';
+    const sortOptions = [
+        { label: 'Date', value: 'date' },
+        { label: 'Match', value: 'match' },
+        { label: 'Name', value: 'name' }
+    ];
+    let optionButtons = new window.OptionButtonsComponent(sortContainer, sortOptions, {
+        selected: sortBy,
+        onChange: (val) => {
+            sortBy = val;
+            renderList();
+        }
+    });
+    const sortBar = document.createElement('div');
+    sortBar.style.display = 'flex';
+    sortBar.style.alignItems = 'center';
+    sortBar.appendChild(sortLabel);
+    sortBar.appendChild(sortContainer);
+    filterBar.appendChild(sortBar);
+    c.appendChild(filterBar);
+
+    // Fetch and render function
+    function fetchAndRender() {
         // Fetch conversation for first dates using async fetch
         fetch('/api/dev-tool-first-date/member_conversations', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ member_id: this.member.id })
+            body: JSON.stringify({ member_id: self.member.id, only_last: onlyLast })
         }).then(res => res.json()).then(conversations => {
-            if (conversations.length) {
-                firstDatesTagsDiv = document.createElement('ul');
-                firstDatesTagsDiv.className = 'first-date-first-dates-list';
-                for (const conversation of conversations) {
-                    const other = conversation.members.find(mem => mem.member_id !== this.member.id);
+            firstDatesData = Array.isArray(conversations) ? conversations : [];
+            renderList();
+        })
+        .catch(e => {
+            firstDatesError = '<p>Error loading first dates.</p>';
+            renderList();
+        });
+    }
+
+    fetchAndRender();
+
+        // Create sort option buttons container
+    // Render list function (unchanged)
+    function renderList() {
+            // Remove old list if exists
+            if (firstDatesTagsDiv && firstDatesTagsDiv.parentNode) {
+                firstDatesTagsDiv.parentNode.removeChild(firstDatesTagsDiv);
+            }
+            firstDatesTagsDiv = document.createElement('ul');
+            firstDatesTagsDiv.className = 'first-date-first-dates-list';
+            let sorted = [...firstDatesData];
+            if (sortBy === 'date') {
+                sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            } else if (sortBy === 'match') {
+                sorted.sort((a, b) => {
+                    let am = (a.last_feedback && typeof a.last_feedback === 'object' && a.last_feedback.match !== undefined) ? a.last_feedback.match : '';
+                    let bm = (b.last_feedback && typeof b.last_feedback === 'object' && b.last_feedback.match !== undefined) ? b.last_feedback.match : '';
+                    // Sort descending, numbers first, then strings
+                    if (!isNaN(am) && !isNaN(bm)) return Number(bm) - Number(am);
+                    return String(bm).localeCompare(String(am));
+                });
+            } else if (sortBy === 'name') {
+                sorted.sort((a, b) => {
+                    const an = (a.members.find(mem => mem.member_id !== currentMemberId) || {}).member_nick_name || '';
+                    const bn = (b.members.find(mem => mem.member_id !== currentMemberId) || {}).member_nick_name || '';
+                    return an.localeCompare(bn);
+                });
+            }
+            if (sorted.length) {
+                for (const conversation of sorted) {
+                    const other = conversation.members.find(mem => mem.member_id !== currentMemberId);
+                    let match = '';
+                    if (conversation.last_feedback && typeof conversation.last_feedback === 'object') {
+                        match = conversation.last_feedback.match !== undefined ? conversation.last_feedback.match : '';
+                    }
                     const li = document.createElement('li');
                     li.className = 'first-date-first-dates-item';
                     li.title = 'View conversation details';
                     li.innerHTML = `
                         <div class="first-date-conversation-item">
                             <span class="first-date-conversation-dot" style="background:black;"></span>
-                            <span class="first-date-conversation-nick">${other.member_nick_name}</span>
+                            <span class="first-date-conversation-nick">${other ? other.member_nick_name : ''}</span>
+                            <span class="first-date-conversation-rate">(${match})</span>
                         </div>
                         <div class="first-date-conversation-meta">
-                            ${new Date(conversation.created_at).toLocaleString()}
+                            ${conversation.created_at ? new Date(conversation.created_at).toLocaleString() : ''}
                         </div>
                     `;
                     li.addEventListener('click', async (e) => {
                         e.stopPropagation();
-                        await this.showConversationPopup(conversation, this.member.id);
+                        if (self && self.showConversationPopup) {
+                            await self.showConversationPopup(conversation, currentMemberId);
+                        }
                     });
                     firstDatesTagsDiv.appendChild(li);
-                    firstDatesData.push(conversation);
                 }
-            } else {
-                firstDatesError = '<p>No first dates found.</p>';
-            }
-        })
-        .catch(e => {
-            firstDatesError = '<p>Error loading first dates.</p>';
-        })
-        .finally(() => {
-            c.innerHTML = '';
-            if (firstDatesTagsDiv) {
                 c.appendChild(firstDatesTagsDiv);
             } else {
-                c.innerHTML = firstDatesError;
+                c.innerHTML += firstDatesError || '<p>No first dates found.</p>';
             }
-        });
+        }
     }
 
     async findDating() {
@@ -224,7 +313,7 @@ class MemberDetailsComponent {
             // Find candidate members with a different gender than this.member
             // select only those not in decidedIds - to avoid re-viewing profiles
             let candidates = this.members.filter(m => m.gender != this.member.gender && m.id != this.member.id && !decidedIds.has(m.id));
-            
+
             if (!candidates.length) {
                 alert('No available members to start dating with.');
                 return;
@@ -247,13 +336,13 @@ class MemberDetailsComponent {
                 alert('Started a new decision with ' + chosen.name + '!');
                 this.render();
             })
+                .catch(() => {
+                    alert('Failed to start decision. See console for details.');
+                });
+        })
             .catch(() => {
                 alert('Failed to start decision. See console for details.');
             });
-        })
-        .catch(() => {
-            alert('Failed to start decision. See console for details.');
-        });
     }
 
     async updateRegisterButton() {

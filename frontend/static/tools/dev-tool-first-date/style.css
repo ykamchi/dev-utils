@@ -1,3 +1,19 @@
+/* Filter/Sort bar for first dates tab */
+.first-date-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin: 8px 0px 12px;
+    justify-content: space-between;
+}
+.first-date-only-last-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.95rem;
+    color: var(--color-text-primary);
+}
+
 /* Conversation details main flex container */
 .first-date-conversation {
     display: flex;

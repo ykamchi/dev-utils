@@ -54,10 +54,12 @@ def register_apis(app, base_path: str):
         """Proxy to upstream /api/member_conversations with member_id, returns JSON object."""
         payload = request.get_json(force=True)
         member_id = payload.get('member_id')
+        only_last = payload.get('only_last', False)
         if not member_id:
             return jsonify({'success': False, 'error': 'missing member_id'}), 400
         try:
-            upstream_resp = _proxy_post('/api/member_conversations', {'member_id': member_id})
+            upstream_payload = {'member_id': member_id, 'only_last': only_last}
+            upstream_resp = _proxy_post('/api/member_conversations', upstream_payload)
             return jsonify(upstream_resp)
         except RequestException:
             app.logger.exception('Failed to contact upstream /api/member_conversations')
