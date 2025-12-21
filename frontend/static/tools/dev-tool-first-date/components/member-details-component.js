@@ -103,7 +103,12 @@ class MemberDetailsComponent {
                     if (decision.context.type === 'view-profile') {
                         const other = decision.members.find(mem => mem.member_id !== this.member.id);
                         if (!latestDecisions[other.member_nick_name] || new Date(decision.created_at) > new Date(latestDecisions[other.member_nick_name].created_at)) {
-                            latestDecisions[other.member_nick_name] = { ...decision, nick: other.member_nick_name, rate: decision.feedback ? decision.feedback.rate : '' };
+                            latestDecisions[other.member_nick_name] = {
+                                ...decision,
+                                nick: other.member_nick_name,
+                                rate: decision.feedback ? decision.feedback.rate : '',
+                                confidence_level: decision.feedback ? decision.feedback.confidence_level : ''
+                            };
                         }
                     }
                 }
@@ -120,7 +125,8 @@ class MemberDetailsComponent {
                         <div class="first-date-conversation-item">
                             <span class="first-date-conversation-dot" style="background:${window.getRateColor(decision.rate)};"></span>
                             <span class="first-date-conversation-nick">${decision.nick}</span>
-                            <span class="first-date-conversation-rate">(${decision.rate})</span>
+                            <span class="first-date-conversation-rate" style="color:${window.getRateColor(decision.rate)};">(${decision.rate})</span>
+                            <span class="first-date-conversation-confidence" style="color:${getConfidenceColor(decision.confidence_level)};">confidence: ${decision.confidence_level}</span>
                         </div>
                         <div class="first-date-conversation-meta">${new Date(decision.created_at).toLocaleString()}</div>
                     `;
@@ -264,14 +270,17 @@ class MemberDetailsComponent {
                     const li = document.createElement('li');
                     li.className = 'first-date-first-dates-item';
                     li.title = 'View conversation details';
+                    // info.name in bottom right, small italic
+                    const infoName = conversation.info && conversation.info.name ? conversation.info.name : '';
                     li.innerHTML = `
                         <div class="first-date-conversation-item">
                             <span class="first-date-conversation-dot" style="background:black;"></span>
                             <span class="first-date-conversation-nick">${other ? other.member_nick_name : ''}</span>
                             <span class="first-date-conversation-rate">(${match})</span>
                         </div>
-                        <div class="first-date-conversation-meta">
-                            ${conversation.created_at ? new Date(conversation.created_at).toLocaleString() : ''}
+                        <div class="first-date-conversation-meta" style="display:flex;justify-content:space-between;align-items:end;">
+                            <span>${conversation.created_at ? new Date(conversation.created_at).toLocaleString() : ''}</span>
+                            <span style="font-size:0.85em;font-style:italic;opacity:0.7;">${infoName}</span>
                         </div>
                     `;
                     li.addEventListener('click', async (e) => {
@@ -299,7 +308,7 @@ class MemberDetailsComponent {
             console.log('Decided IDs:', decisions);
             // Create a set of members that their profile was already viewed
             const decidedIds = new Set();
-
+            
             for (const decision of decisions) {
                 if (decision.context.type === 'view-profile') {
                     decision.members.forEach(mem => {
@@ -309,7 +318,7 @@ class MemberDetailsComponent {
                     });
                 }
             }
-
+            
             // Find candidate members with a different gender than this.member
             // select only those not in decidedIds - to avoid re-viewing profiles
             let candidates = this.members.filter(m => m.gender != this.member.gender && m.id != this.member.id && !decidedIds.has(m.id));

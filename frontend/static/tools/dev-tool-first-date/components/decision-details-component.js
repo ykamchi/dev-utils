@@ -70,7 +70,7 @@ class DecisionDetailsComponent {
             const payload = {
                 group_name: 'first-date',
                 participant_members_ids: memberIds,
-                max_messages: 20,
+                max_messages: 14,
                 context: { type: 'first-date' }
             };
             await fetch('/api/dev-tool-first-date/conversation_start', {

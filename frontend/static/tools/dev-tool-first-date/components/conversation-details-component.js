@@ -246,7 +246,11 @@ class ConversationDetailsComponent {
                 },
                 scales: {
                     x: { type: 'time', time: { unit: 'minute' }, title: { display: true, text: 'Time' } },
-                    y: { title: { display: true, text: 'Value' } }
+                    y: {
+                        title: { display: true, text: 'Value' },
+                        min: 0,
+                        max: 10
+                    }
                 }
             }
         });

@@ -1,3 +1,10 @@
+// Get a color code for confidence level: 'low', 'medium', 'high'
+function getConfidenceColor(level) {
+    if (level === 'high') return '#2ecc40'; // green
+    if (level === 'medium') return '#ffb400'; // orange
+    if (level === 'low') return '#ff4136'; // red
+    return '#888';
+}
 // first-date-utils.js
 // Utility functions for dev-tool-first-date
 
