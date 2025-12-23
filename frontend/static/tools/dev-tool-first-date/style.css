@@ -1,3 +1,153 @@
+/* Member select filter label styles */
+.select-member-popup-filter-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.98em;
+    margin-top: 16px;
+    margin-bottom: 4px;
+    justify-content: flex-start;
+    width: 100%;
+}
+.conversation-start-name {
+    text-align: center;
+    font-size: 1.08em;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--primary-text, #222);
+    width: 100%;
+    display: block;
+}
+/* Conversation Start Grid Images, Descriptions, and Labels */
+.conversation-start-img {
+    width: 90px;
+    height: 75px;
+    display: block;
+    margin: 0 auto 8px auto;
+}
+
+.conversation-start-desc {
+    text-align: center;
+    font-size: 0.95em;
+    opacity: 0.8;
+    margin: 0 0 4px 0;
+}
+
+/* Conversation Start Popup Styles */
+.conversation-start-popup .conversation-start-title {
+    font-weight: bold;
+    font-size: 1.15em;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.conversation-start-popup .conversation-start-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.conversation-start-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: 240px;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.conversation-start-popup .conversation-start-cell {
+    flex: 0 0 calc(50% - 8px);
+    background: #f6f6f6;
+    border-radius: 8px;
+    padding: 24px 0;
+    text-align: center;
+    font-weight: 500;
+    font-size: 1.08em;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    transition: background 0.15s;
+    cursor: default;
+}
+
+.conversation-start-popup .conversation-start-cell.conversation-start-cell-action {
+    cursor: pointer;
+}
+
+.conversation-start-popup .conversation-start-cell.conversation-start-cell-action:hover {
+    background: #e0e0e0;
+}
+/* Conversation Start Popup Styles */
+.conversation-start-popup .conversation-start-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.conversation-start-popup .conversation-start-cell {
+    flex: 0 0 calc(50% - 8px);
+    background: #f6f6f6;
+    border-radius: 8px;
+    padding: 24px 0;
+    text-align: center;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 1.08em;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    transition: background 0.15s;
+}
+/* Scrollable list for select member popup */
+.select-member-popup-list-scroll {
+    min-height: 0;
+    overflow-y: auto;
+    margin-bottom: 8px;
+    flex: 1;
+}
+/* --- Select Member Popup Styles --- */
+.select-member-popup-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--color-border-light);
+    margin-bottom: 8px;
+}
+
+.select-member-popup-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 16px 16px 16px;
+}
+
+.select-member-popup-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid #eee;
+    padding: 8px 0;
+}
+
+.select-member-popup-name {
+    font-weight: 500;
+    font-size: 1.05em;
+}
+
+.select-member-popup-btn {
+    /* Inherits .dating-button.secondary, but can be extended here if needed */
+}
+
+.select-member-popup-empty {
+    padding: 16px;
+    color: #888;
+    text-align: center;
+}
+/* --- End Select Member Popup Styles --- */
 /* Filter/Sort bar for first dates tab */
 .first-date-filter-bar {
     display: flex;

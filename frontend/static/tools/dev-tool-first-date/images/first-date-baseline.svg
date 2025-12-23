@@ -1,0 +1,10 @@
+<svg width="180" height="150" viewBox="0 0 180 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="90" cy="135" rx="60" ry="10" fill="#E0C080" opacity="0.3"/>
+  <!-- Two people at a table with a heart -->
+  <ellipse cx="65" cy="90" rx="16" ry="26" fill="#F8BBD0"/>
+  <circle cx="65" cy="70" r="10" fill="#F48FB1"/>
+  <ellipse cx="115" cy="90" rx="16" ry="26" fill="#90CAF9"/>
+  <circle cx="115" cy="70" r="10" fill="#42A5F5"/>
+  <rect x="75" y="120" width="30" height="8" rx="4" fill="#BCA657"/>
+  <path d="M90 95 Q92 90 96 92 Q100 94 98 98 Q96 102 90 106 Q84 102 82 98 Q80 94 84 92 Q88 90 90 95 Z" fill="#E57373"/>
+</svg>

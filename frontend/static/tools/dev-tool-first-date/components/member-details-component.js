@@ -44,17 +44,25 @@ class MemberDetailsComponent {
 
         const registerBtn = document.createElement('button');
         registerBtn.id = 'first-date-registerBtn';
-        registerBtn.className = 'first-date-dating-button';
+        registerBtn.className = 'dating-button';
         registerBtn.textContent = 'Register Agent';
         registerBtn.addEventListener('click', () => this.toggleRegister());
 
+        // Add View Profile button
+        const viewProfileBtn = document.createElement('button');
+        viewProfileBtn.id = 'first-date-viewProfileBtn';
+        viewProfileBtn.className = 'dating-button secondary';
+        viewProfileBtn.textContent = 'View Profile';
+        viewProfileBtn.addEventListener('click', () => this.showViewProfilePopup());
+
         const findDatingBtn = document.createElement('button');
         findDatingBtn.id = 'first-date-startDatingBtn';
-        findDatingBtn.className = 'first-date-dating-button secondary';
+        findDatingBtn.className = 'dating-button secondary';
         findDatingBtn.textContent = 'Find dating';
         findDatingBtn.addEventListener('click', () => this.findDating());
 
         actionsDiv.appendChild(registerBtn);
+        actionsDiv.appendChild(viewProfileBtn);
         actionsDiv.appendChild(findDatingBtn);
         contentDiv.appendChild(actionsDiv);
 
@@ -97,10 +105,10 @@ class MemberDetailsComponent {
             body: JSON.stringify({ member_id: this.member.id })
         }).then(res => res.json()).then(decisions => {
             if (decisions.length) {
-                // First filter only 'view-profile' decisions and get latest per member
+                // First filter only CONVERSATION_CONTEXT__TYPE_VIEW_PROFILE decisions and get latest per member
                 const latestDecisions = {};
                 for (const decision of decisions) {
-                    if (decision.context.type === 'view-profile') {
+                    if (decision.context.type === CONVERSATION_CONTEXT__TYPE_VIEW_PROFILE) {
                         const other = decision.members.find(mem => mem.member_id !== this.member.id);
                         if (!latestDecisions[other.member_nick_name] || new Date(decision.created_at) > new Date(latestDecisions[other.member_nick_name].created_at)) {
                             latestDecisions[other.member_nick_name] = {
@@ -156,86 +164,86 @@ class MemberDetailsComponent {
 
     populateFirstDatesTab(c) {
 
-    let firstDatesData = [];
-    let firstDatesError = '';
-    let firstDatesTagsDiv = null;
-    let sortBy = 'date';
-    let onlyLast = true;
-    const currentMemberId = this.member ? this.member.id : null;
-    const self = this;
+        let firstDatesData = [];
+        let firstDatesError = '';
+        let firstDatesTagsDiv = null;
+        let sortBy = 'date';
+        let onlyLast = false;
+        const currentMemberId = this.member ? this.member.id : null;
+        const self = this;
 
-    // Create filter/sort bar container
-    const filterBar = document.createElement('div');
-    filterBar.className = 'first-date-filter-bar';
+        // Create filter/sort bar container
+        const filterBar = document.createElement('div');
+        filterBar.className = 'first-date-filter-bar';
 
-    // Checkbox for only last date per member
-    const onlyLastLabel = document.createElement('label');
-    onlyLastLabel.className = 'first-date-only-last-label';
+        // Checkbox for only last date per member
+        const onlyLastLabel = document.createElement('label');
+        onlyLastLabel.className = 'first-date-only-last-label';
 
-    const onlyLastCheckbox = document.createElement('input');
-    onlyLastCheckbox.type = 'checkbox';
-    onlyLastCheckbox.checked = onlyLast;
-    onlyLastCheckbox.style.margin = '0';
-    onlyLastCheckbox.addEventListener('change', function() {
-        onlyLast = onlyLastCheckbox.checked;
-        fetchAndRender();
-    });
-    onlyLastLabel.appendChild(onlyLastCheckbox);
-    onlyLastLabel.appendChild(document.createTextNode('Show only last date per member'));
-    filterBar.appendChild(onlyLastLabel);
-
-    // Sort option buttons with label
-    const sortLabel = document.createElement('span');
-    sortLabel.textContent = 'Sort by:';
-    sortLabel.style.marginRight = '4px';
-    sortLabel.style.fontSize = '1em';
-    sortLabel.style.fontWeight = 'normal';
-    const sortContainer = document.createElement('div');
-    sortContainer.style.display = 'flex';
-    sortContainer.style.alignItems = 'center';
-    sortContainer.style.gap = '8px';
-    const sortOptions = [
-        { label: 'Date', value: 'date' },
-        { label: 'Match', value: 'match' },
-        { label: 'Name', value: 'name' }
-    ];
-    let optionButtons = new window.OptionButtonsComponent(sortContainer, sortOptions, {
-        selected: sortBy,
-        onChange: (val) => {
-            sortBy = val;
-            renderList();
-        }
-    });
-    const sortBar = document.createElement('div');
-    sortBar.style.display = 'flex';
-    sortBar.style.alignItems = 'center';
-    sortBar.appendChild(sortLabel);
-    sortBar.appendChild(sortContainer);
-    filterBar.appendChild(sortBar);
-    c.appendChild(filterBar);
-
-    // Fetch and render function
-    function fetchAndRender() {
-        // Fetch conversation for first dates using async fetch
-        fetch('/api/dev-tool-first-date/member_conversations', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ member_id: self.member.id, only_last: onlyLast })
-        }).then(res => res.json()).then(conversations => {
-            firstDatesData = Array.isArray(conversations) ? conversations : [];
-            renderList();
-        })
-        .catch(e => {
-            firstDatesError = '<p>Error loading first dates.</p>';
-            renderList();
+        const onlyLastCheckbox = document.createElement('input');
+        onlyLastCheckbox.type = 'checkbox';
+        onlyLastCheckbox.checked = onlyLast;
+        onlyLastCheckbox.style.margin = '0';
+        onlyLastCheckbox.addEventListener('change', function () {
+            onlyLast = onlyLastCheckbox.checked;
+            fetchAndRender();
         });
-    }
+        onlyLastLabel.appendChild(onlyLastCheckbox);
+        onlyLastLabel.appendChild(document.createTextNode('Show only last date per member'));
+        filterBar.appendChild(onlyLastLabel);
 
-    fetchAndRender();
+        // Sort option buttons with label
+        const sortLabel = document.createElement('span');
+        sortLabel.textContent = 'Sort by:';
+        sortLabel.style.marginRight = '4px';
+        sortLabel.style.fontSize = '1em';
+        sortLabel.style.fontWeight = 'normal';
+        const sortContainer = document.createElement('div');
+        sortContainer.style.display = 'flex';
+        sortContainer.style.alignItems = 'center';
+        sortContainer.style.gap = '8px';
+        const sortOptions = [
+            { label: 'Date', value: 'date' },
+            { label: 'Match', value: 'match' },
+            { label: 'Name', value: 'name' }
+        ];
+        let optionButtons = new window.OptionButtonsComponent(sortContainer, sortOptions, {
+            selected: sortBy,
+            onChange: (val) => {
+                sortBy = val;
+                renderList();
+            }
+        });
+        const sortBar = document.createElement('div');
+        sortBar.style.display = 'flex';
+        sortBar.style.alignItems = 'center';
+        sortBar.appendChild(sortLabel);
+        sortBar.appendChild(sortContainer);
+        filterBar.appendChild(sortBar);
+        c.appendChild(filterBar);
+
+        // Fetch and render function
+        function fetchAndRender() {
+            // Fetch conversation for first dates using async fetch
+            fetch('/api/dev-tool-first-date/member_conversations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ member_id: self.member.id, only_last: onlyLast })
+            }).then(res => res.json()).then(conversations => {
+                firstDatesData = Array.isArray(conversations) ? conversations : [];
+                renderList();
+            })
+                .catch(e => {
+                    firstDatesError = '<p>Error loading first dates.</p>';
+                    renderList();
+                });
+        }
+
+        fetchAndRender();
 
         // Create sort option buttons container
-    // Render list function (unchanged)
-    function renderList() {
+        // Render list function (unchanged)
+        function renderList() {
             // Remove old list if exists
             if (firstDatesTagsDiv && firstDatesTagsDiv.parentNode) {
                 firstDatesTagsDiv.parentNode.removeChild(firstDatesTagsDiv);
@@ -308,9 +316,9 @@ class MemberDetailsComponent {
             console.log('Decided IDs:', decisions);
             // Create a set of members that their profile was already viewed
             const decidedIds = new Set();
-            
+
             for (const decision of decisions) {
-                if (decision.context.type === 'view-profile') {
+                if (decision.context.type === CONVERSATION_CONTEXT__TYPE_VIEW_PROFILE) {
                     decision.members.forEach(mem => {
                         if (mem.member_id !== this.member.id) {
                             decidedIds.add(mem.member_id);
@@ -318,7 +326,7 @@ class MemberDetailsComponent {
                     });
                 }
             }
-            
+
             // Find candidate members with a different gender than this.member
             // select only those not in decidedIds - to avoid re-viewing profiles
             let candidates = this.members.filter(m => m.gender != this.member.gender && m.id != this.member.id && !decidedIds.has(m.id));
@@ -339,7 +347,7 @@ class MemberDetailsComponent {
                 body: JSON.stringify({
                     group_name: 'first-date',
                     participant_members_ids: [this.member.id, chosen.id],
-                    context: { type: 'view-profile' }
+                    context: { type: CONVERSATION_CONTEXT__TYPE_VIEW_PROFILE }
                 })
             }).then(result => {
                 alert('Started a new decision with ' + chosen.name + '!');
@@ -353,6 +361,18 @@ class MemberDetailsComponent {
                 alert('Failed to start decision. See console for details.');
             });
     }
+
+    async showViewProfilePopup() {
+        new window.PopupComponent({
+            icon: '👀',
+            title: 'View Profile Candidates',
+            width: 420,
+            height: 720,
+            content: (container) => { new window.SelectMemberToViewComponent(container, this.member, this.members); },
+        }).show();
+    }
+
+
 
     async updateRegisterButton() {
         const registerBtn = this.container.querySelector('#first-date-registerBtn');

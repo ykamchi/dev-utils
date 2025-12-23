@@ -1,0 +1,22 @@
+<svg width="180" height="150" viewBox="0 0 180 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="90" cy="135" rx="60" ry="10" fill="#E0C080" opacity="0.3"/>
+  <!-- Woman -->
+  <ellipse cx="60" cy="90" rx="18" ry="28" fill="#F8BBD0"/>
+  <circle cx="60" cy="70" r="12" fill="#F48FB1"/>
+  <rect x="54" y="98" width="12" height="24" rx="6" fill="#F48FB1"/>
+  <!-- Man -->
+  <ellipse cx="120" cy="90" rx="18" ry="28" fill="#90CAF9"/>
+  <circle cx="120" cy="70" r="12" fill="#42A5F5"/>
+  <rect x="114" y="98" width="12" height="24" rx="6" fill="#42A5F5"/>
+  <!-- Table -->
+  <rect x="70" y="120" width="40" height="8" rx="4" fill="#BCA657"/>
+  <!-- Wine Glasses -->
+  <g>
+    <rect x="75" y="110" width="6" height="18" rx="3" fill="#fff" stroke="#BCA657" stroke-width="1"/>
+    <ellipse cx="78" cy="110" rx="6" ry="6" fill="#E57373" stroke="#BCA657" stroke-width="1"/>
+    <rect x="99" y="110" width="6" height="18" rx="3" fill="#fff" stroke="#BCA657" stroke-width="1"/>
+    <ellipse cx="102" cy="110" rx="6" ry="6" fill="#E57373" stroke="#BCA657" stroke-width="1"/>
+  </g>
+  <!-- Heart above table -->
+  <path d="M90 95 Q92 90 96 92 Q100 94 98 98 Q96 102 90 106 Q84 102 82 98 Q80 94 84 92 Q88 90 90 95 Z" fill="#E57373"/>
+</svg>

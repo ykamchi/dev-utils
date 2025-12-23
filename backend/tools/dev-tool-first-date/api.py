@@ -26,6 +26,24 @@ from requests.exceptions import RequestException
 upstream_base = 'http://127.0.0.1:8443'
 
 def register_apis(app, base_path: str):
+    @app.route(f"{base_path}/group_instruction_info", methods=["POST"])
+    def group_instruction_info():
+        """Proxy to upstream /api/group_instruction_info with group_name and conversation_type from payload (no defaults)."""
+        payload = request.get_json(force=True)
+        group_name = payload.get('group_name')
+        conversation_type = payload.get('conversation_type')
+        if not group_name or not conversation_type:
+            return jsonify({'success': False, 'error': 'missing group_name or conversation_type'}), 400
+        try:
+            upstream_payload = {
+                'group_name': group_name,
+                'conversation_type': conversation_type
+            }
+            upstream_resp = _proxy_post('/api/group_instruction_info', upstream_payload)
+            return jsonify(upstream_resp)
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/group_instruction_info')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream group_instruction_info'}), 502
     """Register members endpoints on the provided Flask app under base_path."""
     def _proxy_post(path: str, payload: dict, timeout: float = 5.0):
         """Post JSON to upstream and return parsed JSON or raise RequestException."""

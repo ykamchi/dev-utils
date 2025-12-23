@@ -1,0 +1,12 @@
+<svg width="180" height="150" viewBox="0 0 180 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="90" cy="135" rx="60" ry="10" fill="#E0C080" opacity="0.3"/>
+  <!-- Two people, one carrying a heart, one with a light heart -->
+  <ellipse cx="65" cy="90" rx="16" ry="26" fill="#F8BBD0"/>
+  <circle cx="65" cy="70" r="10" fill="#F48FB1"/>
+  <ellipse cx="115" cy="90" rx="16" ry="26" fill="#90CAF9"/>
+  <circle cx="115" cy="70" r="10" fill="#42A5F5"/>
+  <!-- Heavy heart -->
+  <path d="M60 110 Q62 105 66 107 Q70 109 68 113 Q66 117 60 121 Q54 117 52 113 Q50 109 54 107 Q58 105 60 110 Z" fill="#E57373"/>
+  <!-- Light heart -->
+  <path d="M120 100 Q122 97 126 99 Q130 101 128 104 Q126 107 120 110 Q114 107 112 104 Q110 101 114 99 Q118 97 120 100 Z" fill="#E57373" opacity="0.5"/>
+</svg>

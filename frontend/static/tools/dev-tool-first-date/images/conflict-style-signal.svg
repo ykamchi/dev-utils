@@ -1,0 +1,14 @@
+<svg width="180" height="150" viewBox="0 0 180 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="90" cy="135" rx="60" ry="10" fill="#E0C080" opacity="0.3"/>
+  <!-- Two faces with different expressions, a lightning bolt between -->
+  <ellipse cx="65" cy="90" rx="16" ry="26" fill="#F8BBD0"/>
+  <circle cx="65" cy="70" r="10" fill="#F48FB1"/>
+  <ellipse cx="115" cy="90" rx="16" ry="26" fill="#90CAF9"/>
+  <circle cx="115" cy="70" r="10" fill="#42A5F5"/>
+  <!-- Sad mouth -->
+  <path d="M60 78 Q65 74 70 78" stroke="#AD1457" stroke-width="2" fill="none"/>
+  <!-- Angry mouth -->
+  <path d="M110 78 Q115 82 120 78" stroke="#1565C0" stroke-width="2" fill="none"/>
+  <!-- Lightning bolt -->
+  <polyline points="90,70 95,80 87,80 92,90" fill="none" stroke="#FFD600" stroke-width="3"/>
+</svg>

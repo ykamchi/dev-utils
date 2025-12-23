@@ -1,3 +1,6 @@
+const CONVERSATION_CONTEXT__TYPE_VIEW_PROFILE = 'view-profile';
+
+
 // Get a color code for confidence level: 'low', 'medium', 'high'
 function getConfidenceColor(level) {
     if (level === 'high') return '#2ecc40'; // green

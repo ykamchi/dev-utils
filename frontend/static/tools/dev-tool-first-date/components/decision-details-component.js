@@ -23,7 +23,7 @@ class DecisionDetailsComponent {
                     <strong>Feedback:</strong>
                     <ul style="margin:4px 0 0 0;">
                         <li>Rate: <span style="color:${window.getRateColor(this.decision.feedback.rate)};font-weight:bold;">${this.decision.feedback.rate}</span></li>
-                        <li>Rate (reverse): <span style="color:${window.getRateColor(this.decision.feedback['rate-reverse'])};font-weight:bold;">${this.decision.feedback['rate-reverse']}</span></li>
+                        <li>Rate (reverse): <span style="color:${window.getRateColor(this.decision.feedback['rate_reverse'])};font-weight:bold;">${this.decision.feedback['rate_reverse']}</span></li>
                     </ul>
                 </div>
                 <div style="margin-top:12px;display:flex;flex-direction:column;flex: 1;overflow:auto;">
@@ -42,12 +42,19 @@ class DecisionDetailsComponent {
             const firstDateBtn = this.container.querySelector('#firstDateBtn');
             if (firstDateBtn) {
                 firstDateBtn.addEventListener('click', () => {
-                    this.conversationStart([this.currentMember.member_id, this.otherMember.member_id]);
-                    if (this.container.closest('.popup-component')) {
-                        // Try to close the popup if possible
-                        const popup = this.container.closest('.popup-component');
-                        if (popup && popup.hide) popup.hide();
-                    }
+                    new window.PopupComponent({
+                        icon: '💬',
+                        title: 'Start Conversation',
+                        width: 420,
+                        height: 440,
+                        className: 'conversation-start-popup',
+                        content: (popupContainer) => {
+                            new window.ConversationStartComponent(
+                                popupContainer,
+                                [this.currentMember.member_id, this.otherMember.member_id]
+                            );
+                        }
+                    }).show();
                 });
             }
             const newDecisionBtn = this.container.querySelector('#newDecisionBtn');
@@ -57,31 +64,9 @@ class DecisionDetailsComponent {
                 });
             }
         }, 0);
-
     }
 
-    // Helper for starting a conversation
-    async conversationStart(memberIds) {
-        if (!Array.isArray(memberIds) || !memberIds.length) {
-            alert('No members specified for conversation.');
-            return;
-        }
-        try {
-            const payload = {
-                group_name: 'first-date',
-                participant_members_ids: memberIds,
-                max_messages: 14,
-                context: { type: 'first-date' }
-            };
-            await fetch('/api/dev-tool-first-date/conversation_start', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
-        } catch (e) {
-            alert('Failed to start conversation. See console for details.');
-        }
-    }
+    // ...existing code...
 
     // Helper for starting a new decision
     async startNewDecision(memberIds) {
@@ -93,7 +78,7 @@ class DecisionDetailsComponent {
             const payload = {
                 group_name: 'first-date',
                 participant_members_ids: memberIds,
-                context: { type: 'view-profile' }
+                context: { type: CONVERSATION_CONTEXT__TYPE_VIEW_PROFILE }
             };
             await fetch('/api/dev-tool-first-date/decision_start', {
                 method: 'POST',
