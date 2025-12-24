@@ -69,7 +69,6 @@ SVGService.preloadIcons([
     'collapse',
     'fullscreen',
     'exit-fullscreen',
-    'triangle-up-red',
     'triangle-down-blue'
 ]);
 

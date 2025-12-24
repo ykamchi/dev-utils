@@ -45,27 +45,32 @@ def register_apis(app, base_path: str):
             app.logger.exception('Failed to contact upstream /api/group_instruction_info')
             return jsonify({'success': False, 'error': 'Failed to contact upstream group_instruction_info'}), 502
     """Register members endpoints on the provided Flask app under base_path."""
-    def _proxy_post(path: str, payload: dict, timeout: float = 5.0):
-        """Post JSON to upstream and return parsed JSON or raise RequestException."""
+    
+    def _proxy_post(path: str, payload: dict | None = None, *, member_id: int | None = None, timeout: float = 5.0):
         url = f"{upstream_base}{path}"
-        resp = requests.post(url, json=payload, timeout=timeout)
+        headers = {"Authorization": "Bearer CHANGE_ME_ADMIN_TOKEN"}
+
+        params = {}
+        if member_id is not None:
+            params['member_id'] = member_id  # pass as query parameter
+
+        resp = requests.post(url, json=payload or {}, headers=headers, params=params, timeout=timeout)
         resp.raise_for_status()
         return resp.json()
 
+
     @app.route(f"{base_path}/member_decisions", methods=["POST"])
     def member_decisions():
-        """Proxy to upstream /api/member_decisions with member_id, returns JSON object."""
         payload = request.get_json(force=True)
         member_id = payload.get('member_id')
         if not member_id:
             return jsonify({'success': False, 'error': 'missing member_id'}), 400
         try:
-            upstream_resp = _proxy_post('/api/member_decisions', {'member_id': member_id})
+            upstream_resp = _proxy_post('/api/member_decisions', payload={}, member_id=member_id)
             return jsonify(upstream_resp)
         except RequestException:
             app.logger.exception('Failed to contact upstream /api/member_decisions')
             return jsonify({'success': False, 'error': 'Failed to contact upstream member_decisions'}), 502
-
 
     @app.route(f"{base_path}/member_conversations", methods=["POST"])
     def member_conversations():
@@ -76,13 +81,13 @@ def register_apis(app, base_path: str):
         if not member_id:
             return jsonify({'success': False, 'error': 'missing member_id'}), 400
         try:
-            upstream_payload = {'member_id': member_id, 'only_last': only_last}
-            upstream_resp = _proxy_post('/api/member_conversations', upstream_payload)
+            upstream_payload = {'only_last': only_last}  # only_last in JSON
+            upstream_resp = _proxy_post('/api/member_conversations', upstream_payload, member_id=member_id)
             return jsonify(upstream_resp)
         except RequestException:
             app.logger.exception('Failed to contact upstream /api/member_conversations')
             return jsonify({'success': False, 'error': 'Failed to contact upstream member_conversations'}), 502
-    
+
     
     @app.route(f"{base_path}/decision_start", methods=["POST"])
     def decision_start():
