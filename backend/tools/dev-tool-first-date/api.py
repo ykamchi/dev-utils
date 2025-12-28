@@ -98,7 +98,7 @@ def register_apis(app, base_path: str):
         payload = request.get_json(force=True)
         group_name = payload.get('group_name')
         context = payload.get('context')
-        participant_members_ids = payload.get('participant_members_ids', [12, 22])
+        participant_members_nick_names = payload.get('participant_members_nick_names')
 
         if not group_name:
             return jsonify({'success': False, 'error': 'missing group_name'}), 400
@@ -108,7 +108,7 @@ def register_apis(app, base_path: str):
         try:
             decision_req = {
                 'group_name': group_name,
-                'participant_members_ids': participant_members_ids,
+                'participant_members_nick_names': participant_members_nick_names,
                 'context': context
             }
             app.logger.debug('Proxying decision_create with payload: %s', decision_req)

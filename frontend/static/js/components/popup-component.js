@@ -55,6 +55,10 @@ class PopupComponent {
         if (!this.isVisible) return;
 
         this.isVisible = false;
+        // Call destroy on content instance if available
+        if (this._contentInstance && typeof this._contentInstance.destroy === 'function') {
+            try { this._contentInstance.destroy(); } catch (e) { }
+        }
         this.destroy();
 
         // Call onClose callback
@@ -126,10 +130,11 @@ class PopupComponent {
         contentArea.className = 'framework-popup-content';
 
         // Add content
+        this._contentInstance = null;
         if (this.content) {
             if (typeof this.content === 'function') {
-                // Call the function with the content area container
-                this.content(contentArea);
+                // Call the function with the content area container, and store the return value
+                this._contentInstance = this.content(contentArea);
             } else if (Array.isArray(this.content)) {
                 this.content.forEach(element => {
                     if (element instanceof HTMLElement) {

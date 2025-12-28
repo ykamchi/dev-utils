@@ -3,10 +3,11 @@
 
 
 class MemberDetailsComponent {
-    constructor(container, member, members) {
+    constructor(container, selected_member_id, members) {
         container.innerHTML = '';
         this.container = container;
-        this.member = member;
+        this.selected_member_id = selected_member_id;
+        this.member = members[selected_member_id];
         this.members = members || [];
         this.render();
     }
@@ -42,11 +43,7 @@ class MemberDetailsComponent {
         actionsDiv.id = 'first-date-profileActionsLeft';
         actionsDiv.className = 'first-date-profile-actions-left';
 
-        const registerBtn = document.createElement('button');
-        registerBtn.id = 'first-date-registerBtn';
-        registerBtn.className = 'dating-button';
-        registerBtn.textContent = 'Register Agent';
-        registerBtn.addEventListener('click', () => this.toggleRegister());
+    // Register Agent button removed
 
         // Add View Profile button
         const viewProfileBtn = document.createElement('button');
@@ -61,13 +58,10 @@ class MemberDetailsComponent {
         findDatingBtn.textContent = 'Find dating';
         findDatingBtn.addEventListener('click', () => this.findDating());
 
-        actionsDiv.appendChild(registerBtn);
         actionsDiv.appendChild(viewProfileBtn);
         actionsDiv.appendChild(findDatingBtn);
         contentDiv.appendChild(actionsDiv);
 
-        // Update register button state
-        this.updateRegisterButton();
         // Clear and append
         this.container.innerHTML = '';
         this.container.appendChild(contentDiv);
@@ -102,14 +96,14 @@ class MemberDetailsComponent {
         fetch('/api/dev-tool-first-date/member_decisions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ member_id: this.member.id })
+            body: JSON.stringify({ member_id: this.selected_member_id })
         }).then(res => res.json()).then(decisions => {
             if (decisions.length) {
                 // First filter only CONVERSATION_CONTEXT__TYPE_VIEW_PROFILE decisions and get latest per member
                 const latestDecisions = {};
                 for (const decision of decisions) {
                     if (decision.context.type === CONVERSATION_CONTEXT__TYPE_VIEW_PROFILE) {
-                        const other = decision.members.find(mem => mem.member_id !== this.member.id);
+                        const other = decision.members.find(mem => String(mem.member_id) !== String(this.selected_member_id));
                         if (!latestDecisions[other.member_nick_name] || new Date(decision.created_at) > new Date(latestDecisions[other.member_nick_name].created_at)) {
                             latestDecisions[other.member_nick_name] = {
                                 ...decision,
@@ -140,7 +134,7 @@ class MemberDetailsComponent {
                     `;
                     li.addEventListener('click', async (e) => {
                         e.stopPropagation();
-                        await this.showDecisionDetailsPopup(decision, this.member.id);
+                        await this.showDecisionDetailsPopup(decision, this.selected_member_id);
                     });
                     membersTagsDiv.appendChild(li);
                     viewedProfilesData.push(decision);
@@ -228,7 +222,7 @@ class MemberDetailsComponent {
             fetch('/api/dev-tool-first-date/member_conversations', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ member_id: self.member.id, only_last: onlyLast })
+                body: JSON.stringify({ member_id: self.selected_member_id, only_last: onlyLast })
             }).then(res => res.json()).then(conversations => {
                 firstDatesData = Array.isArray(conversations) ? conversations : [];
                 renderList();
@@ -368,70 +362,18 @@ class MemberDetailsComponent {
             title: 'View Profile Candidates',
             width: 420,
             height: 720,
-            content: (container) => { new window.SelectMemberToViewComponent(container, this.member, this.members); },
+            content: (container) => { new window.SelectMemberToViewComponent(container, this.selected_member_id, this.members); },
         }).show();
     }
 
 
 
-    async updateRegisterButton() {
-        const registerBtn = this.container.querySelector('#first-date-registerBtn');
-        const startDatingBtn = this.container.querySelector('#first-date-startDatingBtn');
-        if (!registerBtn || !this.member) return;
-        try {
-            registerBtn.disabled = true;
-            const res = await fetch('/api/dev-tool-first-date/registered', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ group_name: 'first-date', member_nick_name: this.member.member_nick_name })
-            });
-            const data = await res.json();
-            const registered = data && (data.registered === true || data.registered === 'true');
-            this.currentRegistered = Boolean(registered);
-            registerBtn.textContent = this.currentRegistered ? 'Unregister Agent' : 'Register Agent';
-            registerBtn.classList.toggle('registered', this.currentRegistered);
-            registerBtn.classList.toggle('not-registered', !this.currentRegistered);
-            if (startDatingBtn) {
-                startDatingBtn.style.display = this.currentRegistered ? 'inline-block' : 'none';
-            }
-        } catch (e) {
-            registerBtn.textContent = 'Register Agent';
-            registerBtn.classList.remove('registered');
-            registerBtn.classList.add('not-registered');
-            if (startDatingBtn) {
-                startDatingBtn.style.display = 'none';
-            }
-        } finally {
-            registerBtn.disabled = false;
-        }
-    }
-
-    async toggleRegister() {
-        const registerBtn = this.container.querySelector('#first-date-registerBtn');
-        if (!registerBtn || !this.member) return;
-        try {
-            // const nick = this.nicknameFor(this.member);
-            registerBtn.disabled = true;
-            const endpoint = this.currentRegistered ? '/api/dev-tool-first-date/unregister' : '/api/dev-tool-first-date/register';
-            const res = await fetch(endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ group_name: 'first-date', member_nick_name: this.member.member_nick_name })
-            });
-            const data = await res.json();
-            await this.updateRegisterButton();
-        } catch (e) {
-            alert('Failed to contact registration API. See console for details.');
-        } finally {
-            registerBtn.disabled = false;
-        }
-    }
 
     // Popup for decision details - view profile
     async showDecisionDetailsPopup(decision, memberId) {
         new window.PopupComponent({
             icon: '🗳️', title: 'Viewed Profile - Decision Details', width: 520, height: 720,
-            content: (container) => { new window.DecisionDetailsComponent(container, decision, memberId, this.members); },
+            content: (container) => { return new window.DecisionDetailsComponent(container, decision, memberId, this.members); },
         }).show();
     }
 
@@ -439,7 +381,7 @@ class MemberDetailsComponent {
     async showConversationPopup(conversation, memberId) {
         new window.PopupComponent({
             icon: '💬', title: 'First Date - Conversation Details', width: 1280, height: 960,
-            content: (container) => { new window.ConversationDetailsComponent(container, conversation); },
+            content: (container) => { return new window.ConversationDetailsComponent(container, conversation); },
         }).show();
     }
 }

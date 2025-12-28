@@ -1,8 +1,9 @@
 // Encapsulates the member selection popup for viewing profiles
 class SelectMemberToViewComponent {
-    constructor(container, currentMember, members) {
-        this.currentMember = currentMember;
+    constructor(container, selected_member_id, members) {
+        this.selected_member_id = selected_member_id;
         this.members = members;
+        this.currentMember = members[selected_member_id];
         this.render(container);
     }
 
@@ -53,7 +54,7 @@ class SelectMemberToViewComponent {
 
     const renderList = () => {
             // Show all candidates of opposite gender except self
-            let candidates = this.members.filter(m => m.gender != this.currentMember.gender && m.id != this.currentMember.id);
+            let candidates = Object.values(this.members).filter(m => m.gender != this.currentMember.gender && m.name != this.currentMember.name);
             if (showOnlyUnviewed) {
                 candidates = candidates.filter(m => !latestDecisionById[m.id]);
             }
@@ -95,7 +96,7 @@ class SelectMemberToViewComponent {
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 group_name: 'first-date',
-                                participant_members_ids: [this.currentMember.id, member.id],
+                                participant_members_nick_names: [this.currentMember.name, member.name],
                                 context: { type: CONVERSATION_CONTEXT__TYPE_VIEW_PROFILE }
                             })
                         });

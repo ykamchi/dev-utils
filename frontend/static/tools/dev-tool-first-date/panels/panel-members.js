@@ -72,14 +72,14 @@ window.panel_members = {
         try {
             const res = await fetch('/api/dev-tool-first-date/members');
             const data = await res.json();
-            if (data.success && Array.isArray(data.members)) {
+            if (data.success) {
                 this.members = data.members;
                 this.renderList();
                 // Restore last selected member if available, else select first
                 const toolState = window.StorageService.getToolState('dev-tool-first-date', {});
                 const lastSelectedId = toolState.lastSelectedMemberId;
                 let memberToSelect = null;
-                if (lastSelectedId && this.members.some(m => String(m.id) === String(lastSelectedId))) {
+                if (lastSelectedId && this.members[lastSelectedId]) {
                     memberToSelect = lastSelectedId;
                 } else if (this.members.length > 0) {
                     memberToSelect = this.members[0].id;
@@ -100,16 +100,18 @@ window.panel_members = {
 
         // Apply search filter
         const q = this.searchInput ? this.searchInput.value.trim().toLowerCase() : '';
-        const filtered = (this.members || []).filter(m => {
-            if (!q) return true;
-            return (m.name && m.name.toLowerCase().includes(q)) || (m.location && m.location.toLowerCase().includes(q));
-        });
-
+        // Filter the members map to a new filtered map
+        const filtered = {};
+        for (const [id, m] of Object.entries(this.members || {})) {
+            if (!q || (m.name && m.name.toLowerCase().includes(q)) || (m.location && m.location.toLowerCase().includes(q))) {
+                filtered[id] = m;
+            }
+        }
         this.memberListElement.innerHTML = '';
-        for (const m of filtered) {
+        for (const [k, m] of Object.entries(filtered)) {
             const li = document.createElement('li');
             li.className = 'member-item';
-            li.dataset.id = m.id;
+            li.dataset.id = k;
 
             // Avatar
             const avatarDiv = document.createElement('div');
@@ -136,17 +138,18 @@ window.panel_members = {
 
             li.appendChild(avatarDiv);
             li.appendChild(infoDiv);
-            li.addEventListener('click', () => this.showProfile(m.id));
+            li.addEventListener('click', () => this.showProfile(k));
             this.memberListElement.appendChild(li);
         }
 
-        if (filtered.length === 0) {
+        if (Object.keys(filtered).length === 0) {
             this.memberListElement.innerHTML = '<li class="empty">No members found</li>';
         }
     },
 
-    async showProfile(id, opts = {}) {
-        const member = (this.members || []).find(m => m.id === id || String(m.id) === String(id));
+    async showProfile(selected_member_id, opts = {}) {
+        // const member = (this.members || []).find(m => m.id === id || String(m.id) === String(id));
+        const member = this.members[selected_member_id];
         if (!member) return;
 
         this.currentMember = member;
@@ -155,14 +158,14 @@ window.panel_members = {
         const toolState = window.StorageService.getToolState('dev-tool-first-date', {});
         window.StorageService.setToolState('dev-tool-first-date', {
             ...toolState,
-            lastSelectedMemberId: member.id
+            lastSelectedMemberId: selected_member_id
         });
 
         // Update selection state in list and scroll if needed
         if (this.memberListElement) {
             const items = this.memberListElement.querySelectorAll('.member-item');
             items.forEach(item => {
-                if (String(item.dataset.id) === String(id)) {
+                if (String(item.dataset.id) === String(selected_member_id)) {
                     item.classList.add('selected');
                     if (opts.scroll) {
                         item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -174,7 +177,7 @@ window.panel_members = {
         }
 
         this.memberDetailsElement = this.container.querySelector('#first-date-memberDetails');
-        new window.MemberDetailsComponent(this.memberDetailsElement, member, this.members);
+        new window.MemberDetailsComponent(this.memberDetailsElement, selected_member_id, this.members);
     },
 
 };

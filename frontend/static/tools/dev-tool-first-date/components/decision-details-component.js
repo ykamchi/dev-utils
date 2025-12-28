@@ -5,8 +5,8 @@ class DecisionDetailsComponent {
     constructor(container, decision, memberId) {
         this.container = container;
         this.decision = decision;
-        this.currentMember = this.decision.members.find(m => m.member_id === memberId);
-        this.otherMember = this.decision.members.find(m => m.member_id !== memberId);
+        this.currentMember = this.decision.members.find(m => String(m.member_id) === String(memberId));
+        this.otherMember = this.decision.members.find(m => String(m.member_id) !== String(memberId));
         this.render();
     }
 
@@ -60,7 +60,7 @@ class DecisionDetailsComponent {
             const newDecisionBtn = this.container.querySelector('#newDecisionBtn');
             if (newDecisionBtn) {
                 newDecisionBtn.addEventListener('click', () => {
-                    this.startNewDecision([this.currentMember.member_id, this.otherMember.member_id]);
+                    this.startNewDecision([this.currentMember.member_nick_name, this.otherMember.member_nick_name]);
                 });
             }
         }, 0);
@@ -69,15 +69,15 @@ class DecisionDetailsComponent {
     // ...existing code...
 
     // Helper for starting a new decision
-    async startNewDecision(memberIds) {
-        if (!Array.isArray(memberIds) || memberIds.length !== 2) {
+    async startNewDecision(memberNames) {
+        if (!Array.isArray(memberNames) || memberNames.length !== 2) {
             alert('Need exactly two members for a decision.');
             return;
         }
         try {
             const payload = {
                 group_name: 'first-date',
-                participant_members_ids: memberIds,
+                participant_members_nick_names: memberNames,
                 context: { type: CONVERSATION_CONTEXT__TYPE_VIEW_PROFILE }
             };
             await fetch('/api/dev-tool-first-date/decision_start', {

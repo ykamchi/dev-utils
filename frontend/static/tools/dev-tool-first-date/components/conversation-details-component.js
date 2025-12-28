@@ -14,6 +14,14 @@ class ConversationDetailsComponent {
         }
     }
 
+    destroy() {
+        if (this._refreshInterval) {
+            clearInterval(this._refreshInterval);
+            this._refreshInterval = null;
+        }
+        this.destroyAllCharts();
+    }
+
     static _instanceCounter = 0;
     constructor(container, conversation) {
         this._instanceId = 'cdcomp-' + (++ConversationDetailsComponent._instanceCounter);
@@ -24,8 +32,102 @@ class ConversationDetailsComponent {
         this.memberProfiles = {};
         this.currentTab = 'details';
         this.chartInstances = {}; // Make chartInstances an instance property
-        this.destroyAllCharts(); // Ensure no lingering charts from previous popups
+        // this.destroyAllCharts(); // Ensure no lingering charts from previous popups
         this.fetchAndRenderMessages();
+        // Only set interval once
+        if (!this._refreshInterval) {
+            this._refreshInterval = setInterval(() => this.refreshGraphData(), 5000);
+        }
+    }
+
+    async refreshGraphData() {
+        console.log('[ConversationDetailsComponent] Polling API for graph data...');
+        // Always fetch latest messages
+        const res = await fetch('/api/dev-tool-first-date/conversation_messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ conversation_id: this.conversation.conversation_id })
+        });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.messages)) {
+            // Save previous members/keys
+            const prevFeedback = this.parseFeedbackData();
+            const prevMembers = prevFeedback.members.join(',');
+            const prevKeys = prevFeedback.keys.join(',');
+            this.messages = data.messages;
+            const newFeedback = this.parseFeedbackData();
+            const newMembers = newFeedback.members.join(',');
+            const newKeys = newFeedback.keys.join(',');
+            // If members or keys changed, re-render the tab
+            if (prevMembers !== newMembers || prevKeys !== newKeys) {
+                // Find the active tab and re-populate it
+                const tabset = this.container.querySelector('.first-date-profile-tabset');
+                if (tabset) {
+                    // Get active tab index
+                    const activeTab = tabset.querySelector('.tab.active');
+                    if (activeTab) {
+                        const tabName = activeTab.textContent.trim();
+                        if (tabName.includes('By Members')) {
+                            this.populateFeedbackByMembers(tabset.querySelector('.tab-content'));
+                        } else if (tabName.includes('By Metrics')) {
+                            this.populateFeedbackByMetrics(tabset.querySelector('.tab-content'));
+                        }
+                    }
+                }
+            } else {
+                // Otherwise, just update the charts
+                this.updateFeedbackByMembersGraphs(true);
+                this.updateFeedbackByMetricsGraphs(true);
+            }
+        }
+    }
+
+    updateFeedbackByMembersGraphs(allowCreate = false) {
+        const feedbackData = this.parseFeedbackData();
+        feedbackData.members.forEach(member => {
+            const canvasId = `${this._instanceId}-graph-member-${member.replace(/\s+/g, '-')}`;
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const chart = this.chartInstances[canvasId];
+            const data = feedbackData.points.filter(p => p.member === member);
+            if (chart) {
+                // For each key, update the corresponding dataset
+                feedbackData.keys.forEach(key => {
+                    const points = data.filter(d => d.key === key);
+                    const dataset = chart.data.datasets.find(ds => ds.label === key);
+                    if (dataset) {
+                        dataset.data = points.map(p => ({ x: p.time, y: p.value }));
+                    }
+                });
+                chart.update();
+            } else if (allowCreate) {
+                this.drawLineGraph(canvas, data, feedbackData.keys, 'key');
+            }
+        });
+    }
+
+    updateFeedbackByMetricsGraphs(allowCreate = false) {
+        const feedbackData = this.parseFeedbackData();
+        feedbackData.keys.forEach(key => {
+            const canvasId = `${this._instanceId}-graph-key-${key.replace(/\s+/g, '-')}`;
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const chart = this.chartInstances[canvasId];
+            const data = feedbackData.points.filter(p => p.key === key);
+            if (chart) {
+                // For each member, update the corresponding dataset
+                feedbackData.members.forEach(member => {
+                    const points = data.filter(d => d.member === member);
+                    const dataset = chart.data.datasets.find(ds => ds.label === member);
+                    if (dataset) {
+                        dataset.data = points.map(p => ({ x: p.time, y: p.value }));
+                    }
+                });
+                chart.update();
+            } else if (allowCreate) {
+                this.drawLineGraph(canvas, data, feedbackData.members, 'member');
+            }
+        });
     }
 
     /**
@@ -100,7 +202,6 @@ class ConversationDetailsComponent {
 
     populateFeedbackByMembers(c) {
         const feedbackData = this.parseFeedbackData();
-        this.destroyAllCharts(); // Destroy charts before replacing canvases
         let html = '<div style="display: flex; flex-direction: column; height: 100%; overflow-y: auto; padding: 20px; gap: 20px;">';
         if (feedbackData.members.length > 0) {
             feedbackData.members.forEach(member => {
@@ -122,7 +223,8 @@ class ConversationDetailsComponent {
                 const canvasId = `${this._instanceId}-graph-member-${member.replace(/\s+/g, '-')}`;
                 const canvas = document.getElementById(canvasId);
                 if (!canvas) return;
-                const data = feedbackData.points.filter(p => p.member === member).map(p => ({ key: p.key, value: p.value, time: p.time }));
+                // For this member, show a line for each key (metric)
+                const data = feedbackData.points.filter(p => p.member === member);
                 this.drawLineGraph(canvas, data, feedbackData.keys, 'key');
             });
         }, 100);
@@ -130,21 +232,19 @@ class ConversationDetailsComponent {
 
     populateFeedbackByMetrics(c) {
         const feedbackData = this.parseFeedbackData();
-        this.destroyAllCharts(); // Destroy charts before replacing canvases
-        let html = '<div style="display: flex; flex-direction: column; height: 100%; overflow-y: auto; padding: 20px; gap: 20px;">';
-        if (feedbackData.keys.length > 0) {
-            feedbackData.keys.forEach(key => {
-                const canvasId = `${this._instanceId}-graph-key-${key.replace(/\s+/g, '-')}`;
-                html += `
-                    <div style="flex-shrink: 0; margin-bottom: 20px;">
-                        <h4 class="graph-title">📉 ${key}</h4>
-                        <div style="position: relative; height: 300px; width: 100%;">
-                            <canvas id="${canvasId}"></canvas>
-                        </div>
+        // 2x2 grid for up to 4 metrics
+        let html = '<div style="display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 340px; gap: 20px; padding: 20px;">';
+        feedbackData.keys.forEach((key, idx) => {
+            const canvasId = `${this._instanceId}-graph-key-${key.replace(/\s+/g, '-')}`;
+            html += `
+                <div style="display: flex; flex-direction: column; align-items: stretch; height: 100%;">
+                    <h4 class="graph-title" style="margin-bottom: 8px;">📉 ${key}</h4>
+                    <div style="position: relative; flex: 1;">
+                        <canvas id="${canvasId}" style="width: 100%; height: 100%;"></canvas>
                     </div>
-                `;
-            });
-        }
+                </div>
+            `;
+        });
         html += '</div>';
         c.innerHTML = html;
         setTimeout(() => {
@@ -152,7 +252,8 @@ class ConversationDetailsComponent {
                 const canvasId = `${this._instanceId}-graph-key-${key.replace(/\s+/g, '-')}`;
                 const canvas = document.getElementById(canvasId);
                 if (!canvas) return;
-                const data = feedbackData.points.filter(p => p.key === key).map(p => ({ member: p.member, value: p.value, time: p.time }));
+                // For this key, show a line for each member
+                const data = feedbackData.points.filter(p => p.key === key);
                 this.drawLineGraph(canvas, data, feedbackData.members, 'member');
             });
         }, 100);
@@ -160,14 +261,21 @@ class ConversationDetailsComponent {
 
     parseFeedbackData() {
         const data = { members: [], keys: [], points: [] };
+        // Use conversation members as source of truth if available
+        if (this.conversation && Array.isArray(this.conversation.members)) {
+            this.conversation.members.forEach(m => {
+                const name = m.member_nick_name || m.name || 'Unknown';
+                if (!data.members.includes(name)) data.members.push(name);
+            });
+        }
         if (!this.messages) return data;
         this.messages.forEach(msg => {
             const member = msg.member_nick_name || msg.name || 'Unknown';
+            if (!data.members.includes(member)) data.members.push(member);
             const time = new Date(msg.created_at || msg.timestamp || Date.now());
             Object.entries(msg.feedback).forEach(([key, value]) => {
                 const numValue = parseFloat(value);
                 if (!isNaN(numValue)) {
-                    if (!data.members.includes(member)) data.members.push(member);
                     if (!data.keys.includes(key)) data.keys.push(key);
                     data.points.push({ member, key, value: numValue, time });
                 }
@@ -178,12 +286,31 @@ class ConversationDetailsComponent {
 
     drawLineGraph(canvas, data, labels, labelType) {
         if (!window.Chart || !canvas) return;
-        // Destroy previous chart instance if exists
+        // If chart already exists, just update its datasets
         if (this.chartInstances[canvas.id]) {
-            try {
-                this.chartInstances[canvas.id].destroy();
-            } catch (e) { }
+            const chart = this.chartInstances[canvas.id];
+            // Update datasets
+            if (labelType === 'key') {
+                labels.forEach(key => {
+                    const points = data.filter(d => d.key === key);
+                    const dataset = chart.data.datasets.find(ds => ds.label === key);
+                    if (dataset) {
+                        dataset.data = points.map(p => ({ x: p.time, y: p.value }));
+                    }
+                });
+            } else if (labelType === 'member') {
+                labels.forEach(member => {
+                    const points = data.filter(d => d.member === member);
+                    const dataset = chart.data.datasets.find(ds => ds.label === member);
+                    if (dataset) {
+                        dataset.data = points.map(p => ({ x: p.time, y: p.value }));
+                    }
+                });
+            }
+            chart.update();
+            return;
         }
+        // Otherwise, create chart as before
         const datasets = [];
         if (labelType === 'key') {
             labels.forEach(key => {
