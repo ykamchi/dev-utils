@@ -72,6 +72,15 @@ class ToolManager:
             except Exception as e:
                 print(f"Failed to load tool {tool_dir.name}: {e}")
 
+    def _monkeypatch_route(self, tool_name):
+        orig_route = self.app.route
+        def custom_route(rule, **options):
+            def decorator(f):
+                endpoint = f"{tool_name}.{f.__name__}"
+                return orig_route(rule, endpoint=endpoint, **options)(f)
+            return decorator
+        return custom_route
+
     def register_tool_api(self, tool_dir: Path, module):
         """Register tool APIs - try to import from api module first"""
         try:
@@ -83,7 +92,10 @@ class ToolManager:
                 api_module = importlib.util.module_from_spec(api_spec)
                 api_spec.loader.exec_module(api_module)
                 if hasattr(api_module, 'register_apis'):
+                    orig_route = self.app.route
+                    self.app.route = self._monkeypatch_route(tool_dir.name)
                     api_module.register_apis(self.app, f'/api/{tool_dir.name}')
+                    self.app.route = orig_route
                     print(f"Registered APIs for tool: {tool_dir.name} (from api.py)")
                 else:
                     print(f"Warning: {tool_dir.name}/api.py has no register_apis function")
@@ -92,7 +104,10 @@ class ToolManager:
         except Exception as api_error:
             # Fallback: try to register APIs from tool module (backward compatibility)
             if hasattr(module, 'register_apis'):
+                orig_route = self.app.route
+                self.app.route = self._monkeypatch_route(tool_dir.name)
                 module.register_apis(self.app, f'/api/{tool_dir.name}')
+                self.app.route = orig_route
                 print(f"Registered APIs for tool: {tool_dir.name} (from tool.py - deprecated)")
             else:
                 print(f"Warning: No API registration found for tool: {tool_dir.name}")

@@ -205,7 +205,10 @@ const ToolsService = {
         // TODO: Need to set a destructor to notify the tool when it's removed/unloaded
         // and remove the code from the current tools
         toolContainer.dataset.toolName = toolName;
-        
+
+        // Load all tool imports before anything else
+        await this.loadToolImports(toolName);
+
         // Load tool HTML and get the content type
         await this.loadToolHTML(toolName, toolContainer);
 
@@ -220,6 +223,33 @@ const ToolsService = {
             console.warn(`No CSS found for tool: ${toolName}`);
         }
 
+    },
+
+    // Load all JS imports for a tool from the framework API
+    async loadToolImports(toolName) {
+        try {
+            const res = await fetch('/api/tools/imports');
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!data.success || !data.imports || !Array.isArray(data.imports[toolName])) return;
+            for (const scriptUrl of data.imports[toolName]) {
+                const file = scriptUrl.split('/').pop();
+                if (!file.endsWith('.js')) continue;
+                const globalName = file
+                    .replace(/\.js$/, '')
+                    .split('-')
+                    .map((part, i) => part.charAt(0).toUpperCase() + part.slice(1))
+                    .join('');
+                console.log("[ToolsService] Loading import script:", scriptUrl, "for global", globalName);
+                try {
+                    await Utils.loadScriptIfNeeded(scriptUrl, globalName);
+                } catch (err) {
+                    console.warn(`[ToolsService] Failed to load import script: ${scriptUrl}`, err);
+                }
+            }
+        } catch (err) {
+            // Ignore if API does not exist
+        }
     },
 
     // Load tool-specific content HTML. 
@@ -360,20 +390,19 @@ const ToolsService = {
             script.src = `/static/tools/${toolName}/script.js`;
             script.dataset.tool = toolName;
             script.onload = async () => {
-                    try {
-                        // Get tool info from the loaded script
-                        const toolInfo = await this.getToolInfo(toolName);
-                        this.toolsState.toolInfo = toolInfo;
-                        toolInfo.init(toolContainer);  // <-- Pass the tool container to init
-                        resolve();
-                    } catch (error) {
-                        reject(error);
-                    }
-                };
-                script.onerror = () => {
-                    reject(new Error(`Failed to load tool script: ${panelName}`));
-                };
-            
+                try {
+                    // Get tool info from the loaded script
+                    const toolInfo = await this.getToolInfo(toolName);
+                    this.toolsState.toolInfo = toolInfo;
+                    toolInfo.init(toolContainer);  // <-- Pass the tool container to init
+                    resolve();
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            script.onerror = () => {
+                reject(new Error(`Failed to load tool script: script.js`));
+            };
             document.head.appendChild(script);
         });
     },

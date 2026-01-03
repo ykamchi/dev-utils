@@ -1,0 +1,40 @@
+.tabset-tab-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--color-secondary-accent);
+    padding-bottom: 8px;
+}
+
+.tabset-tab-button {
+    padding: 8px 16px;
+    border: 1px solid var(--color-secondary-accent);
+    background: var(--color-card-background);
+    color: var(--color-text-dark);
+    border-radius: 6px 6px 0 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.tabset-tab-button.active {
+    background: var(--color-highlight);
+    color: var(--color-text-light);
+    border-color: var(--color-highlight);
+}
+
+.tabset-tab-button:hover {
+    background: var(--color-secondary-accent);
+    color: var(--color-text-light);
+    border-color: var(--color-highlight);
+}
+
+.tabset-tab-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: auto;
+    padding: 16px 0;
+    min-height: 60px;
+}

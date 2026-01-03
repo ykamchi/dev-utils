@@ -8,7 +8,7 @@ class MemberDetailsComponent {
         this.container = container;
         this.selected_member_id = selected_member_id;
         this.member = members[selected_member_id];
-        this.members = members || [];
+        this.members = members;
         this.render();
     }
 
@@ -29,6 +29,7 @@ class MemberDetailsComponent {
         const tabsetDiv = document.createElement('div');
         tabsetDiv.className = 'first-date-profile-tabset';
         contentDiv.appendChild(tabsetDiv);
+
         const tabs = [
             { name: '📝 Details', populateFunc: this.populateDetailsTab.bind(this) },
             { name: '👀 Viewed Profiles', populateFunc: this.populateViewedProfilesTab.bind(this) },
@@ -225,6 +226,7 @@ class MemberDetailsComponent {
                 body: JSON.stringify({ member_id: self.selected_member_id, only_last: onlyLast })
             }).then(res => res.json()).then(conversations => {
                 firstDatesData = Array.isArray(conversations) ? conversations : [];
+
                 renderList();
             })
                 .catch(e => {
@@ -264,7 +266,7 @@ class MemberDetailsComponent {
             }
             if (sorted.length) {
                 for (const conversation of sorted) {
-                    const other = conversation.members.find(mem => mem.member_id !== currentMemberId);
+                    const other = conversation.members.find(mem => String(mem.member_nick_name) !== String(self.member.name));
                     let match = '';
                     if (conversation.last_feedback && typeof conversation.last_feedback === 'object') {
                         match = conversation.last_feedback.match !== undefined ? conversation.last_feedback.match : '';
