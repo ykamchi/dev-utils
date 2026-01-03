@@ -235,14 +235,14 @@ const ToolsService = {
             for (const scriptUrl of data.imports[toolName]) {
                 const file = scriptUrl.split('/').pop();
                 if (!file.endsWith('.js')) continue;
-                const globalName = file
-                    .replace(/\.js$/, '')
-                    .split('-')
-                    .map((part, i) => part.charAt(0).toUpperCase() + part.slice(1))
-                    .join('');
-                console.log("[ToolsService] Loading import script:", scriptUrl, "for global", globalName);
+                // const globalName = file
+                //     .replace(/\.js$/, '')
+                //     .split('-')
+                //     .map((part, i) => part.charAt(0).toUpperCase() + part.slice(1))
+                //     .join('');
+                console.log("[ToolsService] Loading import script:", scriptUrl);//, "for global", globalName);
                 try {
-                    await Utils.loadScriptIfNeeded(scriptUrl, globalName);
+                    await Utils.loadScriptIfNeeded(scriptUrl);//, globalName);
                 } catch (err) {
                     console.warn(`[ToolsService] Failed to load import script: ${scriptUrl}`, err);
                 }

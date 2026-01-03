@@ -16,18 +16,18 @@ const Utils = {
      * @param {string} globalName - The global variable to check (e.g. 'ConversationDetailsComponent')
      * @returns {Promise<void>} Resolves when loaded
      */
-    async loadScriptIfNeeded(url, globalName) {
-        if (window[globalName]) return;
+    async loadScriptIfNeeded(url) {//, globalName) {
+        // if (window[globalName]) return;
         await new Promise((resolve, reject) => {
             const script = document.createElement('script');
             script.src = url;
             script.onload = () => {
-                if (window[globalName]) {
+                // if (window[globalName]) {
                     resolve();
-                } else {
-                    console.warn(`Script '${url}' loaded, but global object '${globalName}' was not found.`);
-                    resolve();
-                }
+                // } else {
+                //     console.warn(`Script '${url}' loaded, but global object '${globalName}' was not found.`);
+                //     resolve();
+                // }
             };
             script.onerror = () => reject(new Error(`Failed to load script: ${url}`));
             document.head.appendChild(script);
