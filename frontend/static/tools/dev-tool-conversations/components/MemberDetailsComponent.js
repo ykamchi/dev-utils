@@ -57,7 +57,7 @@ class MemberDetailsComponent {
     const genderLabel = document.createElement('span');
     genderLabel.textContent = 'Gender: ';
     const genderValue = document.createElement('b');
-    genderValue.text = this.member.gender;
+    genderValue.textContent = this.member.gender;
     metaDiv.appendChild(genderLabel);
     metaDiv.appendChild(genderValue);
     
