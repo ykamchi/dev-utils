@@ -4,6 +4,12 @@
 
 /* 1. Monochromatic Elegance (High Contrast) */
 .theme-monochrome {
+    --color-background: #fff;
+    --color-text-primary: #222;
+    --color-disabled: #f5f5f5;
+    --color-text-secondary: #aaa;
+    --shadow-input: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-input-focus: 0 2px 8px rgba(0,0,0,0.08);
     --color-background-main: #FFFFFF;
     --color-primary-accent: #1C1C1C;
     --color-primary-accent-hover: #333333;
@@ -31,10 +37,18 @@
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
     --shadow-collapse-button-hover: 0 2px 6px rgba(28, 28, 28, 0.4);
+    --shadow-button: 0 2px 8px rgba(25, 42, 86, 0.08);
+    --shadow-button-hover: 0 4px 16px rgba(25, 42, 86, 0.15);
 }
 
 /* 2. Traditional Mahogany (Warm Earth Tones) */
 .theme-mahogany {
+    --color-background: #fff;
+    --color-text-primary: #222;
+    --color-disabled: #f5f5f5;
+    --color-text-secondary: #aaa;
+    --shadow-input: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-input-focus: 0 2px 8px rgba(0,0,0,0.08);
     --color-background-main: #EDEAE4;
     --color-primary-accent: #5D4037;
     --color-primary-accent-hover: #4E342E;
@@ -62,10 +76,18 @@
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
     --shadow-collapse-button-hover: 0 2px 6px rgba(93, 64, 55, 0.4);
+    --shadow-button: 0 2px 8px rgba(25, 42, 86, 0.08);
+    --shadow-button-hover: 0 4px 16px rgba(25, 42, 86, 0.15);
 }
 
 /* 3. Regal Dark Mode (Deep Green/Silver) */
 .theme-regal-dark {
+    --color-background: #233136;
+    --color-text-primary: #E0E0E0;
+    --color-disabled: #2a363b;
+    --color-text-secondary: #7A7A7A;
+    --shadow-input: 0 1px 2px rgba(0,0,0,0.10);
+    --shadow-input-focus: 0 2px 8px rgba(0,0,0,0.18);
     --color-background-main: #1C282D;
     --color-primary-accent: #004D40;
     --color-primary-accent-hover: #00695C;
@@ -93,10 +115,18 @@
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
     --shadow-collapse-button-hover: 0 2px 6px rgba(0, 77, 64, 0.4);
+    --shadow-button: 0 2px 8px rgba(25, 42, 86, 0.08);
+    --shadow-button-hover: 0 4px 16px rgba(25, 42, 86, 0.15);
 }
 
 /* 4. Soft Sage & Stone (Muted Natural) */
 .theme-sage-stone {
+    --color-background: #fff;
+    --color-text-primary: #3D3D3D;
+    --color-disabled: #e0e0e0;
+    --color-text-secondary: #A9B3A9;
+    --shadow-input: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-input-focus: 0 2px 8px rgba(0,0,0,0.08);
     --color-background-main: #F4F6F4;
     --color-primary-accent: #4A574E;
     --color-primary-accent-hover: #3A463E;
@@ -124,10 +154,14 @@
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
     --shadow-collapse-button-hover: 0 2px 6px rgba(74, 87, 78, 0.4);
+    --shadow-button: 0 2px 8px rgba(25, 42, 86, 0.08);
+    --shadow-button-hover: 0 4px 16px rgba(25, 42, 86, 0.15);
 }
 
 /* 5. French Provincial (Light Blue/Pastel) */
 .theme-provincial {
+    --shadow-input: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-input-focus: 0 2px 8px rgba(0,0,0,0.08);
     --color-background-main: #F8F8FF;
     --color-primary-accent: #4682B4;
     --color-primary-accent-hover: #3A6B9C;
@@ -155,10 +189,18 @@
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
     --shadow-collapse-button-hover: 0 2px 6px rgba(70, 130, 180, 0.4);
+    --shadow-button: 0 2px 8px rgba(25, 42, 86, 0.08);
+    --shadow-button-hover: 0 4px 16px rgba(25, 42, 86, 0.15);
 }
 
 /* 6. Dark Modern (VS Code Dark+) */
 .theme-dark-modern {
+    --color-background: #43435e;
+    --color-text-primary: #cccccc;
+    --color-disabled: #4e4b4b;
+    --color-text-secondary: #aaa;
+    --shadow-input: 0 1px 2px rgba(0,0,0,0.10);
+    --shadow-input-focus: 0 2px 8px rgba(0,0,0,0.18);
     --color-background-main: #4e4b4b;
     --color-primary-accent: #007acc;
     --color-primary-accent-hover: #005999;
@@ -186,10 +228,18 @@
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
     --shadow-collapse-button-hover: 0 2px 6px rgba(0, 122, 204, 0.4);
+    --shadow-button: 0 2px 8px rgba(25, 42, 86, 0.08);
+    --shadow-button-hover: 0 4px 16px rgba(25, 42, 86, 0.15);
 }
 
 /* 7. Light Modern (VS Code Light+) */
 .theme-light-modern {
+    --color-background: #fff;
+    --color-text-primary: #3c3c3c;
+    --color-disabled: #e5e5e5;
+    --color-text-secondary: #aaa;
+    --shadow-input: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-input-focus: 0 2px 8px rgba(0,0,0,0.08);
     --color-background-main: #f3f3f3;
     --color-primary-accent: #0066cc;
     --color-primary-accent-hover: #004d99;
@@ -217,10 +267,18 @@
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
     --shadow-collapse-button-hover: 0 2px 6px rgba(0, 102, 204, 0.4);
+    --shadow-button: 0 2px 8px rgba(25, 42, 86, 0.08);
+    --shadow-button-hover: 0 4px 16px rgba(25, 42, 86, 0.15);
 }
 
 /* 8. GitHub Dark */
 .theme-github-dark {
+    --color-background: #3d444e;
+    --color-text-primary: #c9d1d9;
+    --color-disabled: #38404c;
+    --color-text-secondary: #aaa;
+    --shadow-input: 0 1px 2px rgba(0,0,0,0.10);
+    --shadow-input-focus: 0 2px 8px rgba(0,0,0,0.18);
     --color-background-main: #38404c;
     --color-primary-accent: #58a6ff;
     --color-primary-accent-hover: #388bfd;
@@ -248,10 +306,18 @@
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
     --shadow-collapse-button-hover: 0 2px 6px rgba(88, 166, 255, 0.4);
+    --shadow-button: 0 2px 8px rgba(25, 42, 86, 0.08);
+    --shadow-button-hover: 0 4px 16px rgba(25, 42, 86, 0.15);
 }
 
 /* 9. Solarized Dark */
 .theme-solarized-dark {
+    --color-background: #073642;
+    --color-text-primary: #93a1a1;
+    --color-disabled: #002b36;
+    --color-text-secondary: #839496;
+    --shadow-input: 0 1px 2px rgba(0,0,0,0.10);
+    --shadow-input-focus: 0 2px 8px rgba(0,0,0,0.18);
     --color-background-main: #002b36;
     --color-primary-accent: #268bd2;
     --color-primary-accent-hover: #1e6ba8;
@@ -279,10 +345,18 @@
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
     --shadow-collapse-button-hover: 0 2px 6px rgba(38, 139, 210, 0.4);
+    --shadow-button: 0 2px 8px rgba(25, 42, 86, 0.08);
+    --shadow-button-hover: 0 4px 16px rgba(25, 42, 86, 0.15);
 }
 
 /* 10. Dracula */
 .theme-dracula {
+    --color-background: #44475a;
+    --color-text-primary: #f8f8f2;
+    --color-disabled: #282a36;
+    --color-text-secondary: #aaa;
+    --shadow-input: 0 1px 2px rgba(0,0,0,0.10);
+    --shadow-input-focus: 0 2px 8px rgba(0,0,0,0.18);
     --color-background-main: #282a36;
     --color-primary-accent: #bd93f9;
     --color-primary-accent-hover: #a166f6;
@@ -310,10 +384,18 @@
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
     --shadow-collapse-button-hover: 0 2px 6px rgba(189, 147, 249, 0.4);
+    --shadow-button: 0 2px 8px rgba(25, 42, 86, 0.08);
+    --shadow-button-hover: 0 4px 16px rgba(25, 42, 86, 0.15);
 }
 
 /* 11. One Dark Pro */
 .theme-one-dark-pro {
+    --color-background: #345b6c;
+    --color-text-primary: #abb2bf;
+    --color-disabled: #282c34;
+    --color-text-secondary: #aaa;
+    --shadow-input: 0 1px 2px rgba(0,0,0,0.10);
+    --shadow-input-focus: 0 2px 8px rgba(0,0,0,0.18);
     --color-background-main: #282c34;
     --color-primary-accent: #417e8f;
     --color-primary-accent-hover: #4fc3e7;
@@ -341,10 +423,18 @@
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
     --shadow-collapse-button-hover: 0 2px 6px rgba(97, 218, 251, 0.4);
+    --shadow-button: 0 2px 8px rgba(25, 42, 86, 0.08);
+    --shadow-button-hover: 0 4px 16px rgba(25, 42, 86, 0.15);
 }
 
 /* 12. Natural Neutral */
 .theme-natural-neutral {
+    --color-background: #fff;
+    --color-text-primary: #333;
+    --color-disabled: #f5f5f5;
+    --color-text-secondary: #aaa;
+    --shadow-input: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-input-focus: 0 2px 8px rgba(0,0,0,0.08);
     /* Main Background & Cards - Soft, warm white */
     --color-background-main: #F8F8F8;
     --color-card-background: #FFFFFF;

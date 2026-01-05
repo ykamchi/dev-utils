@@ -10,9 +10,15 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/panels.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/welcome-screen.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='js/components/table-component.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='js/components/button-component.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='js/components/list-component.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='js/components/popup-component.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='js/components/tabset-component.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='js/components/spinner-component.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='js/components/option-buttons-component.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='js/components/select-component.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='js/components/alert-component.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='js/components/list-chooser-component.css') }}">
 </head>
 <body id="page-body">
     <!-- Top Header Bar -->
@@ -104,15 +110,23 @@
     <script src="{{ url_for('static', filename='js/services/theme-service.js') }}"></script>
     <script src="{{ url_for('static', filename='js/services/svg-service.js') }}"></script>
     <script src="{{ url_for('static', filename='js/services/panels-drag-drop-service.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/list-component.js') }}"></script>
     <script src="{{ url_for('static', filename='js/components/table-component.js') }}"></script>
     <script src="{{ url_for('static', filename='js/components/popup-component.js') }}"></script>
     <script src="{{ url_for('static', filename='js/components/option-buttons-component.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/button-component.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/spinner-component.js') }}"></script>
     <script src="{{ url_for('static', filename='js/components/tabset-component.js') }}"></script>
     <script src="{{ url_for('static', filename='js/services/cross-tool-service.js') }}"></script>
     <script src="{{ url_for('static', filename='js/services/panels-service.js') }}"></script>
     <script src="{{ url_for('static', filename='js/services/tools-list-service.js') }}"></script>
     <script src="{{ url_for('static', filename='js/services/tools-service.js') }}"></script>
     <script src="{{ url_for('static', filename='js/services/drawer-service.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/select-component.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/alert-component.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/list-chooser-component.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <!-- Modal root for global modals -->
+    <div id="modal-root"></div>
 </body>
 </html>

@@ -216,6 +216,11 @@ class PopupComponent {
         // Handle outside click to close
         if (this.closeOnOutsideClick) {
             this.handleOutsideClick = (e) => {
+                // If an alert modal is open, ignore clicks inside it
+                const alertModal = document.querySelector('.alert-component-modal');
+                if (alertModal && alertModal.contains(e.target)) {
+                    return;
+                }
                 if (this.popupElement && !this.popupElement.contains(e.target)) {
                     this.hide();
                 }

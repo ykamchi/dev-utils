@@ -1,0 +1,63 @@
+/* Overlay for blocking modal */
+
+.alert-component-overlay {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.45);
+    z-index: 99998 !important;
+    display: block;
+    pointer-events: all;
+}
+
+/* Centered modal container */
+
+.alert-component-modal {
+    position: fixed !important;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 99999 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 260px;
+    max-width: 400px;
+    background: none;
+}
+/* AlertComponent styles */
+.alert-component-wrapper {
+    background: var(--color-card-background);
+    border-radius: 10px;
+    box-shadow: var(--shadow-card-light, 0 2px 8px rgba(0,0,0,0.12));
+    padding: 24px 20px 20px 20px;
+    margin: 18px 12px;
+    min-width: 260px;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.alert-component-title {
+    font-size: 1.2em;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--color-primary-accent);
+}
+
+.alert-component-content {
+    font-size: 1em;
+    line-height: 1.5;
+    margin-bottom: 24px;
+    color: var(--color-text-primary);
+}
+
+.conversations-buttons-container {
+    display: flex;
+    gap: 16px;
+    justify-content: flex-end;
+    width: 100%;
+}

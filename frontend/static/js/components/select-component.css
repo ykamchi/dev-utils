@@ -1,0 +1,20 @@
+.framework-select-component {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border-light);
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-size: 1em;
+  outline: none;
+  transition: border 0.15s, box-shadow 0.15s;
+  box-shadow: var(--shadow-input);
+}
+.framework-select-component:focus {
+  border-color: var(--color-primary-accent);
+  box-shadow: var(--shadow-input-focus);
+}
+.framework-select-component:disabled {
+  background: var(--color-disabled);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+}

@@ -1,0 +1,29 @@
+.framework-list-chooser-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  min-width: 320px;
+}
+
+.framework-list-chooser-wrapper > div {
+  min-width: 140px;
+}
+
+.framework-list-chooser-wrapper .framework-list-component {
+  min-height: 200px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.framework-list-chooser-wrapper .framework-list-chooser-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.framework-list-chooser-wrapper .framework-button-component {
+  min-width: 36px;
+  margin: 0;
+}

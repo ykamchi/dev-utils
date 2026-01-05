@@ -1,251 +1,333 @@
+/* Decision start buttons container styles */
+.conversations-buttons-container {
+    display: flex;
+    gap: 16px;
+    justify-content: flex-end;
+}
+
+/* Decision start wrapper styles */
+.conversations-decision-start-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: auto;
+    gap: 24px;
+}
+/* Tabset container margin (copied from first-date tool) */
+.conversations-profile-tabset {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    flex: 1;
+    margin-bottom: 16px;
+}
+
 /* Member details wrapper styles */
-.member-details-wrapper {
-  display: flex;
-  flex-direction: column;
-  overflow: auto;
-  flex: 1;
-  padding: 16px;
+ .conversations-member-details-wrapper {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    flex: 1;
+    padding: 16px;
 }
+
 /* Member details header styles */
-.member-details-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 18px;
+ .conversations-member-details-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
 }
 
-.member-details-avatar {
-  width: 64px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.8em;
-  border-radius: 50%;
+ .conversations-member-details-avatar {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.8em;
+    border-radius: 50%;
 }
 
-.member-details-info {
-  display: flex;
-  flex-direction: column;
+ .conversations-member-details-info {
+    display: flex;
+    flex-direction: column;
 }
 
-.member-details-name {
-  font-size: 1.3em;
-  font-weight: bold;
+ .conversations-member-details-name {
+    font-size: 1.3em;
+    font-weight: bold;
 }
 
 .conversations-tool-left {
-  display: flex;
-  flex-direction: column;
-  overflow: auto;
-  flex: 0 1 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    flex: 0 1 auto;
 }
 
 .conversations-tool-right {
-  display: flex;
-  flex-direction: column;
-  overflow: auto;
-  flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    flex: 1;
 }
 
-
-.member-item {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  padding: 12px;
-  border-radius: 8px;
-  background: var(--color-card-background);
-  border: 1px solid var(--color-border-light);
-  box-shadow: var(--shadow-card-light);
-  margin-bottom: 10px;
-  cursor: pointer;
-  transition: transform 0.09s ease, box-shadow 0.12s ease;
-}
-
-.member-item:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-card-hover);
-}
-
-.member-item.selected {
-  border-color: var(--color-primary-accent);
-  background: var(--color-highlight);
-  box-shadow: var(--shadow-card-hover);
-}
-
-.member-item .avatar {
-  width: 56px;
-  height: 56px;
-  font-size: 20px;
-  border-radius: 8px;
-  background: var(--color-overlay-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.member-item .member-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.member-name {
-  font-weight: 600;
-  margin: 0;
-  font-size: 16px;
-}
-
-.member-meta {
-  font-size: 13px;
-  color: var(--color-text-secondary);
-  margin-top: 4px;
-}
-
-.profile.empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--color-text-secondary);
-}
-
-.conversations-tool-root {
-  height: 100%;
-  display: flex;
-  flex-direction: row;
-  background: var(--color-background);
-}
-
-.conversations-members-list {
-  width: 340px;
-  min-width: 260px;
-  max-width: 400px;
-  background: var(--color-card-background);
-  border-right: 1px solid var(--color-border-light);
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.conversations-members-list-header {
-  padding: 18px 18px 8px 18px;
-  font-size: 1.2em;
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.conversations-group-select {
-  margin: 0 18px 10px 18px;
-  padding: 6px 8px;
-  font-size: 1em;
-  border-radius: 4px;
-  border: 1px solid var(--color-border-light);
-  background: var(--color-background);
-}
-
-.conversations-members-search {
-  margin: 0 18px 10px 18px;
-  padding: 6px 8px;
-  font-size: 1em;
-  border-radius: 4px;
-  border: 1px solid var(--color-border-light);
-}
-
-.conversations-members-list-items {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0 8px 8px 8px;
-}
+/* 
 
 .conversations-member-item {
-  display: flex;
-  align-items: center;
-  padding: 10px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-bottom: 4px;
-  transition: background 0.15s;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 12px;
+    border-radius: 8px;
+    background: var(--color-card-background);
+    border: 1px solid var(--color-border-light);
+    box-shadow: var(--shadow-card-light);
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: transform 0.09s ease, box-shadow 0.12s ease;
 }
 
 .conversations-member-item:hover {
-  background: var(--color-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
+}
+
+.conversations-member-item.selected {
+    border-color: var(--color-primary-accent);
+    background: var(--color-highlight);
+    box-shadow: var(--shadow-card-hover);
+}
+*/
+.conversations-member-card-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.conversations-member-card-avatar {
+    width: 56px;
+    height: 56px;
+    font-size: 20px;
+    border-radius: 8px;
+    background: var(--color-overlay-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.conversations-member-card-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.conversations-member-card-name {
+    font-weight: 600;
+    margin: 0;
+    font-size: 16px;
+}
+
+.conversations-member-card-meta {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-top: 4px;
+}
+
+.conversations-profile-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--color-text-secondary);
+}
+
+.conversations-tool-root {
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    background: var(--color-background);
+}
+
+.conversations-members-list {
+    width: 340px;
+    min-width: 260px;
+    max-width: 400px;
+    background: var(--color-card-background);
+    border-right: 1px solid var(--color-border-light);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.conversations-members-list-header {
+    padding: 18px 18px 8px 18px;
+    font-size: 1.2em;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.conversations-group-select {
+    margin: 0 18px 10px 18px;
+    padding: 6px 8px;
+    font-size: 1em;
+    border-radius: 4px;
+    border: 1px solid var(--color-border-light);
+    background: var(--color-background);
+}
+
+.conversations-members-search {
+    margin: 0 18px 10px 18px;
+    padding: 6px 8px;
+    font-size: 1em;
+    border-radius: 4px;
+    border: 1px solid var(--color-border-light);
+}
+
+.conversations-members-list-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 8px 8px 8px;
+}
+
+.conversations-member-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 4px;
+    transition: background 0.15s;
+}
+
+.conversations-member-item:hover {
+    background: var(--color-hover);
 }
 
 .conversations-member-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--color-avatar-background);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.3em;
-  margin-right: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--color-avatar-background);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3em;
+    margin-right: 12px;
 }
 
-.conversations-member-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+.conversations-member-card-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
-.conversations-member-name {
-  font-weight: 500;
-  color: var(--color-text-primary);
+.conversations-member-card-name {
+    font-weight: 500;
+    color: var(--color-text-primary);
 }
 
-.conversations-member-meta {
-  font-size: 0.95em;
-  color: var(--color-text-secondary);
+.conversations-member-card-meta {
+    font-size: 0.95em;
+    color: var(--color-text-secondary);
 }
 
 .conversations-member-details {
-  flex: 1;
-  background: var(--color-background);
-  padding: 32px;
-  overflow-y: auto;
+    flex: 1;
+    background: var(--color-background);
+    padding: 32px;
+    overflow-y: auto;
 }
 
-.member-profile-wrapper {
-  background: var(--color-card-background);
-  border-radius: 10px;
-  box-shadow: var(--shadow-card-light, 0 2px 8px rgba(0,0,0,0.1));
-  padding: 24px 20px 20px 20px;
-  margin: 18px 12px;
-  min-height: 180px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+.conversations-member-profile-wrapper {
+    background: var(--color-card-background);
+    border-radius: 10px;
+    box-shadow: var(--shadow-card-light, 0 2px 8px rgba(0, 0, 0, 0.1));
+    padding: 24px 20px 20px 20px;
+    margin: 18px 12px;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
-.member-profile-header {
-  font-size: 1.3em;
-  font-weight: 600;
-  margin-bottom: 16px;
-  color: var(--color-primary-accent);
+.conversations-member-profile-header {
+    font-size: 1.3em;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--color-primary-accent);
 }
 
-.member-profile-json {
-  background: var(--color-background-main);
-  border-radius: 6px;
-  padding: 14px 12px;
-  font-size: 1em;
-  line-height: 1.5;
-  max-height: 340px;
-  overflow: auto;
-  width: 100%;
+.conversations-member-profile-json {
+    background: var(--color-background-main);
+    border-radius: 6px;
+    padding: 14px 12px;
+    font-size: 1em;
+    line-height: 1.5;
+    max-height: 340px;
+    overflow: auto;
+    width: 100%;
 }
 
-.member-profile-loading,
-.member-profile-empty,
-.member-profile-error {
-  margin: 32px 0 0 0;
-  color: var(--color-secondary-accent);
-  font-size: 1.1em;
-  text-align: left;
-  padding-left: 18px;
+.conversations-member-profile-loading,
+.conversations-member-profile-empty,
+.conversations-member-profile-error {
+    margin: 32px 0 0 0;
+    color: var(--color-secondary-accent);
+    font-size: 1.1em;
+    text-align: left;
+    padding-left: 18px;
 }
-.member-profile-error {
-  color: var(--color-warning-error);
+
+.conversations-member-profile-error {
+    color: var(--color-warning-error);
+}
+
+/* Decision item member names */
+.conversations-decision-item-members-names {
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+/* Decision item created_at */
+.conversations-decision-item-created-at {
+    font-style: italic;
+    font-size: 0.95em;
+    color: var(--color-text-secondary);
+}
+
+/* Decision item decision type */
+.conversations-decision-item-decision-type {
+    margin-left: auto;
+    font-size: 0.9em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: var(--color-secondary-accent);
+    color: var(--color-text-light);
+    font-weight: 500;
+}
+
+/* Feedback field for decision details popup */
+.conversations-decision-item-feedback-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 120px;
+}
+/* Feedback container for decision details popup */
+.conversations-decision-item-feedback-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 24px 0px 24px 0px;
+}
+
+/* Feedback field name for decision details popup */
+.conversations-decision-item-feedback-name {
+    font-weight: bold;
+}
+/* Header for decision details popup */
+.conversations-decision-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
