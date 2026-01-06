@@ -13,6 +13,7 @@
     overflow: auto;
     gap: 24px;
 }
+
 /* Tabset container margin (copied from first-date tool) */
 .conversations-profile-tabset {
     display: flex;
@@ -23,7 +24,7 @@
 }
 
 /* Member details wrapper styles */
- .conversations-member-details-wrapper {
+.conversations-member-details-wrapper {
     display: flex;
     flex-direction: column;
     overflow: auto;
@@ -32,14 +33,14 @@
 }
 
 /* Member details header styles */
- .conversations-member-details-header {
+.conversations-member-details-header {
     display: flex;
     align-items: center;
     gap: 16px;
     margin-bottom: 18px;
 }
 
- .conversations-member-details-avatar {
+.conversations-member-details-avatar {
     width: 64px;
     height: 64px;
     display: flex;
@@ -49,12 +50,12 @@
     border-radius: 50%;
 }
 
- .conversations-member-details-info {
+.conversations-member-details-info {
     display: flex;
     flex-direction: column;
 }
 
- .conversations-member-details-name {
+.conversations-member-details-name {
     font-size: 1.3em;
     font-weight: bold;
 }
@@ -63,7 +64,21 @@
     display: flex;
     flex-direction: column;
     overflow: auto;
+    flex: 1;
+    border-right: 1px solid var(--color-border-light);
+}
+
+.conversations-group-container {
+    display: flex;
+    flex-direction: column;
     flex: 0 1 auto;
+}
+
+.conversations-content-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: auto;
 }
 
 .conversations-tool-right {
@@ -73,33 +88,6 @@
     flex: 1;
 }
 
-/* 
-
-.conversations-member-item {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    padding: 12px;
-    border-radius: 8px;
-    background: var(--color-card-background);
-    border: 1px solid var(--color-border-light);
-    box-shadow: var(--shadow-card-light);
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: transform 0.09s ease, box-shadow 0.12s ease;
-}
-
-.conversations-member-item:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-card-hover);
-}
-
-.conversations-member-item.selected {
-    border-color: var(--color-primary-accent);
-    background: var(--color-highlight);
-    box-shadow: var(--shadow-card-hover);
-}
-*/
 .conversations-member-card-wrapper {
     display: flex;
     align-items: center;
@@ -150,14 +138,35 @@
 }
 
 .conversations-members-list {
-    width: 340px;
     min-width: 260px;
-    max-width: 400px;
     background: var(--color-card-background);
-    border-right: 1px solid var(--color-border-light);
     display: flex;
     flex-direction: column;
     height: 100%;
+}
+
+/* Group Selection Component */
+.conversations-group-selection-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.conversations-group-selection-header {
+    padding: 18px 18px 8px 18px;
+    font-size: 1.2em;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.conversations-group-selection-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 18px 10px 18px;
+}
+
+.conversations-group-selection-select {
+    flex: 1;
 }
 
 .conversations-members-list-header {
@@ -313,6 +322,7 @@
     flex-direction: column;
     min-width: 120px;
 }
+
 /* Feedback container for decision details popup */
 .conversations-decision-item-feedback-container {
     display: flex;
@@ -325,9 +335,68 @@
 .conversations-decision-item-feedback-name {
     font-weight: bold;
 }
+
 /* Header for decision details popup */
 .conversations-decision-item-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+/* Manage component wrapper */
+.conversations-manage-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: auto;
+}
+
+/* Manage component header */
+.conversations-manage-header {
+    padding: 18px 18px 8px 18px;
+    font-size: 1.2em;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+/* Manage list items */
+.conversations-manage-list-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 8px 8px 8px;
+}
+
+/* Manage card wrapper */
+.conversations-manage-card-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.conversations-manage-card-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 28px;
+    border-radius: 8px;
+    background: var(--color-overlay-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.conversations-manage-card-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.conversations-manage-card-name {
+    font-weight: 600;
+    margin: 0;
+    font-size: 16px;
+}
+
+.conversations-manage-card-description {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-top: 4px;
 }

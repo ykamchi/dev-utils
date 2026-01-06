@@ -3,11 +3,9 @@
         MembersListComponent: left side to select members in dev-tool-conversations
     */
     class MembersListComponent {
-        constructor(container, groupNames, onMemberSelect) {
+        constructor(container, onMemberSelect) {
             this.container = container;
-            this.groupNames = groupNames;
             this.onMemberSelect = onMemberSelect;
-            this.selectedGroup = groupNames[0];
             this.members = {};
             this.filteredMembers = {};
             this.searchInput = null;
@@ -21,27 +19,6 @@
             // Create wrapper for filtering and list
             const wrapper = document.createElement('div');
             wrapper.className = 'conversations-members-list';
-
-            // Group header
-            const groupHeader = document.createElement('div');
-            groupHeader.className = 'conversations-members-list-header';
-            groupHeader.textContent = 'Group';
-            wrapper.appendChild(groupHeader);
-
-            // Group select dropdown using framework SelectComponent
-            const groupSelectContainer = document.createElement('div');
-            wrapper.appendChild(groupSelectContainer);
-            const groupOptions = this.groupNames.map(g => ({ label: g, value: g }));
-            new window.SelectComponent(
-                groupSelectContainer,
-                groupOptions,
-                (selectedGroup) => {
-                    this.selectedGroup = selectedGroup;
-                    this.fetchMembers();
-                },
-                'Select Group ...',
-                this.selectedGroup,
-            );
 
             // Members header
             const membersHeader = document.createElement('div');
@@ -65,19 +42,23 @@
             wrapper.appendChild(this.membersListItems);
             this.container.appendChild(wrapper);
 
-            // Initial fetch
-            this.fetchMembers();
+            // Show initial loading state
+            new window.SpinnerComponent(this.membersListItems, { text: 'Waiting for group selection...' });
         }
 
-        // Fetch members for the selected group
-        async fetchMembers() {
+        // Load members for the selected group
+        async load(selectedGroup) {
             // Show loading spinner
             new window.SpinnerComponent(this.membersListItems, { text: 'Loading members...' });
+
+            // TODO: Remove this debug delay
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
             try {
                 const resp = await fetch('/api/dev-tool-conversations/members', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ group_name: this.selectedGroup })
+                    body: JSON.stringify({ group_name: selectedGroup })
                 });
                 const data = await resp.json();
                 if (data.success && data.members && typeof data.members === 'object') {
@@ -120,7 +101,7 @@
                 window.ListComponent.SELECTION_MODE_SINGLE,
                 (selectedItems) => {
                     if (selectedItems.length > 0) {
-                        this.onMemberSelect(this.selectedGroup, selectedItems[0].id, this.members);
+                        this.onMemberSelect(selectedItems[0].id, this.members);
                     }
                 }
             );

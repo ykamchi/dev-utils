@@ -9,10 +9,10 @@
             this.memberId = memberId;
             this.membersMap = membersMap;
             this.member = membersMap[memberId];
-            this.renderProfile();
+            this.render();
         }
 
-        renderProfile() {
+        render() {
             this.container.innerHTML = '';
 
             // Create wrapper for profile

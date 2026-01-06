@@ -34,6 +34,19 @@ def register_apis(app, base_path: str):
         return resp.json()
 
 
+    @app.route(f"{base_path}/groups", methods=["POST"])
+    def get_groups():
+        """
+        Proxy to upstream /api/groups to fetch available group names.
+        """
+        try:
+            upstream_resp = _proxy_post('/api/groups', {})
+            return jsonify({"success": True, "groups": upstream_resp})
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/groups')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream groups'}), 502
+
+
     @app.route(f"{base_path}/group_instruction_info", methods=["POST"])
     def group_instruction_info():
         """
