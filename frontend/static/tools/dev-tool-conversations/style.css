@@ -23,48 +23,18 @@
     margin-bottom: 16px;
 }
 
-/* Member details wrapper styles */
-.conversations-member-details-wrapper {
-    display: flex;
-    flex-direction: column;
-    overflow: auto;
-    flex: 1;
-    padding: 16px;
-}
-
-/* Member details header styles */
-.conversations-member-details-header {
+.conversations-members-search-container {
     display: flex;
     align-items: center;
-    gap: 16px;
-    margin-bottom: 18px;
-}
-
-.conversations-member-details-avatar {
-    width: 64px;
-    height: 64px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.8em;
-    border-radius: 50%;
-}
-
-.conversations-member-details-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.conversations-member-details-name {
-    font-size: 1.3em;
-    font-weight: bold;
+    gap: 8px;
+    margin: 0 8px 10px 8px;
 }
 
 .conversations-tool-left {
     display: flex;
     flex-direction: column;
     overflow: auto;
-    flex: 1;
+    flex: 0 1 auto;
     border-right: 1px solid var(--color-border-light);
 }
 
@@ -94,12 +64,12 @@
     gap: 24px;
 }
 
-.conversations-member-card-avatar {
+.conversations-list-card-icon {
     width: 56px;
     height: 56px;
-    font-size: 20px;
+    font-size: 28px;
     border-radius: 8px;
-    background: var(--color-overlay-border);
+    background: var(--color-background-main);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -114,12 +84,6 @@
     font-weight: 600;
     margin: 0;
     font-size: 16px;
-}
-
-.conversations-member-card-meta {
-    font-size: 13px;
-    color: var(--color-text-secondary);
-    margin-top: 4px;
 }
 
 .conversations-profile-empty {
@@ -151,9 +115,9 @@
     flex-direction: column;
 }
 
-.conversations-group-selection-header {
+.conversations-selection-header {
     padding: 18px 18px 8px 18px;
-    font-size: 1.2em;
+    font-size: 18px;
     font-weight: 600;
     color: var(--color-text-primary);
 }
@@ -165,30 +129,10 @@
     margin: 0 18px 10px 18px;
 }
 
-.conversations-group-selection-select {
-    flex: 1;
-}
-
-.conversations-members-list-header {
-    padding: 18px 18px 8px 18px;
-    font-size: 1.2em;
-    font-weight: 600;
-    color: var(--color-text-primary);
-}
-
-.conversations-group-select {
+.conversations-members-search-input {
     margin: 0 18px 10px 18px;
     padding: 6px 8px;
-    font-size: 1em;
-    border-radius: 4px;
-    border: 1px solid var(--color-border-light);
-    background: var(--color-background);
-}
-
-.conversations-members-search {
-    margin: 0 18px 10px 18px;
-    padding: 6px 8px;
-    font-size: 1em;
+    font-size: 16px;
     border-radius: 4px;
     border: 1px solid var(--color-border-light);
 }
@@ -197,32 +141,6 @@
     flex: 1;
     overflow-y: auto;
     padding: 0 8px 8px 8px;
-}
-
-.conversations-member-item {
-    display: flex;
-    align-items: center;
-    padding: 10px 8px;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-bottom: 4px;
-    transition: background 0.15s;
-}
-
-.conversations-member-item:hover {
-    background: var(--color-hover);
-}
-
-.conversations-member-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: var(--color-avatar-background);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3em;
-    margin-right: 12px;
 }
 
 .conversations-member-card-info {
@@ -237,7 +155,8 @@
 }
 
 .conversations-member-card-meta {
-    font-size: 0.95em;
+    font-size: 14px;
+    font-style: italic;
     color: var(--color-text-secondary);
 }
 
@@ -261,7 +180,7 @@
 }
 
 .conversations-member-profile-header {
-    font-size: 1.3em;
+    font-size: 18px;
     font-weight: 600;
     margin-bottom: 16px;
     color: var(--color-primary-accent);
@@ -271,7 +190,7 @@
     background: var(--color-background-main);
     border-radius: 6px;
     padding: 14px 12px;
-    font-size: 1em;
+    font-size: 16px;
     line-height: 1.5;
     max-height: 340px;
     overflow: auto;
@@ -283,7 +202,7 @@
 .conversations-member-profile-error {
     margin: 32px 0 0 0;
     color: var(--color-secondary-accent);
-    font-size: 1.1em;
+    font-size: 16px;
     text-align: left;
     padding-left: 18px;
 }
@@ -301,14 +220,14 @@
 /* Decision item created_at */
 .conversations-decision-item-created-at {
     font-style: italic;
-    font-size: 0.95em;
+    font-size: 12px;
     color: var(--color-text-secondary);
 }
 
 /* Decision item decision type */
 .conversations-decision-item-decision-type {
     margin-left: auto;
-    font-size: 0.9em;
+    font-size: 12px;
     padding: 4px 8px;
     border-radius: 4px;
     background: var(--color-secondary-accent);
@@ -331,10 +250,20 @@
     margin: 24px 0px 24px 0px;
 }
 
+.conversations-decision-item-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    /* padding: 16px;
+    background: var(--color-card-background);
+    border: 1px solid var(--color-overlay-border);
+    border-radius: 8px; */
+}
 /* Feedback field name for decision details popup */
 .conversations-decision-item-feedback-name {
     font-weight: bold;
 }
+
 
 /* Header for decision details popup */
 .conversations-decision-item-header {
@@ -351,14 +280,6 @@
     overflow: auto;
 }
 
-/* Manage component header */
-.conversations-manage-header {
-    padding: 18px 18px 8px 18px;
-    font-size: 1.2em;
-    font-weight: 600;
-    color: var(--color-text-primary);
-}
-
 /* Manage list items */
 .conversations-manage-list-items {
     flex: 1;
@@ -371,17 +292,6 @@
     display: flex;
     align-items: center;
     gap: 24px;
-}
-
-.conversations-manage-card-icon {
-    width: 56px;
-    height: 56px;
-    font-size: 28px;
-    border-radius: 8px;
-    background: var(--color-overlay-border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .conversations-manage-card-info {
@@ -399,4 +309,290 @@
     font-size: 13px;
     color: var(--color-text-secondary);
     margin-top: 4px;
+}
+
+/* Manage details component */
+.conversations-page-details-wrapper {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    flex: 1;
+    padding: 16px;
+}
+
+.conversations-page-details-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.conversations-page-details-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    border-radius: 50%;
+    background: var(--color-overlay-border);
+}
+
+.conversations-page-details-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.conversation-page-details-title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.conversation-page-details-subtitle {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-top: 4px;
+}
+
+.conversations-manage-details-content {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Manage instructions tabset */
+.conversations-manage-instructions-tabset {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Manage instructions content */
+.conversations-manage-instructions-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 16px;
+    overflow: auto;
+    padding: 8px 0;
+}
+
+.conversations-manage-instructions-tab-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 16px;
+}
+
+/* Manage instructions info section */
+.conversations-manage-instructions-info {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: var(--color-overlay-border);
+    border-radius: 8px;
+}
+
+.conversations-manage-instructions-name {
+    font-size: 1.2em;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.conversations-manage-instructions-description {
+    font-size: 0.95em;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+}
+
+/* Manage instructions text section */
+.conversations-manage-instructions-text-section {
+    margin-top: 16px;
+}
+
+.conversations-manage-instructions-label {
+    font-weight: 600;
+    margin-bottom: 12px;
+    font-size: 1.05em;
+}
+
+.conversations-manage-instructions-text {
+    background: var(--color-overlay-border);
+    padding: 16px;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9em;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Instruction editor tabs */
+.conversations-manage-instruction-editor-tabset {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: auto;
+}
+
+.conversations-instruction-editor-tab {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 16px 0px;
+    overflow: auto;
+    gap: 16px;
+}
+
+/* Instruction field groups */
+.conversations-instruction-field-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.conversations-instruction-scrollable-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: auto;
+}
+
+.conversations-instruction-field-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 12px;
+}
+
+.conversations-instruction-field-input {
+    /* width: 100%; */
+    border: 1px solid var(--color-overlay-border);
+    border-radius: 6px;
+    background: var(--color-background);
+    color: var(--color-text);
+    font-size: 16px;
+    font-family: inherit;
+    padding: 8px 12px;
+}
+
+.conversations-instruction-field-input:focus {
+    outline: none;
+    border: 1px solid var(--color-border-light);
+}
+
+.conversations-instruction-field-textarea {
+    width: 100%;
+    border: 1px solid var(--color-border-light);
+    border-radius: 4px;
+    background-color: var(--color-background);
+    color: var(--color-text-dark);
+    font-size: 16px;
+    font-family: inherit;
+    resize: vertical;
+    padding: 7px 8px;
+    outline: none;
+    transition: border-color 0.2s ease;
+    /* min-height: 60px; */
+}
+
+.conversations-instruction-field-textarea-large {
+    flex: 1;
+    /* min-height: 300px; */
+    /* font-family: 'Consolas', 'Monaco', 'Courier New', monospace; */
+}
+
+.conversations-instruction-field-textarea:focus {
+    border-color: var(--color-primary);
+}
+
+.conversations-instruction-field-select {
+    width: 100%;
+    border: 1px solid var(--color-overlay-border);
+    border-radius: 6px;
+    background: var(--color-background);
+    color: var(--color-text);
+    font-size: 16px;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.conversations-instruction-field-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.conversations-instruction-field-readonly {
+    padding: 10px 12px;
+    border: 1px solid var(--color-border-light);
+    border-radius: 4px;
+    background-color: var(--color-disabled);
+    color: var(--color-text-dark);
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s ease;
+    width: 100%;
+}
+
+.conversations-instruction-field-empty {
+    padding: 24px;
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-style: italic;
+}
+
+/* Feedback cards */
+.conversations-feedback-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: var(--color-background);
+    border: 1px solid var(--color-overlay-border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.conversations-feedback-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.conversations-feedback-card:last-child {
+    margin-bottom: 0;
+}
+
+.conversations-feedback-card-header {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--color-primary);
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--color-overlay-border);
+}
+
+.conversations-feedback-type-container {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+}
+
+.conversations-feedback-type-minmax-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.conversations-feedback-type-minmax-container .conversations-instruction-field-group {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.conversations-feedback-minmax-container {
+    display: flex;
+    gap: 16px;
 }

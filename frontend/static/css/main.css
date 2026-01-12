@@ -13,6 +13,7 @@
     --color-card-background: #FBFBF2;
     --color-warning-error: #A65B43;
     --color-info-background: linear-gradient(135deg, rgba(168, 144, 83, 0.15), rgba(251, 251, 242, 0.95));
+    --color-disabled: #e0e0e0;  
     --box-shadow-panel: 4px -4px 7px 2px rgba(0, 0, 0, 0.25);
     --shadow-card-light: 0 2px 8px rgba(0, 0, 0, 0.1);
     --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
@@ -29,6 +30,22 @@
     --shadow-header: 0 4px 8px rgba(0, 0, 0, 0.2);
     --shadow-overlay: 0 12px 30px rgba(0, 0, 0, 0.2);
     --shadow-collapse-button-hover: 0 2px 6px rgba(25, 42, 86, 0.4);
+    
+    /* Red Range (Poor) */
+    --color-rate-bucket-1: #ff4d4d; /* Bright Red */
+    --color-rate-bucket-2: #ff764d; /* Red-Orange */
+    --color-rate-bucket-3: #ff9f4d; /* Soft Orange */
+
+    /* Orange/Yellow Range (Average) */
+    --color-rate-bucket-4: #ffc94d; /* Golden Yellow */
+    --color-rate-bucket-5: #ffe04d; /* Yellow */
+    --color-rate-bucket-6: #e0f24d; /* Lime Yellow */
+
+    /* Green Range (Good) */
+    --color-rate-bucket-7: #b8f24d; /* Light Lime */
+    --color-rate-bucket-8: #8bf24d; /* Bright Lime */
+    --color-rate-bucket-9: #4df276; /* Mint Green */
+    --color-rate-bucket-10: #2ecc71; /* Success Green */
 }
 
 /* ---------------------------------------------------- */

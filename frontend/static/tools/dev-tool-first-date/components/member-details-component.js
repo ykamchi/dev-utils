@@ -202,13 +202,11 @@ class MemberDetailsComponent {
             { label: 'Match', value: 'match' },
             { label: 'Name', value: 'name' }
         ];
-        let optionButtons = new window.OptionButtonsComponent(sortContainer, sortOptions, {
-            selected: sortBy,
-            onChange: (val) => {
+        let optionButtons = new window.OptionButtonsComponent(sortContainer, sortOptions, sortBy, (val) => {
                 sortBy = val;
                 renderList();
             }
-        });
+        );
         const sortBar = document.createElement('div');
         sortBar.style.display = 'flex';
         sortBar.style.alignItems = 'center';

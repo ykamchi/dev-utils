@@ -1,18 +1,18 @@
 .framework-select-component {
-  padding: 8px 12px;
-  border-radius: 6px;
+  padding: 6.5px 8px;
+  border-radius: 4px;
   border: 1px solid var(--color-border-light);
-  background: var(--color-background);
-  color: var(--color-text-primary);
-  font-size: 1em;
+  background-color: var(--color-background);
+  color: var(--color-text-dark);
+  font-size: 16px;
   outline: none;
-  transition: border 0.15s, box-shadow 0.15s;
-  box-shadow: var(--shadow-input);
+  transition: border-color 0.2s ease;
 }
+
 .framework-select-component:focus {
-  border-color: var(--color-primary-accent);
-  box-shadow: var(--shadow-input-focus);
+  border-color: var(--color-primary);
 }
+
 .framework-select-component:disabled {
   background: var(--color-disabled);
   color: var(--color-text-secondary);

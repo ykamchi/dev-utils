@@ -103,14 +103,21 @@ window.tool_script = {
     },
 
     // Show manage option details in right pane
-    showManageOption(right, optionId) {
+    showManageOption(right, optionId, manageOptions) {
         right.innerHTML = '';
         if (optionId) {
-            // TODO: Create and show manage option component based on optionId
-            const optionDiv = document.createElement('div');
-            optionDiv.className = 'conversations-member-profile-empty';
-            optionDiv.textContent = `Manage option "${optionId}" will be implemented here.`;
-            right.appendChild(optionDiv);
+            const selectedOption = manageOptions[optionId];
+            if (selectedOption && selectedOption.component) {
+                const ComponentClass = window.conversations[selectedOption.component];
+                if (ComponentClass) {
+                    new ComponentClass(right, this.selectedGroup, optionId, manageOptions);
+                } else {
+                    console.error(`Component ${selectedOption.component} not found`);
+                    right.innerHTML = '<div class="conversations-member-profile-empty">Component not found.</div>';
+                }
+            } else {
+                right.innerHTML = '<div class="conversations-member-profile-empty">This feature is not yet implemented.</div>';
+            }
         } else {
             right.innerHTML = '<div class="conversations-member-profile-empty">Select a management option.</div>';
         }

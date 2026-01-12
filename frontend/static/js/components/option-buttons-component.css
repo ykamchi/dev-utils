@@ -3,7 +3,7 @@
 .option-buttons-component {
   display: flex;
   gap: 8px;
-  padding: 4px 0;
+  height: 100%;
 }
 .option-buttons-component .option-btn {
   padding: 6px 18px;
@@ -11,7 +11,7 @@
   border: 1px solid var(--color-border-light);
   background: var(--color-background-main);
   color: var(--color-text-dark);
-  font-size: 1em;
+  font-size: 16px;
   cursor: pointer;
   transition: background 0.2s, color 0.2s, border 0.2s;
 }
@@ -19,7 +19,7 @@
   background: var(--color-primary-accent);
   color: var(--color-text-light);
   border-color: var(--color-primary-accent);
-  font-weight: bold;
+  font-weight: 300;
 }
 .option-buttons-component .option-btn:not(.selected):hover {
   background: var(--color-primary-accent-hover);

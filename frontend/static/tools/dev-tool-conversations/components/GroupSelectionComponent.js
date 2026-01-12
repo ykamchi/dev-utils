@@ -21,44 +21,31 @@
             this.container.innerHTML = '';
             
             // Create wrapper with header
-            const wrapper = document.createElement('div');
-            wrapper.className = 'conversations-group-selection-wrapper';
+            const wrapper = window.conversations.utils.createDivContainer(this.container, 'conversations-group-selection-wrapper');
             
             // Header - Group
-            const groupHeader = document.createElement('div');
-            groupHeader.className = 'conversations-group-selection-header';
-            groupHeader.textContent = 'Group';
-            wrapper.appendChild(groupHeader);
+            window.conversations.utils.createReadOnlyText(wrapper, 'conversations-selection-header', 'Group', 'conversations-selection-header');
             
             // Content container
-            this.contentContainer = document.createElement('div');
-            wrapper.appendChild(this.contentContainer);
-            
-            this.container.appendChild(wrapper);
-            
+            this.contentContainer = window.conversations.utils.createDivContainer(wrapper, 'conversations-group-selection-content');
+                        
             // Show loading spinner while fetching
             new window.SpinnerComponent(this.contentContainer, { text: 'Loading groups...', size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
             
             // Fetch groups
-            this.groupNames = await this.fetchGroupNames();
+            this.groupNames = await window.conversations.api.fetchGroupNames();
             this.selectedGroup = this.groupNames.length > 0 ? this.groupNames[0] : null;
             
             // Remove the spinner
             this.contentContainer.innerHTML = '';
 
-            const controlsContainer = document.createElement('div');
-            controlsContainer.className = 'conversations-group-selection-controls';
-            this.contentContainer.appendChild(controlsContainer);
+            // Controls container for select group and mode buttons
+            const controlsContainer = window.conversations.utils.createDivContainer(this.contentContainer, 'conversations-group-selection-controls', 'conversations-group-selection-controls');
             
-            // Select dropdown
-            const selectContainer = document.createElement('div');
-            selectContainer.className = 'conversations-group-selection-select';
-            controlsContainer.appendChild(selectContainer);
-            
-            const groupOptions = this.groupNames.map(g => ({ label: g, value: g }));
+            // Select group dropdown 
             new window.SelectComponent(
-                selectContainer,
-                groupOptions,
+                controlsContainer,
+                this.groupNames.map(g => ({ label: g, value: g })),
                 (selectedGroup) => {
                     this.selectedGroup = selectedGroup;
                     this.onGroupChange(selectedGroup);
@@ -68,57 +55,19 @@
             );
             
             // Option buttons (View/Manage)
-            const optionButtonsContainer = document.createElement('div');
-            controlsContainer.appendChild(optionButtonsContainer);
-            
+            const options = [ { label: 'View', value: 'view' }, { label: 'Manage', value: 'manage' } ];
             new window.OptionButtonsComponent(
-                optionButtonsContainer,
-                [
-                    { label: 'View', value: 'view' },
-                    { label: 'Manage', value: 'manage' }
-                ],
-                {
-                    selected: 'view',
-                    onChange: (mode) => {
-                        console.log('Group mode changed to:', mode);
-                        if (this.onModeChange) {
-                            this.onModeChange(mode);
-                        }
-                    }
-                }
+                controlsContainer, 
+                options, 
+                'view', 
+                this.onModeChange.bind(this),
+                'conversations-group-selection-mode'
             );
             
             // Trigger onGroupChange callback with initial selection
             if (this.selectedGroup) {
                 this.onGroupChange(this.selectedGroup);
             }
-        }
-
-        // Fetch group names from API
-        async fetchGroupNames() {
-            try {
-                const resp = await fetch('/api/dev-tool-conversations/groups', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({})
-                });
-                const data = await resp.json();
-                if (data.success && Array.isArray(data.groups)) {
-                    return data.groups;
-                } else {
-                    console.error('Failed to fetch groups:', data.error || 'Unknown error');
-                    return [];
-                }
-            } catch (error) {
-                console.error('Error fetching groups:', error);
-                return [];
-            }
-        }
-
-
-        // Public method to get current selected group
-        getSelectedGroup() {
-            return this.selectedGroup;
         }
     }
 

@@ -49,15 +49,8 @@
 }
 
 .alert-component-content {
-    font-size: 1em;
+    font-size: 16px;
     line-height: 1.5;
     margin-bottom: 24px;
     color: var(--color-text-primary);
-}
-
-.conversations-buttons-container {
-    display: flex;
-    gap: 16px;
-    justify-content: flex-end;
-    width: 100%;
 }

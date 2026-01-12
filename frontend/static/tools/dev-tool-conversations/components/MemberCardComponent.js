@@ -19,7 +19,7 @@
 
             // Avatar 
             const avatar = document.createElement('div');
-            avatar.className = 'conversations-member-card-avatar';
+            avatar.className = 'conversations-list-card-icon';
             avatar.textContent = '👤';
             wrapper.appendChild(avatar);
 

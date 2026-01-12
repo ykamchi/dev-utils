@@ -1,0 +1,56 @@
+.range-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 3px 10px;
+    background-color: var(--color-background);
+    border: 1px solid var(--color-border-light);
+    border-radius: 4px;
+    gap: 8px;
+    color: var(--color-text-dark);
+    font-size: 16px;
+    transition: border-color 0.2s ease;
+}
+/* Focus state for range-item container */
+.range-item:focus-within {
+    border-color: var(--color-primary);
+}
+
+.range-component {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.range-inputs-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+.range-separator {
+    font-size: 18px;
+    color: var(--color-text-dark);
+    margin: 0 4px;
+}
+
+
+.range-input {
+    padding: 4px 0px 4px 8px;
+    border: none;
+    background-color: var(--color-background);
+    color: var(--color-text-dark);
+    font-size: 16px;
+    outline: none;
+    width: 60px;
+    min-width: 0;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.range-input:hover {
+    border-color: var(--color-border);
+}
+
+

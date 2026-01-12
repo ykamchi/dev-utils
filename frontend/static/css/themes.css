@@ -489,6 +489,7 @@
     /* Subclass .theme-natural-neutral and override only highlight */
     @extend .theme-natural-neutral;
     --color-highlight: #2f985c;
+    --color-border-light: #2f985c;
 }
 
 /* 14. Natural Blue */

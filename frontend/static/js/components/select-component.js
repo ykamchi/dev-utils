@@ -42,6 +42,7 @@
             select.addEventListener('change', (e) => {
                 // Enable all options after first change
                 if (placeholderOption) placeholderOption.disabled = true;
+                this.setValue(e.target.value);
                 if (this.onSelection) this.onSelection(e.target.value);
             });
             return select;
@@ -53,6 +54,10 @@
 
         setValue(value) {
             this.select.value = value;
+        }
+
+        getSelectedValue() {
+            return this.select.value;
         }
     }
 

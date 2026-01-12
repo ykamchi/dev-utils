@@ -47,27 +47,137 @@ def register_apis(app, base_path: str):
             return jsonify({'success': False, 'error': 'Failed to contact upstream groups'}), 502
 
 
-    @app.route(f"{base_path}/group_instruction_info", methods=["POST"])
-    def group_instruction_info():
+    @app.route(f"{base_path}/group_instructions", methods=["POST"])
+    def group_instructions():
         """
-        Proxy to upstream /api/group_instruction_info with group_name and conversation_type from payload (no defaults).
+        Proxy to upstream /api/group_instructions with group_name from payload (no defaults).
         """
         payload = request.get_json(force=True)
         group_name = payload.get('group_name')
         conversation_type = payload.get('conversation_type')
-        if not group_name or not conversation_type:
-            return jsonify({'success': False, 'error': 'missing group_name or conversation_type'}), 400
+        if not group_name:
+            return jsonify({'success': False, 'error': 'missing group_name'}), 400
         try:
             upstream_payload = {
                 'group_name': group_name,
-                'conversation_type': conversation_type
             }
-            upstream_resp = _proxy_post('/api/group_instruction_info', upstream_payload)
+
+            if conversation_type:
+                upstream_payload['conversation_type'] = conversation_type   
+
+            upstream_resp = _proxy_post('/api/group_instructions', upstream_payload)
             return jsonify(upstream_resp)
         except RequestException:
-            app.logger.exception('Failed to contact upstream /api/group_instruction_info')
-            return jsonify({'success': False, 'error': 'Failed to contact upstream group_instruction_info'}), 502
+            app.logger.exception('Failed to contact upstream /api/group_instructions')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream group_instructions'}), 502
 
+
+    # @app.route(f"{base_path}/group_instruction_info", methods=["POST"])
+    # def group_instruction_info():
+    #     """
+    #     Proxy to upstream /api/group_instruction_info with group_name and conversation_type from payload (no defaults).
+    #     """
+    #     payload = request.get_json(force=True)
+    #     group_name = payload.get('group_name')
+    #     conversation_type = payload.get('conversation_type')
+    #     if not group_name or not conversation_type:
+    #         return jsonify({'success': False, 'error': 'missing group_name or conversation_type'}), 400
+    #     try:
+    #         upstream_payload = {
+    #             'group_name': group_name,
+    #             'conversation_type': conversation_type
+    #         }
+    #         upstream_resp = _proxy_post('/api/group_instruction_info', upstream_payload)
+    #         return jsonify({ 'success': True, 'data': upstream_resp })
+    #     except RequestException:
+    #         app.logger.exception('Failed to contact upstream /api/group_instruction_info')
+    #         return jsonify({'success': False, 'error': 'Failed to contact upstream group_instruction_info'}), 502
+
+
+
+    @app.route(f"{base_path}/delete_group_instructions", methods=["POST"])
+    def delete_group_instructions():
+        """
+        Proxy to upstream /api/delete_group_instructions to delete group instructions.
+        """
+        payload = request.get_json(force=True)
+        group_name = payload.get('group_name')
+        instructions_type = payload.get('instructions_type')
+        if not group_name:
+            return jsonify({'success': False, 'error': 'missing group_name'}), 400
+        if not instructions_type:
+            return jsonify({'success': False, 'error': 'missing instructions_type'}), 400
+        try:
+            upstream_payload = {
+                'group_name': group_name,
+                'instructions_type': instructions_type
+            }
+            upstream_resp = _proxy_post('/api/delete_group_instructions', upstream_payload)
+            return jsonify(upstream_resp)
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/delete_group_instructions')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream delete_group_instructions'}), 502
+
+
+    @app.route(f"{base_path}/add_group_instructions", methods=["POST"])
+    def add_group_instructions():
+        """
+        Proxy to /api/add_group_instructions to add group instructions.
+        """
+        payload = request.get_json(force=True)
+        group_name = payload.get('group_name')
+        instructions = payload.get('instructions')
+        
+        if not group_name:
+            return jsonify({'success': False, 'error': 'missing group_name'}), 400
+        # if not instructions_type:
+        #     return jsonify({'success': False, 'error': 'missing instructions_type'}), 400
+        if not instructions:
+            return jsonify({'success': False, 'error': 'missing instructions'}), 400
+            
+        try:
+            upstream_payload = {
+                'group_name': group_name,
+                'instructions': instructions,
+                'feedback_def': payload.get('feedback_def'),
+                'info': payload.get('info')
+            }
+            add_resp = _proxy_post('/api/add_group_instructions', upstream_payload)
+            return jsonify(add_resp)
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/add_group_instructions')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream add_group_instructions'}), 502
+
+    @app.route(f"{base_path}/update_group_instructions", methods=["POST"])
+    def update_group_instructions():
+        """
+        Proxy to /api/update_group_instructions to update group instructions.
+        """
+        payload = request.get_json(force=True)
+        group_name = payload.get('group_name')
+        instructions_type = payload.get('instructions_type')
+        instructions = payload.get('instructions')
+        
+        if not group_name:
+            return jsonify({'success': False, 'error': 'missing group_name'}), 400
+        if not instructions_type:
+            return jsonify({'success': False, 'error': 'missing instructions_type'}), 400
+        if not instructions:
+            return jsonify({'success': False, 'error': 'missing instructions'}), 400
+            
+        try:
+            upstream_payload = {
+                'group_name': group_name,
+                'instructions_type': instructions_type,
+                'instructions': instructions,
+                'feedback_def': payload.get('feedback_def'),
+                'info': payload.get('info')
+            }
+            upstream_resp = _proxy_post('/api/update_group_instructions', upstream_payload)
+            return jsonify(upstream_resp)
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/update_group_instructions')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream update_group_instructions'}), 502
 
     @app.route(f"{base_path}/member_decisions", methods=["POST"])
     def member_decisions():
@@ -80,7 +190,7 @@ def register_apis(app, base_path: str):
             return jsonify({'success': False, 'error': 'missing member_id'}), 400
         try:
             upstream_resp = _proxy_post('/api/member_decisions', payload={}, member_id=member_id)
-            return jsonify(upstream_resp)
+            return jsonify({"success": True, "decisions": upstream_resp})
         except RequestException:
             app.logger.exception('Failed to contact upstream /api/member_decisions')
             return jsonify({'success': False, 'error': 'Failed to contact upstream member_decisions'}), 502
@@ -142,7 +252,7 @@ def register_apis(app, base_path: str):
             }
             app.logger.debug('Proxying decision_create with payload: %s', decision_req)
             upstream_resp = _proxy_post('/api/decision_create', decision_req)
-            return jsonify(upstream_resp)
+            return jsonify({ "success": True, "decision": upstream_resp })
         except RequestException:
             app.logger.exception('Failed to contact upstream /api/decision_create')
             return jsonify({'success': False, 'error': 'Failed to contact upstream decision service'}), 502

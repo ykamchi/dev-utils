@@ -6,11 +6,13 @@ class TabsetComponent {
      * @param {HTMLElement} container - The container to render the tabset into.
      * @param {Array<{name: string, populateFunc?: function(HTMLElement):void}>} tabsArray - Array of tab objects.
      * @param {string} [storageKey] - Optional key for persistent tab selection.
+     * @param {function(string):void} [onTabSwitch] - Optional callback function invoked when tab is switched. Receives the new tab name.
      */
-    constructor(container, tabsArray, storageKey = '') {
+    constructor(container, tabsArray, storageKey = '', onTabSwitch = null) {
         this.container = container;
         this.tabsArray = tabsArray;
         this.storageKey = storageKey;
+        this.onTabSwitch = onTabSwitch;
         this.tabContentContainers = {};
         // Load last selected tab if storageKey is provided
         let lastTab = null;
@@ -51,6 +53,10 @@ class TabsetComponent {
                 this.populateTab(tab.name, tab.populateFunc);
             }
         });
+        // Invoke callback for initial active tab
+        if (typeof this.onTabSwitch === 'function') {
+            this.onTabSwitch(this.activeTab);
+        }
     }
 
     switchTab(tabName) {
@@ -68,6 +74,10 @@ class TabsetComponent {
         Object.entries(this.tabContentContainers).forEach(([name, content]) => {
             content.style.display = (name === tabName) ? '' : 'none';
         });
+        // Invoke callback if provided
+        if (typeof this.onTabSwitch === 'function') {
+            this.onTabSwitch(tabName);
+        }
     }
 
     /**

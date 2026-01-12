@@ -4,12 +4,12 @@
     */
 
     class DecisionStartComponent {
-        constructor(container, groupName, memberId, membersMap, instructionInfo, popupInstance) {
+        constructor(container, groupName, memberId, membersMap, groupInstructions, popupInstance) {
             this.container = container;
             this.groupName = groupName;
             this.memberId = memberId;
             this.membersMap = membersMap;
-            this.instructionInfo = instructionInfo;
+            this.groupInstructions = groupInstructions;
             this.popupInstance = popupInstance;
             this.membersListComponent = null;
             this.render();
@@ -23,7 +23,8 @@
             wrapperDiv.className = 'conversations-decision-start-wrapper';
 
             // Instructions chooser
-            const selectOptions = Object.values(this.instructionInfo).map(({name, type}) => ({ label: name, value: type }));
+            console.log('array:', Object.values(this.groupInstructions))
+            const selectOptions = Object.values(this.groupInstructions).map(entry => ({ label: entry.info.name, value: entry.info.type }));
             new window.SelectComponent(wrapperDiv, selectOptions, this.handleSelectionChange.bind(this),'Select an instruction...' );
 
             // Members chooser - filter out the current member
@@ -61,7 +62,7 @@
             }
         }
 
-        handleStartClick() {
+        async handleStartClick() {
             if (!this.selectedInstruction) {
                 new window.AlertComponent('Missing Instruction', 'Please select an instruction type.');
                 return;
@@ -75,22 +76,11 @@
             const participant_members_nick_names = selectedMembers.map(m => m.value.name);
             participant_members_nick_names.push(this.membersMap[this.memberId].name);
 
-            const payload = {
-                group_name: this.groupName,
-                context: { type: this.selectedInstruction },
-                participant_members_nick_names
-            };
-            fetch('/api/dev-tool-conversations/decision_start', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-            .catch(err => {
-                console.error('Error starting decision:', err);
-            })
-            .finally(() => {
-                this.popupInstance.hide();
-            });
+            // Start the decision
+            await window.conversations.api.decisionStart(this.groupName, this.selectedInstruction, participant_members_nick_names);
+            
+            // Close popup
+            this.popupInstance.hide();
         }
     }
 

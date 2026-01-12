@@ -19,7 +19,7 @@
 
             // Icon 
             const icon = document.createElement('div');
-            icon.className = 'conversations-manage-card-icon';
+            icon.className = 'conversations-list-card-icon';
             icon.textContent = this.manageOption.icon;
             wrapper.appendChild(icon);
 

@@ -17,31 +17,31 @@
 
             // Create wrapper for details
             const wrapper = document.createElement('div');
-            wrapper.className = 'conversations-member-details-wrapper';
+            wrapper.className = 'conversations-page-details-wrapper';
 
             // Header with avatar and member details
             const headerDiv = document.createElement('div');
-            headerDiv.className = 'conversations-member-details-header';
+            headerDiv.className = 'conversations-page-details-header';
 
             // Emoji avatar
             const avatar = document.createElement('div');
             avatar.textContent = '👤';
-            avatar.className = 'conversations-member-details-avatar';
+            avatar.className = 'conversations-page-details-icon';
             headerDiv.appendChild(avatar);
 
             // Member info
             const infoDiv = document.createElement('div');
-            infoDiv.className = 'conversations-member-details-info';
+            infoDiv.className = 'conversations-page-details-info';
 
             // Member name
             const nameDiv = document.createElement('div');
-            nameDiv.className = 'conversations-member-details-name';
+            nameDiv.className = 'conversation-page-details-title';
             nameDiv.textContent = this.member.name;
             infoDiv.appendChild(nameDiv);
 
             // Member meta info
             const metaDiv = document.createElement('div');
-            metaDiv.className = 'conversations-member-details-meta';
+            metaDiv.className = 'conversation-page-details-subtitle';
 
             // Age
             const ageLabel = document.createElement('span');

@@ -20,7 +20,7 @@
 
             // Manage header
             const manageHeader = document.createElement('div');
-            manageHeader.className = 'conversations-manage-header';
+            manageHeader.className = 'conversations-selection-header';
             manageHeader.textContent = 'Manage';
             wrapper.appendChild(manageHeader);
 
@@ -47,20 +47,32 @@
             });
 
             // Define manage options
-            this.manageOptions = [
-                { 
-                    id: 'decisions', 
+            this.manageOptions = {
+                decisions: { 
                     name: 'Decisions', 
                     icon: '⚖️',
-                    description: 'Manage group decisions'
+                    description: 'Manage group decisions',
+                    component: 'ManageInstructionsComponent',
+                    info: {
+                        conversationType: 'ai_decision'
+                    }
                 },
-                { 
-                    id: 'conversations', 
+                conversation: { 
                     name: 'Conversations', 
                     icon: '💬',
-                    description: 'Manage group conversations'
+                    description: 'Manage group conversations',
+                    component: 'ManageInstructionsComponent',
+                    info: {
+                        conversationType: 'ai_conversation'
+                    }
+                },
+                editMembers: { 
+                    name: 'Edit Members', 
+                    icon: '✏️',
+                    description: 'Edit group members',
+                    component: null
                 }
-            ];
+            };
 
             // Render the list
             this.renderManageList();
@@ -69,8 +81,8 @@
         renderManageList() {
             this.manageListItems.innerHTML = '';
             
-            const items = this.manageOptions.map(option => ({ id: option.id, option }));
-            new window.ListComponent(
+            const items = Object.entries(this.manageOptions).map(([id, option]) => ({ id, option }));
+            const list = new window.ListComponent(
                 this.manageListItems,
                 items,
                 (item) => {
@@ -81,10 +93,15 @@
                 window.ListComponent.SELECTION_MODE_SINGLE,
                 (selectedItems) => {
                     if (selectedItems.length > 0) {
-                        this.onOptionSelect(selectedItems[0].id);
+                        this.onOptionSelect(selectedItems[0].id, this.manageOptions);
                     }
                 }
             );
+
+            // Automatically select the first item if available
+            if (items.length > 0) {
+                list.handleSelect(0);
+            }
         }
     }
 

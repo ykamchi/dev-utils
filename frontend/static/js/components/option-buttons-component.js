@@ -5,32 +5,39 @@ class OptionButtonsComponent {
     /**
      * @param {HTMLElement} container - The container to render the buttons into
      * @param {Array<{label: string, value: string|number}>} options - The options to display
-     * @param {Object} [config] - Optional config: { selected, onChange }
+     * @param {string|number} [selected] - The initially selected value
+     * @param {Function} [onChange] - Callback function when selection changes
+     * @param {string} [storageKey] - Optional key for persistent selection
      */
-    constructor(container, options, config = {}) {
+    constructor(container, options, selected = null, onChange = null, storageKey = '') {
         this.container = container;
         this.options = options;
-        this.selected = config.selected || null;
-        this.onChange = config.onChange || null;
+        this.storageKey = storageKey;
+        this.onChange = onChange;
+        
+        // Load last selected value if storageKey is provided
+        let lastSelected = null;
+        if (storageKey && window.StorageService) {
+            lastSelected = window.StorageService.getLocalStorageItem(storageKey, null);
+        }
+        this.selected = (lastSelected && options.some(opt => opt.value == lastSelected)) ? lastSelected : selected;
+        this.onChange(this.selected);
         this.render();
     }
 
     render() {
-        this.container.innerHTML = '';
+        // this.container.innerHTML = '';
         const wrapper = document.createElement('div');
         wrapper.className = 'option-buttons-component';
         this.buttons = [];
         this.options.forEach(opt => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'option-btn';
-            btn.textContent = opt.label;
+            const btnContainer = document.createElement('div');
+            const isSelected = this.selected === opt.value;
+            const btnType = isSelected ? window.ButtonComponent.TYPE_FILL : window.ButtonComponent.TYPE_GHOST;
+            const btnComponent = new window.ButtonComponent(btnContainer, opt.label, () => this.select(opt.value), btnType);
+            const btn = btnComponent.getElement();
             btn.dataset.value = opt.value;
-            if (this.selected === opt.value) {
-                btn.classList.add('selected');
-            }
-            btn.addEventListener('click', () => this.select(opt.value));
-            wrapper.appendChild(btn);
+            wrapper.appendChild(btnContainer);
             this.buttons.push(btn);
         });
         this.container.appendChild(wrapper);
@@ -40,8 +47,15 @@ class OptionButtonsComponent {
     select(value) {
         if (this.selected === value) return;
         this.selected = value;
+        
+        // Persist selection if storageKey is provided
+        if (this.storageKey && window.StorageService) {
+            window.StorageService.setLocalStorageItem(this.storageKey, value);
+        }
+        
         this.buttons.forEach(btn => {
-            btn.classList.toggle('selected', btn.dataset.value == value);
+            const isSelected = btn.dataset.value == value;
+            btn.className = isSelected ? 'framework-button framework-button-' + window.ButtonComponent.TYPE_FILL : 'framework-button framework-button-' + window.ButtonComponent.TYPE_GHOST;
         });
         if (typeof this.onChange === 'function') {
             this.onChange(value);

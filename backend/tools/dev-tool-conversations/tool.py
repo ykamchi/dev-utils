@@ -13,6 +13,10 @@ def get_tool_info():
         'icon': '👥',
         'version': '1.0.0',
         'imports': [
+            'https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js',
+            'constants.js',
+            'api.js',
+            'utils.js',
             'components/*.js',
         ],
     }

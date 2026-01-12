@@ -1,0 +1,32 @@
+/* ---------------------------------------------------- */
+/* --- Text Input Component Styles --- */
+/* ---------------------------------------------------- */
+
+.text-input-field {
+    padding: 7px 8px;
+    border: 1px solid var(--color-border-light);
+    border-radius: 4px;
+    background-color: var(--color-background);
+    color: var(--color-text-dark);
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s ease;
+    width: 100%;
+}
+
+.text-input-field:focus {
+    border-color: var(--color-primary);
+}
+
+.text-input-field.text-input-error {
+    border-color: var(--color-warning-error);
+}
+
+.text-input-field.text-input-error:focus {
+    border-color: var(--color-warning-error);
+}
+
+.text-input-field::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 0.6;
+}
