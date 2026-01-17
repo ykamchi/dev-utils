@@ -24,7 +24,7 @@ class TabsetComponent {
     }
 
     render() {
-        this.container.innerHTML = '';
+        // this.container.innerHTML = '';
         // Tab buttons
         const tabButtonsDiv = document.createElement('div');
         tabButtonsDiv.className = 'tabset-tab-buttons';

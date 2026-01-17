@@ -1,9 +1,9 @@
 (function () {
     /*
-        DecisionDetailsComponent: displays details for a decision in dev-tool-conversations
-        Usage: new window.conversations.DecisionDetailsComponent(container, decision, groupInstructions)
+        MemberConversationDetailsComponent: displays details for a decision in dev-tool-conversations
+        Usage: new window.conversations.MemberConversationDetailsComponent(container, decision, groupInstructions)
     */
-    class DecisionDetailsComponent {
+    class MemberConversationDetailsComponent {
         constructor(container, decision, memberId, membersMap, groupInstructions) {
             this.container = container;
             this.decision = decision;
@@ -37,6 +37,9 @@
             const typeDiv = window.conversations.utils.createReadOnlyText(typeDateDiv, 'conversations-decision-item-decision-type', this.groupInstructions[this.decision.context.type]?.info?.name, 'conversations-decision-item-decision-type');
             typeDiv.title = this.groupInstructions[this.decision.context.type]?.info?.description;
 
+            // if (this.decision.last_feedback) {
+            //     this.decision.feedback = this.decision.last_feedback;
+            // }
             // Feedback fields
             if (this.decision.feedback && typeof this.decision.feedback === 'object') {
                 const feedbackContainer = window.conversations.utils.createDivContainer(this.container, null, 'conversations-decision-item-feedback-container');
@@ -45,7 +48,7 @@
                     const fieldDiv = window.conversations.utils.createDivContainer(feedbackContainer, null, 'conversations-decision-item-feedback-field');
 
                     // Feedback entry key
-                    window.conversations.utils.createReadOnlyText(fieldDiv, null, key, 'conversations-decision-item-feedback-name');
+                    window.conversations.utils.createLabel(fieldDiv, key);
                     
                     // Feedback entry value using the feedback definition   
                     const valueDiv = window.conversations.utils.createDivContainer(fieldDiv, null, 'conversations-decision-item-feedback-value');
@@ -67,5 +70,5 @@
     }
 
     window.conversations = window.conversations || {};
-    window.conversations.DecisionDetailsComponent = DecisionDetailsComponent;
+    window.conversations.MemberConversationDetailsComponent = MemberConversationDetailsComponent;
 })();

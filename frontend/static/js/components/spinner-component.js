@@ -10,27 +10,38 @@ class SpinnerComponent {
      * @param {string} [options.textPosition] - Position of text relative to spinner: 'top', 'bottom', 'left', 'right'.
      */
     constructor(root, options = {}) {
-        this.root = root;
+        if (!root) {
+            this.root = document.createElement('div');
+            document.body.appendChild(this.root);
+            this.root.style.position = 'absolute';
+            this.root.style.left = '50%';
+            this.root.style.top = '50%';
+            this.root.style.transform = 'translate(-50%, -50%)';
+            this.root.style.zIndex = '9999';
+        } else {
+            this.root = root;
+        }
+        this.wrapper = null;
         this.options = options;
         this.render();
     }
 
     render() {
-        this.root.innerHTML = '';
+        // this.root.innerHTML = '';
         // Outer flex wrapper to fill parent
-        const wrapper = document.createElement('div');
-        wrapper.className = 'spinner-center-flex';
+        this.wrapper = document.createElement('div');
+        this.wrapper.className = 'spinner-center-flex';
 
         // Set flex direction based on text position
         const textPosition = this.options.textPosition;
         if (textPosition === SpinnerComponent.TEXT_POSITION_TOP) {
-            wrapper.classList.add('spinner-text-top');
+            this.wrapper.classList.add('spinner-text-top');
         } else if (textPosition === SpinnerComponent.TEXT_POSITION_BOTTOM) {
-            wrapper.classList.add('spinner-text-bottom');
+            this.wrapper.classList.add('spinner-text-bottom');
         } else if (textPosition === SpinnerComponent.TEXT_POSITION_LEFT) {
-            wrapper.classList.add('spinner-text-left');
+            this.wrapper.classList.add('spinner-text-left');
         } else if (textPosition === SpinnerComponent.TEXT_POSITION_RIGHT) {
-            wrapper.classList.add('spinner-text-right');
+            this.wrapper.classList.add('spinner-text-right');
         }
 
         // Spinner element
@@ -39,17 +50,20 @@ class SpinnerComponent {
         const size = this.options.size || 32;
         spinner.style.width = size + 'px';
         spinner.style.height = size + 'px';
-        wrapper.appendChild(spinner);
+        this.wrapper.appendChild(spinner);
 
         // Optional loading text
         if (this.options.text) {
             const loadingText = document.createElement('div');
             loadingText.className = 'spinner-loading-text';
             loadingText.textContent = this.options.text;
-            wrapper.appendChild(loadingText);
+            this.wrapper.appendChild(loadingText);
         }
 
-        this.root.appendChild(wrapper);
+        this.root.appendChild(this.wrapper);
+    }
+    remove() {
+        this.wrapper.remove();
     }
 }
 

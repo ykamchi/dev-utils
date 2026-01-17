@@ -1,8 +1,8 @@
 (function () {
     /*
-        MemberCardComponent: renders a single member item for dev-tool-conversations
+        CardMemberComponent: renders a single member item for dev-tool-conversations
     */
-    class MemberCardComponent {
+    class CardMemberComponent {
         /**
          * @param {HTMLElement} container - The container to render into
          * @param {Object} member - The member object { name, location, age }
@@ -44,5 +44,5 @@
     }
 
     window.conversations = window.conversations || {};
-    window.conversations.MemberCardComponent = MemberCardComponent;
+    window.conversations.CardMemberComponent = CardMemberComponent;
 })();

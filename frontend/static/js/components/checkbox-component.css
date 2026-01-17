@@ -1,0 +1,72 @@
+.framework-checkbox-container {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 16px;
+    /* font-weight: 300; */
+    user-select: none;
+    padding: 4px 0;
+    transition: transform 0.12s;
+    flex-shrink: 0;
+}
+
+/* Label always stays the same color */
+.framework-checkbox-label {
+    line-height: 22px;
+    /* color: var(--color-text-main, #333); */
+}
+
+/* Disabled State: Only affects the cursor and the box */
+.framework-checkbox-disabled {
+    cursor: not-allowed ;
+}
+
+.framework-checkbox-disabled .framework-checkbox-box {
+    background-color: var(--color-disabled-bg, #f5f5f5) ;
+    border-color: var(--color-disabled, #ccc) ;
+    box-shadow: none ;
+}
+
+/* Hidden real input */
+.framework-checkbox-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* The Visual Box */
+.framework-checkbox-box {
+    height: 22px;
+    width: 22px;
+    background-color: transparent;
+    border: 1px solid var(--color-border-light, #ddd);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-button);
+    transition: background 0.18s, border-color 0.18s, color 0.18s;
+    font-size: 14px;
+    color: transparent; /* Emoji is hidden by default */
+}
+
+.framework-checkbox-box:not(:last-child) {
+    margin-right: 10px;
+}
+
+/* Hover effect only for non-disabled */
+.framework-checkbox-container:hover:not(.framework-checkbox-disabled) .framework-checkbox-box {
+    border-color: var(--color-primary-accent);
+}
+
+/* Checked state logic */
+.framework-checkbox-input:checked + .framework-checkbox-box {
+    color: var(--color-text-main, #333); /* Emoji becomes visible */
+    background: var(--color-background-subtle, #f9f9f9);
+}
+
+/* If checked AND disabled, dim the emoji but keep label as is */
+.framework-checkbox-input:checked:disabled + .framework-checkbox-box {
+    color: var(--color-disabled, #999);
+}

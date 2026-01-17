@@ -1,7 +1,7 @@
-// DecisionDetailsComponent.js
+// MemberDecisionDetailsComponent.js
 // Renders the details for a decision in a popup
 
-class DecisionDetailsComponent {
+class MemberDecisionDetailsComponent {
     constructor(container, decision, memberId) {
         this.container = container;
         this.decision = decision;
@@ -92,4 +92,4 @@ class DecisionDetailsComponent {
     }
 }
 
-window.DecisionDetailsComponent = DecisionDetailsComponent;
+window.MemberDecisionDetailsComponent = MemberDecisionDetailsComponent;

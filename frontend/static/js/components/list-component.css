@@ -6,7 +6,7 @@
     flex-direction: column;
     list-style: none;
     margin: 0;
-    padding: 0;
+    padding-top: 4px;
 }
 
 .list-component-empty {

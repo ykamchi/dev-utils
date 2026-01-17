@@ -1,0 +1,178 @@
+(function () {
+    /*
+        ManageGroupSettingsComponent: TODO - implement group settings UI and logic
+    */
+    class ManageGroupSettingsComponent {
+        constructor(container, groupName, optionId, manageOptions) {
+            this.container = container;
+            this.groupName = groupName;
+            this.optionId = optionId;
+            this.group = null;
+            this.manageOptions = manageOptions;
+            this.groupEditor = null;
+            this.page = null;
+            this.render();
+        }
+
+        render() {
+            // Create the main page component
+            this.page = new window.conversations.PageComponent(this.container, this.manageOptions[this.optionId].icon, this.manageOptions[this.optionId].name,
+                `${this.groupName} Settings`
+            );
+
+            // Page control
+            const controlDiv = window.conversations.utils.createDivContainer(null, null, '-');
+            this.page.updateControlArea(controlDiv);
+
+            // Page buttons
+            const buttonsDiv = window.conversations.utils.createDivContainer(null, null, 'conversations-buttons-container');
+            this.page.updateButtonsArea(buttonsDiv);
+
+            this.loadContent();
+        }
+
+        async loadContent() {      
+            // Fetch group details
+            // TODO: Need API to fetch single group details
+            const groups = await window.conversations.api.fetchGroups(null);
+            const groupDescription = groups.find(g => g.group_name === this.groupName).group_description; 
+
+            // Page content
+            const contentDiv = window.conversations.utils.createDivContainer(null, null, '');
+            const tabsetTabs = [
+                {
+                    name: 'Properties',
+                    populateFunc: (container) => {
+                        this.populateEditTab(container, groupDescription);
+                    }
+                },
+                {
+                    name: 'Seed Data',
+                    populateFunc: (container) => {
+                        this.populateSeedDataTab(container);
+                    }
+                }
+            ];
+            new window.TabsetComponent(contentDiv, tabsetTabs, 'manage-group-settings-tabset');
+            this.page.updateContentArea(contentDiv);
+        }
+
+        populateEditTab(container, groupDescription) {
+            // Edit group section (for Properties tab)
+            const editGroupDiv = window.conversations.utils.createDivContainer(container, null, 'conversations-instruction-editor-tab');
+            const buttonContainer = window.conversations.utils.createDivContainer(editGroupDiv, null, 'conversations-buttons-container');
+            new window.ButtonComponent(buttonContainer, '💾', () => this.saveGroupSettings(), window.ButtonComponent.TYPE_GHOST, '💾 Save instruction');
+            
+            this.groupEditor = new window.conversations.ManageGroupEditorComponent(editGroupDiv, this.groupName, groupDescription); 
+
+        }
+    
+        async populateSeedDataTab(container) {
+            container.innerHTML = '';
+
+            const seedGroupDiv = window.conversations.utils.createDivContainer(container, null, 'conversations-instruction-editor-tab');
+
+            const seedingData = await window.conversations.api.fetchGroupSeedFiles(seedGroupDiv, this.groupName);
+            if (seedingData && seedingData.length > 0) {
+                // Pre-load instruction file contents for valid entries
+                for (const seedEntry of seedingData) {
+                    if (seedEntry.valid) {
+                        if (seedEntry.type === 'instruction') {
+                            seedEntry.instructionContent = await seedEntry.instruction_file.content;
+                            seedEntry.feedbackContent = JSON.parse(await seedEntry.feedback_file.content);
+                            seedEntry.infoContent = JSON.parse(await seedEntry.info_file.content);
+                        } else if (seedEntry.type === 'members') {
+                            seedEntry.fileContent = JSON.parse(await seedEntry.file.content);
+                        }
+                    }
+                }
+
+                // Buttons container
+                const buttonContainer = window.conversations.utils.createDivContainer(seedGroupDiv, null, 'conversations-buttons-container');
+                new window.ButtonComponent(buttonContainer, '📤 Start seeding selected items', () => this.startSeeding(seedingData), window.ButtonComponent.TYPE_GHOST, '💾 Save instruction');
+
+                // Seed data list
+                new window.ListComponent(seedGroupDiv, seedingData, (seedEntry) => {
+                    // Create header content
+                    const headerContent = window.conversations.utils.createDivContainer(); 
+                    new window.CheckboxComponent(headerContent, seedEntry.include, (checked) => {
+                        seedEntry.include = checked;
+                    }, seedEntry.type + ' - ' + seedEntry.folderName + (!seedEntry.valid ? ' <b style="color: var(--color-warning-error)">(Invalid)</b>' : ''), !seedEntry.valid);
+
+                    // Create body content
+                    const bodyContent = window.conversations.utils.createDivContainer();
+                    if (!seedEntry.valid) {
+                        const errorDiv = window.conversations.utils.createReadOnlyText(bodyContent, null, seedEntry.error, 'conversations-message-error');
+                    } else {
+
+                        if (seedEntry.type === 'members') {
+                            window.conversations.utils.createJsonDiv(bodyContent, seedEntry.fileContent);
+                        } else if (seedEntry.type === 'instruction') {
+                            const infoGroup = window.conversations.utils.createDivContainer(bodyContent, 'conversations-instruction-scrollable-group');
+                            window.conversations.utils.createLabel(infoGroup, 'Info Content:');
+                            window.conversations.utils.createJsonDiv(infoGroup, seedEntry.infoContent);
+                            const instructionsGroup = window.conversations.utils.createDivContainer(bodyContent, 'conversations-instruction-scrollable-group');
+                            window.conversations.utils.createLabel(instructionsGroup, 'Instruction Content:');
+                            window.conversations.utils.createReadOnlyText(instructionsGroup, null, seedEntry.instructionContent || 'No content', null);
+                            const feedbackGroup = window.conversations.utils.createDivContainer(bodyContent, 'conversations-instruction-scrollable-group');
+                            window.conversations.utils.createLabel(feedbackGroup, 'Feedback Content:');
+                            window.conversations.utils.createJsonDiv(feedbackGroup, seedEntry.feedbackContent);
+                        }
+                    }
+                    // Create ExpandDivComponent
+                    const seedDiv = window.conversations.utils.createDivContainer();
+                    new window.ExpandDivComponent(seedDiv, headerContent, bodyContent);
+                    return seedDiv;
+                    
+                });
+            } else {
+                const noMembersSeedDiv = window.conversations.utils.createDivContainer(container, null, 'conversations-message-empty');
+                noMembersSeedDiv.textContent = 'No seed files were found.';
+            }
+        }
+
+        async startSeeding(seedingData) {
+            for (const entry of seedingData) {
+                if (entry.include) {
+                    if (entry.type === 'members') {
+                        console.log("Seeding members from:", entry.file.name);
+                        await window.conversations.api.addGroupMembers(null, this.groupName, entry.fileContent);
+
+                    } else if (entry.type === 'instruction') {
+                        console.log("Seeding instruction from folder:", entry.folderName);
+                        await window.conversations.api.addGroupInstructions(null, this.groupName, entry.instructionContent, entry.feedbackContent, entry.infoContent);
+
+                    }
+                }
+            }
+            
+        }
+
+        async saveGroupSettings() {
+            const updatedGroup = this.groupEditor.updatedGroup();
+            const newGroupName = updatedGroup.groupName;
+            const newDescription = updatedGroup.groupDescription;
+
+            // Validate group name
+            if (!newGroupName) {
+                new window.AlertComponent('Save', 'Group name cannot be empty.');
+                return;
+            }
+
+            // Call API to save group settings
+            const result = await window.conversations.api.updateGroup(null, this.groupName, newGroupName, newDescription);
+            
+            if (result.success) {
+                new window.AlertComponent('Success', 'Group settings saved successfully.');
+                this.manageOptions[this.optionId].info.onGroupNameChange(newGroupName);
+            } else {
+                new window.AlertComponent('Error', `Failed to save group settings: ${result.error || 'Unknown error'}`);
+            }
+        }
+
+        load
+    }
+
+    window.conversations = window.conversations || {};
+    window.conversations.ManageGroupSettingsComponent = ManageGroupSettingsComponent;
+})();

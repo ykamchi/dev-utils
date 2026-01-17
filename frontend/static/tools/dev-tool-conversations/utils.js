@@ -11,14 +11,8 @@ window.conversations.utils.createLabel = function(container, text) {
     return label;
 }
 
-window.conversations.utils.createTextInput = function(container, id, value) {
-    const input = document.createElement('input');
-    input.className = 'conversations-instruction-field-input';
-    input.id = id;
-    input.type = 'text';
-    input.value = value;
-    container.appendChild(input);
-    return input;
+window.conversations.utils.createTextInput = function(container, id, value, placeholder = '', onChange = null) {
+    return window.conversations.utils.createPatternTextInput(container, id, value, /.*/, placeholder, onChange);
 }
 
 window.conversations.utils.createPatternTextInput = function(container, id, value, pattern = /.*/, placeholder = '', onChange = null) {
@@ -74,12 +68,34 @@ window.conversations.utils.createNumberInput = function(container, id, value) {
     return input;
 }
 
-window.conversations.utils.createDivContainer = function(container, id = null, className = null) {
+window.conversations.utils.create
+
+window.conversations.utils.createSpan = function(container = null, id = null, value, className = null) {
+    const span = document.createElement('span');
+    if (id) {
+        span.id = id;
+    }
+    span.className = className || '';
+    span.textContent = value;
+    container.appendChild(span);
+    return span;
+}
+
+window.conversations.utils.createDivContainer = function(container = null, id = null, className = null) {
     const div = document.createElement('div');
     if (id) {
         div.id = id;
     }
-    div.className = className || 'conversations-instruction-field-group';
-    container.appendChild(div);
+    div.className = className || 'conversations-instruction-scrollable-group';
+    if (container) {
+        container.appendChild(div);
+    }
     return div;
+}
+
+window.conversations.utils.createJsonDiv = function(container, json) {
+    const pre = document.createElement('pre');
+    pre.className = 'conversations-json-div';
+    pre.textContent = JSON.stringify(json, null, 2);
+    container.appendChild(pre);
 }

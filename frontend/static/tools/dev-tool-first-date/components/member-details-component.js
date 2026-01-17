@@ -373,7 +373,7 @@ class MemberDetailsComponent {
     async showDecisionDetailsPopup(decision, memberId) {
         new window.PopupComponent({
             icon: '🗳️', title: 'Viewed Profile - Decision Details', width: 520, height: 720,
-            content: (container) => { return new window.DecisionDetailsComponent(container, decision, memberId, this.members); },
+            content: (container) => { return new window.MemberDecisionDetailsComponent(container, decision, memberId, this.members); },
         }).show();
     }
 

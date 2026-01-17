@@ -1,8 +1,8 @@
 (function () {
     /*
-        ManageCardComponent: renders a single manage option item for dev-tool-conversations
+        CardManageComponent: renders a single manage option item for dev-tool-conversations
     */
-    class ManageCardComponent {
+    class CardManageComponent {
         /**
          * @param {HTMLElement} container - The container to render into
          * @param {Object} manageOption - The manage option object { name, icon, description }
@@ -47,5 +47,5 @@
     }
 
     window.conversations = window.conversations || {};
-    window.conversations.ManageCardComponent = ManageCardComponent;
+    window.conversations.CardManageComponent = CardManageComponent;
 })();

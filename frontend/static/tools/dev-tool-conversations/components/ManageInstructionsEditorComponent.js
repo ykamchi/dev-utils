@@ -19,7 +19,7 @@
             this.tabsetDiv.className = 'conversations-manage-instruction-editor-tabset';
 
             // Add tabs for instruction details
-            const storageKey = `conversations-instruction-editor-${this.instruction.group_id}-${this.instruction.instructions_type}`;
+            const storageKey = `conversations-instruction-editor-${this.groupName}-${this.instruction.instructions_type}`;
             new window.TabsetComponent(this.tabsetDiv, [
                 { name: 'Info', populateFunc: (c) => this.renderInfoTab(c) },
                 { name: 'Instructions', populateFunc: (c) => this.renderInstructionsEditorTab(c) },
@@ -37,17 +37,17 @@
             container.className = 'conversations-instruction-editor-tab';
 
             // Name field (editable)
-            const infoNameGroup = window.conversations.utils.createDivContainer(container, 'conversations-instruction-field-group');
+            const infoNameGroup = window.conversations.utils.createDivContainer(container, 'conversations-instruction-scrollable-group');
             window.conversations.utils.createLabel(infoNameGroup, 'Name:');
             window.conversations.utils.createPatternTextInput(infoNameGroup, 'conversations-instruction-name-input', this.instruction.info.name);
             
             // Conversation Type field (read-only)
-            const infoConversationTypeGroup = window.conversations.utils.createDivContainer(container, 'conversations-instruction-field-group');
+            const infoConversationTypeGroup = window.conversations.utils.createDivContainer(container, 'conversations-instruction-scrollable-group');
             window.conversations.utils.createLabel(infoConversationTypeGroup, 'Conversation Type:');
             window.conversations.utils.createReadOnlyText(infoConversationTypeGroup, 'conversations-instruction-conversation-type-value', this.instruction.info.conversation_type);
 
-            // Type field (read-only)
-            const infoTypeGroup = window.conversations.utils.createDivContainer(container, 'conversations-instruction-field-group');
+            // Instructions type field (read-only)
+            const infoTypeGroup = window.conversations.utils.createDivContainer(container, 'conversations-instruction-scrollable-group');
             window.conversations.utils.createLabel(infoTypeGroup, 'Instructions Type:');
             // window.conversations.utils.createReadOnlyText(infoTypeGroup, 'conversations-instruction-type-value', this.instruction.info.type);
             window.conversations.utils.createPatternTextInput(infoTypeGroup, 'conversations-instruction-type-value', this.instruction.info.type, /^[a-z-]+$/, 'e.g., custom_instruction_type');
@@ -75,6 +75,10 @@
             container.innerHTML = '';
             container.className = 'conversations-instruction-editor-tab';
             container.id = 'conversations-instruction-feedback-tab';
+
+            // Add button container below tabset
+            const buttonContainer = window.conversations.utils.createDivContainer(container, 'conversations-buttons-container', 'conversations-buttons-container');
+            new window.ButtonComponent(buttonContainer, '+ Add feedback', () => this.handleAddFeedback(), window.ButtonComponent.TYPE_GHOST);
 
             const feedbackEntries = Object.entries(this.instruction.feedback_def);
 
@@ -134,11 +138,6 @@
                     this.renderFeedbackTab(container);
                 }, window.ButtonComponent.TYPE_GHOST_DANGER, '🗙 Delete feedback');
             });
-
-            // Add button container below tabset
-            const buttonContainer = window.conversations.utils.createDivContainer(container, 'conversations-buttons-container', 'conversations-buttons-container');
-            new window.ButtonComponent(buttonContainer, 'Add feedback', () => this.handleAddFeedback());
-
         }
 
         renderFeedbackTypeOptions(container, feedbackIndex, fieldDef) {
@@ -162,11 +161,52 @@
                 description: 'Description of the new feedback field',
                 type: 'integer',
                 min: 0,
-                max: 10
+                max: 10, 
+                required: true
             };
             // Re-render Feedback tab
             const feedbackTab = this.tabsetDiv.querySelector('#conversations-instruction-feedback-tab');
             this.renderFeedbackTab(feedbackTab);
+        }
+
+        updatedInstructions() {
+            const updatedData = {
+                info: {
+                    name: this.container.querySelector('#conversations-instruction-name-input').getValue(),
+                    description: this.container.querySelector('#conversations-instruction-description-textarea').value,
+                    conversation_type: this.container.querySelector('#conversations-instruction-conversation-type-value').textContent,
+                    type: this.container.querySelector('#conversations-instruction-type-value').getValue()
+                },
+                instructions: this.container.querySelector('#conversations-instruction-instructions-textarea').value,
+                feedback_def: {}
+            };
+
+            // Fill Feedback values
+            const feedbackCards = this.container.querySelector('#conversations-instruction-feedback-tab').querySelectorAll('.conversations-feedback-card');
+            feedbackCards.forEach((card, index) => {
+                const feedbackName = card.querySelector(`#conversations-feedback-name-input-${index}`).getValue();
+                const feedbackDescription = card.querySelector(`#conversations-feedback-description-textarea-${index}`).value;
+                const feedbackTypeContainer = card.querySelector(`#conversations-feedback-type-select-${index}`);
+                const feedbackType = feedbackTypeContainer.querySelector('select').value;
+                updatedData.feedback_def[feedbackName] = {
+                    description: feedbackDescription,
+                    type: feedbackType,
+                    required: true
+                };
+
+                if (feedbackType === 'integer') {
+                    // Get range from RangeComponent
+                    const optionalValuesContainer = card.querySelector(`#conversations-feedback-type-options-container-${index}`);
+                    const range = optionalValuesContainer.rangeComponent.getRange();
+                    updatedData.feedback_def[feedbackName].min = range.min;
+                    updatedData.feedback_def[feedbackName].max = range.max;
+                } else if (feedbackType === 'string') {
+                    // Get values from StringArrayComponent
+                    const optionalValuesContainer = card.querySelector(`#conversations-feedback-type-options-container-${index}`);
+                    updatedData.feedback_def[feedbackName]['optional-values'] = optionalValuesContainer.stringArrayComponent.getValues();
+                }
+            });
+            return updatedData;
         }
     }
 

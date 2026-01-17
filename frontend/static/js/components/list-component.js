@@ -7,10 +7,10 @@ class ListComponent {
      * @param {HTMLElement} container - The container to render the list into.
      * @param {Array} items - Array of items to render.
      * @param {Function} renderItemFunction - Function(item) => HTMLElement, returns the DOM for each item.
-     * @param {string} [selectionMode] - 'none' | 'single' | 'multiple'
+     * @param {string} [selectionMode] - ListComponent.SELECTION_MODE_NONE | ListComponent.SELECTION_MODE_SINGLE | ListComponent.SELECTION_MODE_MULTIPLE
      * @param {Function} [onSelect] - Callback(selectedItems)
      */
-    constructor(container, items, renderItemFunction, selectionMode = 'none', onSelect = null) {
+    constructor(container, items, renderItemFunction, selectionMode = ListComponent.SELECTION_MODE_NONE, onSelect = null) {
         this.container = container;
         this.items = items || [];
         this.renderItemFunction = renderItemFunction;
@@ -33,7 +33,7 @@ class ListComponent {
             if (isSelected) li.classList.add('selected');
             const rendered = this.renderItemFunction(item);
             li.appendChild(rendered);
-            if (this.selectionMode !== 'none') {
+            if (this.selectionMode !== ListComponent.SELECTION_MODE_NONE) {
                 li.style.cursor = 'pointer';
                 li.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -53,9 +53,9 @@ class ListComponent {
     }
 
     handleSelect(idx) {
-        if (this.selectionMode === 'single') {
+        if (this.selectionMode === ListComponent.SELECTION_MODE_SINGLE) {
             this.selectedIndices = [idx];
-        } else if (this.selectionMode === 'multiple') {
+        } else if (this.selectionMode === ListComponent.SELECTION_MODE_MULTIPLE) {
             if (this.selectedIndices.includes(idx)) {
                 this.selectedIndices = this.selectedIndices.filter(i => i !== idx);
             } else {
@@ -96,7 +96,36 @@ class ListComponent {
         return [...this.selectedIndices];
     }
 
-}
+    /**
+     * Stores the last selected items based on storageKey and getKeyFn.
+     * @param {string} storageKey
+     * @param {Function} getKeyFn - Function(item) => key used for storage.
+     */
+    storeLastSelected(storageKey, getKeyFn) {
+        if (this.selectedIndices.length > 0) {
+            const keys = this.selectedIndices.map(idx => getKeyFn(this.items[idx]));
+            window.StorageService.setLocalStorageItem(storageKey, JSON.stringify(keys));
+        }
+    }
+
+    /**
+     * Restores the last selected items based on storageKey and getKeyFn.
+     * @param {string} storageKey
+     * @param {Function} getKeyFn - Function(item) => key used for storage.
+     */
+    setLastSelected(storageKey, getKeyFn) {
+        if (this.items.length > 0) {
+            const stored = window.StorageService.getLocalStorageItem(storageKey, []);
+            if (stored.length > 0) {
+                this.items.forEach((item, idx) => {
+                    if (stored.includes(getKeyFn(item))) {
+                        this.handleSelect(idx);
+                    }
+                });
+            }
+        }
+    }
+}   
 
 window.ListComponent = ListComponent;
 // Static selection mode constants for encapsulation and external usage

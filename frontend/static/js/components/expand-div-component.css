@@ -1,0 +1,67 @@
+/* Framework Expand Div Component */
+.framework-expand-container {
+    border-radius: 6px;
+    margin-bottom: 10px;
+    background: var(--color-background-main, #fff);
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.12s;
+}
+
+.framework-expand-container:hover {
+    box-shadow: var(--shadow-button-hover);
+}
+
+.framework-expand-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 12px 14px;
+    cursor: pointer;
+    background: var(--color-background-subtle, #f9f9f9);
+    user-select: none;
+    transition: background 0.18s;
+    z-index: 2;
+    position: relative;
+}
+
+.framework-expand-header:hover {
+    background: var(--color-background-hover, #f0f0f0);
+}
+
+.framework-expand-header-left {
+    flex: 1;
+    font-weight: 400;
+    color: var(--color-text-main, #333);
+}
+
+.framework-expand-toggle {
+    font-size: 18px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--color-primary-accent, #555);
+}
+
+/* Animation Logic */
+.framework-expand-content {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out, opacity 0.2s ease-in-out;
+    background: var(--color-background-main, #fff);
+}
+
+.framework-expand-content-inner {
+    padding: 14px;
+    border-top: 1px solid var(--color-border-light, #ddd);
+    color: var(--color-text-main, #333);
+    font-weight: 300;
+}
+
+/* Expanded States */
+.is-expanded .framework-expand-content {
+    max-height: 1000px; /* Large enough to hold content */
+    opacity: 1;
+}
+
+.is-expanded .framework-expand-toggle {
+    transform: rotate(180deg);
+}

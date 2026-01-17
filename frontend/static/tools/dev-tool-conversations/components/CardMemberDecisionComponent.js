@@ -1,8 +1,8 @@
 (function () {
     /*
-        MemberDecisionCardComponent: renders a single decision card for dev-tool-conversations
+        CardMemberDecisionComponent: renders a single decision card for dev-tool-conversations
     */
-    class MemberDecisionCardComponent {
+    class CardMemberDecisionComponent {
         /**
          * @param {HTMLElement} container - The container to render into
          * @param {Object} decision - The decision object
@@ -17,6 +17,7 @@
             this.memberId = memberId;
             this.membersMap = membersMap;
             this.groupInstructions = groupInstructions;
+            this.feedbackDefMap = this.groupInstructions[this.decision.context.type]?.feedback_def;
             this.render();
         }
 
@@ -37,10 +38,42 @@
             const secondLine = window.conversations.utils.createDivContainer(wrapper);
             secondLine.className = 'conversations-decision-item-header';
 
-            // Rate
-            if (this.decision.feedback && this.decision.feedback.rate !== undefined) {
-                new window.RateComponent(secondLine, 1, 10, this.decision.feedback.rate);
+            // Feedback fields
+            if (this.decision.feedback && typeof this.decision.feedback === 'object') {
+                const feedbackContainer = window.conversations.utils.createDivContainer(secondLine, null, 'conversations-decision-item-feedback-container');
+                
+                for (const [key, value] of Object.entries(this.decision.feedback)) {
+                    const fieldDiv = window.conversations.utils.createDivContainer(feedbackContainer, null, 'conversations-decision-item-feedback-field');
+
+                    // Feedback entry key
+                    window.conversations.utils.createLabel(fieldDiv, key);
+                    
+                    // Feedback entry value using the feedback definition   
+                    const valueDiv = window.conversations.utils.createDivContainer(fieldDiv, null, 'conversations-decision-item-feedback-value');
+                    if (this.feedbackDefMap === undefined) {
+                        valueDiv.textContent = value;
+                        continue;
+                    }
+                    const feedbackDef = this.feedbackDefMap[key];
+                    if (!feedbackDef) {
+                        valueDiv.textContent = value;
+                        continue;
+                    }
+                    if (feedbackDef.type === 'integer') {
+                        new window.RateComponent(valueDiv, feedbackDef.min, feedbackDef.max, value, '100px', '8px', false);
+                    } else if (feedbackDef.type === 'string') {
+                        valueDiv.textContent = value;
+                    } else {
+                        valueDiv.textContent = value;
+                    }
+                    valueDiv.title = feedbackDef.description;
+                }
             }
+
+
+
+
+
 
             // Created at
             window.conversations.utils.createReadOnlyText(secondLine, 'conversations-decision-item-created-at', Utils.formatDateTime(this.decision.created_at), 'conversations-decision-item-created-at');
@@ -54,7 +87,7 @@
             new window.PopupComponent({
                 title: 'Decision Details',
                 content: (container) => {
-                    new window.conversations.DecisionDetailsComponent(container, this.decision, this.memberId, this.membersMap, this.groupInstructions);
+                    new window.conversations.MemberConversationDetailsComponent(container, this.decision, this.memberId, this.membersMap, this.groupInstructions);
                 },
                 closable: true,
                 width: '600px',
@@ -64,5 +97,5 @@
     }
 
     window.conversations = window.conversations || {};
-    window.conversations.MemberDecisionCardComponent = MemberDecisionCardComponent;
+    window.conversations.CardMemberDecisionComponent = CardMemberDecisionComponent;
 })();

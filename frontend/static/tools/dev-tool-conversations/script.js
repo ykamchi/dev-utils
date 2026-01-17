@@ -3,62 +3,30 @@ window.tool_script = {
     async init(container) {
         console.log('[Conversations Tool] Initializing conversations tool...');
 
-        new SpinnerComponent(container, { text: 'Loading conversations tool...' });
-
-
         // Clear container
         container.innerHTML = '';
 
         // Create root
-        const root = document.createElement('div');
-        root.id = 'conversations-tool-root';
-        root.className = 'conversations-tool-root';
+        const root = window.conversations.utils.createDivContainer(container,  'conversations-tool-root', 'conversations-tool-root');
 
         // Create left
-        const left = document.createElement('div');
-        left.id = 'conversations-tool-left';
-        left.className = 'conversations-tool-left';
-        root.appendChild(left);
+        const left = window.conversations.utils.createDivContainer(root, 'conversations-tool-left', 'conversations-tool-left');
 
         // Create right
-        const right = document.createElement('div');
-        right.id = 'conversations-tool-right';
-        right.className = 'conversations-tool-right';
-        right.innerHTML = '<div class="conversations-member-profile-empty">No member selected.</div>';
-        root.appendChild(right);
+        this.right = window.conversations.utils.createDivContainer(root, 'conversations-tool-right', 'conversations-tool-right');
 
-        // Add to container
-        container.appendChild(root);
+        // Create group selection container at the top of left
+        this.groupSelectionContainer = window.conversations.utils.createDivContainer(left, 'conversations-group-container', 'conversations-group-container');
 
-        // State for selected group and mode
-        this.selectedGroup = null;
-        this.selectedMode = 'view';
-
-        // Create group selection container
-        const groupSelectionContainer = document.createElement('div');
-        groupSelectionContainer.className = 'conversations-group-container';
-        left.appendChild(groupSelectionContainer);
-
-        // Create content container (will hold either members list or manage component)
-        this.contentContainer = document.createElement('div');
-        this.contentContainer.className = 'conversations-content-container';
-        left.appendChild(this.contentContainer);
-
-        // Store references
-        this.right = right;
+        // Create content container (will hold either members list or manage component) at the bottom of left
+        this.contentContainer = window.conversations.utils.createDivContainer(left, 'conversations-group-container', 'conversations-group-container');
 
         // Initialize group selection component
-        this.groupSelectionComponent = new window.conversations.GroupSelectionComponent(
-            groupSelectionContainer,
-            (selectedGroup) => {
-                this.selectedGroup = selectedGroup;
-                this.updateContent();
-            },
-            (mode) => {
-                this.selectedMode = mode;
-                console.log('[Conversations Tool] Mode changed to:', mode);
-                this.updateContent();
-            }
+        // MenuGroupSelectionComponent expose the selectedGroup and selectedMode properties
+        // the initial values of selectedGroup and selectedMode will be available and triggered 
+        // from the callback onChange when component is loaded
+        this.MenuGroupSelectionComponent = new window.conversations.MenuGroupSelectionComponent(
+            this.groupSelectionContainer, () => { this.updateContent(); }
         );
     },
 
@@ -67,60 +35,71 @@ window.tool_script = {
         // Clear content container
         this.contentContainer.innerHTML = '';
 
-        if (!this.selectedGroup) {
+        if (!this.MenuGroupSelectionComponent.selectedGroup) {
             // No group selected
-            this.right.innerHTML = '<div class="conversations-member-profile-empty">Please select a group.</div>';
+            this.right.innerHTML = '<div class="conversations-message-empty">Please select a group.</div>';
             return;
         }
 
-        if (this.selectedMode === 'view') {
+        if (this.MenuGroupSelectionComponent.selectedMode === 'view') {
             // Show members list - View mode
-            this.right.innerHTML = '<div class="conversations-member-profile-empty">Select a member to view details.</div>';
-            this.membersListComponent = new window.conversations.MembersListComponent(
+            this.right.innerHTML = '<div class="conversations-message-empty">Select a member to view details.</div>';
+            this.MenuListMembersComponent = new window.conversations.MenuListMembersComponent(
                 this.contentContainer,
-                this.showMember.bind(this, this.right)
+                this.onMemberSelect.bind(this, this.right)
             );
-            this.membersListComponent.load(this.selectedGroup);
-        } else if (this.selectedMode === 'manage') {
+            this.MenuListMembersComponent.load(this.MenuGroupSelectionComponent.selectedGroup);
+
+        } else if (this.MenuGroupSelectionComponent.selectedMode === 'manage') {
             // Show manage component - Manage mode
-            this.right.innerHTML = '<div class="conversations-member-profile-empty">Select a management option.</div>';
-            this.manageListComponent = new window.conversations.ManageListComponent(
+            this.right.innerHTML = '<div class="conversations-message-empty">Select a management option.</div>';
+            this.ListMenuListManageComponent = new window.conversations.ListMenuListManageComponent(
                 this.contentContainer,
-                this.showManageOption.bind(this, this.right)
+                this.onManageOptionSelect.bind(this, this.right),
+                this.onGroupNameChange.bind(this, this.MenuGroupSelectionComponent)
             );
-            this.manageListComponent.load(this.selectedGroup);
+            this.ListMenuListManageComponent.load(this.MenuGroupSelectionComponent.selectedGroup);
         }
     },
 
-    // Show member details in right pane after selection invoked by MemberDetailsComponent
-    showMember(right, memberId, membersMap) {
+    // Show member details in right pane after 
+    // selection invoked by MenuListMembersComponent
+    onMemberSelect(right, memberId, membersMap) {
         right.innerHTML = '';
         if (memberId) {
-            new window.conversations.MemberDetailsComponent(right, this.selectedGroup, memberId, membersMap);
+            new window.conversations.MemberDetailsComponent(right, this.MenuGroupSelectionComponent.selectedGroup, memberId, membersMap);
         } else {
-            right.innerHTML = '<div class="conversations-member-profile-empty">No member selected.</div>';
+            right.innerHTML = '<div class="conversations-message-empty">No member selected.</div>';
         }
     },
 
-    // Show manage option details in right pane
-    showManageOption(right, optionId, manageOptions) {
+    // Show manage option details in right pane after 
+    // selection invoked by ListMenuListManageComponent
+    onManageOptionSelect(right, optionId, manageOptions) {
         right.innerHTML = '';
         if (optionId) {
             const selectedOption = manageOptions[optionId];
             if (selectedOption && selectedOption.component) {
                 const ComponentClass = window.conversations[selectedOption.component];
                 if (ComponentClass) {
-                    new ComponentClass(right, this.selectedGroup, optionId, manageOptions);
+                    new ComponentClass(right, this.MenuGroupSelectionComponent.selectedGroup, optionId, manageOptions);
                 } else {
                     console.error(`Component ${selectedOption.component} not found`);
-                    right.innerHTML = '<div class="conversations-member-profile-empty">Component not found.</div>';
+                    right.innerHTML = '<div class="conversations-message-empty">Component not found.</div>';
                 }
             } else {
-                right.innerHTML = '<div class="conversations-member-profile-empty">This feature is not yet implemented.</div>';
+                right.innerHTML = '<div class="conversations-message-empty">This feature is not yet implemented.</div>';
             }
         } else {
-            right.innerHTML = '<div class="conversations-member-profile-empty">Select a management option.</div>';
+            right.innerHTML = '<div class="conversations-message-empty">Select a management option.</div>';
         }
+    },
+
+    // Handle group name change from ListMenuListManageComponent
+    // Update the selected group and reload the group selection component
+    async onGroupNameChange(MenuGroupSelectionComponent, newGroupName) {
+        MenuGroupSelectionComponent.selectedGroup = newGroupName;
+        await MenuGroupSelectionComponent.load();
     },
 
     destroy(container) {
