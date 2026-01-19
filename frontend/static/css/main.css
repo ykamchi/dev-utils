@@ -46,6 +46,11 @@
     --color-rate-bucket-8: #8bf24d; /* Bright Lime */
     --color-rate-bucket-9: #4df276; /* Mint Green */
     --color-rate-bucket-10: #2ecc71; /* Success Green */
+
+    --color-state-running: #3498db; /* Blue */
+    --color-state-completed: #2ecc71; /* Green */
+    --color-state-pending: #f1c40f; /* Yellow */
+
 }
 
 /* ---------------------------------------------------- */

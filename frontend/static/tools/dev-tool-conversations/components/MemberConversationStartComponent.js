@@ -13,27 +13,55 @@
             this.conversation_type = conversation_type;
             this.popupInstance = popupInstance;
             this.MenuListMembersComponent = null;
+            this.page = null;
             this.render();
         }
 
         render() {
-            const wrapperDiv = window.conversations.utils.createDivContainer(this.container, null, 'conversations-decision-start-wrapper');
 
+            // Create the main page component
+            this.page = new window.conversations.PageComponent(this.container, 
+                window.conversations.CONVERSATION_TYPES_ICONS[this.conversation_type], 
+                'Start ' + window.conversations.CONVERSATION_TYPES_NAMES[this.conversation_type],
+                [ this.groupName ]
+            );
+
+            // Save, Add and Delete instructions button
+            const pageButtons = window.conversations.utils.createDivContainer(null, null, 'conversations-buttons-container');
+            new window.ButtonComponent(pageButtons, 'Cancel', () => this.popupInstance.hide(), window.ButtonComponent.TYPE_GHOST_DANGER, 'Cancel');
+            new window.ButtonComponent(pageButtons, 'Start', () => this.handleStartClick(), window.ButtonComponent.TYPE_GHOST, 'Start ' + window.conversations.CONVERSATION_TYPES_NAMES[this.conversation_type]);
+            this.page.updateButtonsArea(pageButtons);
+
+            // Load and display the content
+            this.loadContent();
+
+
+
+        }
+
+        loadContent() {
+
+            const controlDiv = window.conversations.utils.createDivContainer(null, null, '-');
+            const selectInstructionWrapper = window.conversations.utils.createDivContainer(controlDiv);
+            window.conversations.utils.createLabel(selectInstructionWrapper, 'Select Instruction:');
+                
             // Instructions chooser
             const selectOptions = Object.values(this.groupInstructions).map(entry => ({ label: entry.info.name, value: entry.info.type }));
             new window.SelectComponent(
-                wrapperDiv, 
+                selectInstructionWrapper, 
                 selectOptions, 
                 (selectedValue) => { 
                     this.selectedInstruction = selectedValue 
                 },
                 'Select an instruction...' 
             );
-
+            this.page.updateControlArea(controlDiv);
+            
             // Members chooser - filter out the current member
+            const contentDiv = window.conversations.utils.createDivContainer(null, null, null);
             const membersList = Object.entries(this.membersMap).filter(([id]) => id !== this.memberId).map(([id, member]) => ({label: id, value: member}));
             this.MenuListMembersComponent = new window.ListComponent(
-                wrapperDiv, 
+                contentDiv, 
                 membersList, 
                 (member) => {
                     const tempDiv = window.conversations.utils.createDivContainer(null, null, '-');
@@ -42,11 +70,46 @@
                 }, 
                 window.ListComponent.SELECTION_MODE_MULTIPLE
             );
+            this.page.updateContentArea(contentDiv);
 
-            // Button
-            const buttonContainer = window.conversations.utils.createDivContainer(wrapperDiv, null, 'conversations-buttons-container');
-            new window.ButtonComponent(buttonContainer, 'Cancel', () => this.popupInstance.hide());
-            new window.ButtonComponent(buttonContainer, 'Start', () => this.handleStartClick());
+
+
+
+
+
+
+
+
+            // const wrapperDiv = window.conversations.utils.createDivContainer(this.container);
+
+            // // Instructions chooser
+            // const selectOptions = Object.values(this.groupInstructions).map(entry => ({ label: entry.info.name, value: entry.info.type }));
+            // new window.SelectComponent(
+            //     wrapperDiv, 
+            //     selectOptions, 
+            //     (selectedValue) => { 
+            //         this.selectedInstruction = selectedValue 
+            //     },
+            //     'Select an instruction...' 
+            // );
+
+            // // Members chooser - filter out the current member
+            // const membersList = Object.entries(this.membersMap).filter(([id]) => id !== this.memberId).map(([id, member]) => ({label: id, value: member}));
+            // this.MenuListMembersComponent = new window.ListComponent(
+            //     wrapperDiv, 
+            //     membersList, 
+            //     (member) => {
+            //         const tempDiv = window.conversations.utils.createDivContainer(null, null, '-');
+            //         new window.conversations.CardMemberComponent(tempDiv, member.value);
+            //         return tempDiv;
+            //     }, 
+            //     window.ListComponent.SELECTION_MODE_MULTIPLE
+            // );
+
+            // // Button
+            // const buttonContainer = window.conversations.utils.createDivContainer(wrapperDiv, null, 'conversations-buttons-container');
+            // new window.ButtonComponent(buttonContainer, 'Cancel', () => this.popupInstance.hide());
+            // new window.ButtonComponent(buttonContainer, 'Start', () => this.handleStartClick());
         }
 
         async handleStartClick() {

@@ -6,12 +6,13 @@
     - Accepts initial values via constructor
 */
 class RangeComponent {
-    constructor(container, min = 0, max = 100) {
+    constructor(container, min = 0, max = 100, onChange = null) {
         this.container = container;
         this.range = {
             min: min,
             max: max,
         };
+        this.onChange = onChange;
         // Create wrapper once and reuse
         this.rangeWrapper = document.createElement('div');
         this.rangeWrapper.className = 'range-inputs-wrapper';
@@ -51,11 +52,30 @@ class RangeComponent {
     maxInput.setAttribute('aria-label', 'Max');
 
     // Add event listeners
-    minInput.addEventListener('change', () => this.handleMinChange(minInput, maxInput));
-    minInput.addEventListener('blur', () => this.handleMinChange(minInput, maxInput));
-    maxInput.addEventListener('change', () => this.handleMaxChange(minInput, maxInput));
-    maxInput.addEventListener('blur', () => this.handleMaxChange(minInput, maxInput));
-
+    minInput.addEventListener('change', () => {
+        this.handleMinChange(minInput, maxInput)
+        if (this.onChange) {
+            this.onChange(this.getRange());
+        }
+    });
+    minInput.addEventListener('blur', () => {
+        this.handleMinChange(minInput, maxInput);
+        if (this.onChange) {
+            this.onChange(this.getRange());
+        }
+    });
+    maxInput.addEventListener('change', () => {
+        this.handleMaxChange(minInput, maxInput);
+        if (this.onChange) {
+            this.onChange(this.getRange());
+        }
+    });
+    maxInput.addEventListener('blur', () => {
+        this.handleMaxChange(minInput, maxInput);
+        if (this.onChange) {
+            this.onChange(this.getRange());
+        }
+    });
     // Add inputs to their wrappers
     minItem.appendChild(minInput);
     maxItem.appendChild(maxInput);

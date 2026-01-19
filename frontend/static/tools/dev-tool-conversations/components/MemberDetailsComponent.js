@@ -48,8 +48,8 @@
             const contentDiv = window.conversations.utils.createDivContainer(null, null, '');
             const tabs = [
                 { name: '🧑 Profile', populateFunc: (container) => { window.conversations.utils.createJsonDiv(container, this.member) } },
-                { name: '👀 Decisions', populateFunc: (container) => { new window.conversations.MemberConversationsComponent(container, this.groupName, this.memberId, this.membersMap, groupInstructions, 'ai_decision'); } },
-                { name: '💬 Conversations', populateFunc: (container) => { new window.conversations.MemberConversationsComponent(container, this.groupName, this.memberId, this.membersMap, groupInstructions, 'ai_conversation'); } }
+                { name: window.conversations.CONVERSATION_TYPES_STRING(window.conversations.CONVERSATION_TYPES.AI_DECISION), populateFunc: (container) => { new window.conversations.MemberConversationsComponent(container, this.groupName, this.memberId, this.membersMap, groupInstructions, window.conversations.CONVERSATION_TYPES.AI_DECISION); } },
+                { name: window.conversations.CONVERSATION_TYPES_STRING(window.conversations.CONVERSATION_TYPES.AI_CONVERSATION), populateFunc: (container) => { new window.conversations.MemberConversationsComponent(container, this.groupName, this.memberId, this.membersMap, groupInstructions, window.conversations.CONVERSATION_TYPES.AI_CONVERSATION); } }
             ];
             const storageKey = this.member ? `conversations-member-tabset` : '';
             new window.TabsetComponent(contentDiv, tabs, storageKey);

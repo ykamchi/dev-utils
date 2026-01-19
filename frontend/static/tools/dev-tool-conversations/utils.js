@@ -3,61 +3,36 @@
 */
 window.conversations = window.conversations || {};
 window.conversations.utils = window.conversations.utils || {};
-window.conversations.utils.createLabel = function(container, text) {
+
+
+// Create a label element
+window.conversations.utils.createLabel = function(container, text, alignRight = false) {
     const label = document.createElement('label');
     label.className = 'conversations-instruction-field-label';
     label.textContent = text;
+    if (alignRight) {
+        label.style.textAlign = 'right';
+    }
     container.appendChild(label);
     return label;
 }
 
-window.conversations.utils.createTextInput = function(container, id, value, placeholder = '', onChange = null) {
-    return window.conversations.utils.createPatternTextInput(container, id, value, /.*/, placeholder, onChange);
-}
 
-window.conversations.utils.createPatternTextInput = function(container, id, value, pattern = /.*/, placeholder = '', onChange = null) {
-    const textInputComponent = new window.TextInputComponent(
-        container,
-        value,
-        pattern,
-        placeholder,
-        onChange
-    );
-    
-    // Set the id on the component's container
-    textInputComponent.container.id = id;
-    
-    // Add convenience methods to the container for easy access
-    textInputComponent.container.getValue = () => textInputComponent.getValue();
-    textInputComponent.container.setValue = (val) => textInputComponent.setValue(val);
-    textInputComponent.container.isValid = () => textInputComponent.isValid();
-    
-    return textInputComponent.container;
-}
-
-window.conversations.utils.createTextArea = function(container, id, value, rows = -1) {
-    const textarea = document.createElement('textarea');
-    textarea.id = id;
-    textarea.value = value;
-    if (rows > 0) {
-        textarea.className = 'conversations-instruction-field-textarea';
-        textarea.rows = rows;
-    } else {
-        textarea.className = 'conversations-instruction-field-textarea conversations-instruction-field-textarea-large';
-    }
-    container.appendChild(textarea);
-    return textarea;
-}
-
-window.conversations.utils.createReadOnlyText = function(container, id, value, className = null) {
+// Create a read-only text div
+window.conversations.utils.createReadOnlyText = function(container, id, value, className = null, title = null) {
     const div = document.createElement('div');
     div.className = className || 'conversations-instruction-field-readonly';
     div.id = id;
     div.textContent = value;
+    if (title) {
+        div.title = title;
+    }
     container.appendChild(div);
     return div;
 }
 
+
+// Create a text input element
 window.conversations.utils.createNumberInput = function(container, id, value) {
     const input = document.createElement('input');
     input.className = 'conversations-instruction-field-input';
@@ -68,8 +43,8 @@ window.conversations.utils.createNumberInput = function(container, id, value) {
     return input;
 }
 
-window.conversations.utils.create
 
+// Create a span element
 window.conversations.utils.createSpan = function(container = null, id = null, value, className = null) {
     const span = document.createElement('span');
     if (id) {
@@ -81,18 +56,25 @@ window.conversations.utils.createSpan = function(container = null, id = null, va
     return span;
 }
 
-window.conversations.utils.createDivContainer = function(container = null, id = null, className = null) {
+
+// Create a div container
+window.conversations.utils.createDivContainer = function(container = null, id = null, className = null, title = null) {
     const div = document.createElement('div');
     if (id) {
         div.id = id;
     }
-    div.className = className || 'conversations-instruction-scrollable-group';
+    div.className = className || 'conversations-scrollable-group';
     if (container) {
         container.appendChild(div);
+    }
+    if (title) {
+        div.title = title;
     }
     return div;
 }
 
+
+// Create a div that displays JSON content
 window.conversations.utils.createJsonDiv = function(container, json) {
     const pre = document.createElement('pre');
     pre.className = 'conversations-json-div';

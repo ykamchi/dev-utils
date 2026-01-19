@@ -87,7 +87,7 @@ class SelectMemberToViewComponent {
                     // Not viewed: show button
                     const viewBtn = document.createElement('button');
                     viewBtn.className = 'dating-button secondary select-member-popup-btn';
-                    viewBtn.textContent = '👀 View Profile';
+                    viewBtn.textContent = '⚖️ View Profile';
                     viewBtn.addEventListener('click', async (e) => {
                         e.stopPropagation();
                         viewBtn.disabled = true;

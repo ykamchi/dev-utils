@@ -9,18 +9,110 @@ class ListComponent {
      * @param {Function} renderItemFunction - Function(item) => HTMLElement, returns the DOM for each item.
      * @param {string} [selectionMode] - ListComponent.SELECTION_MODE_NONE | ListComponent.SELECTION_MODE_SINGLE | ListComponent.SELECTION_MODE_MULTIPLE
      * @param {Function} [onSelect] - Callback(selectedItems)
+     * @param {Function} [filterCondition] - Function(item, query) => boolean, returns true if item matches the search query
      */
-    constructor(container, items, renderItemFunction, selectionMode = ListComponent.SELECTION_MODE_NONE, onSelect = null) {
+    constructor(container, items, renderItemFunction, selectionMode = ListComponent.SELECTION_MODE_NONE, onSelect = null, filterCondition = null) {
         this.container = container;
+        this.allItems = items || [];
         this.items = items || [];
         this.renderItemFunction = renderItemFunction;
         this.selectionMode = selectionMode;
         this.onSelect = onSelect;
+        this.filterCondition = filterCondition;
         this.selectedIndices = [];
+        this.selectedItems = new Set(); // Track selected items by reference
+        this.searchInput = null;
+        this.listContainer = null;
         this.render();
     }
 
     render() {
+        // Create a wrapper div to handle the flex layout internally
+        // This wrapper will contain the search input and list, while the container
+        // itself remains unchanged (important for components like TabsetComponent)
+        let wrapper = this.container.querySelector('.list-component-wrapper');
+        if (!wrapper) {
+            wrapper = document.createElement('div');
+            wrapper.className = 'list-component-wrapper';
+            this.container.appendChild(wrapper);
+        }
+        wrapper.innerHTML = '';
+        
+        // If filterCondition is provided, add search input
+        if (this.filterCondition) {
+            const searchContainer = document.createElement('div');
+            searchContainer.className = 'list-component-search-container';
+            
+            // Create search input wrapper with icon inside
+            const inputWrapper = document.createElement('div');
+            inputWrapper.className = 'list-component-search-input-wrapper';
+            searchContainer.appendChild(inputWrapper);
+            
+            // Search input
+            this.searchInput = document.createElement('input');
+            this.searchInput.type = 'text';
+            this.searchInput.className = 'search-input';
+            this.searchInput.placeholder = 'Search...';
+            this.searchInput.addEventListener('input', () => this.filterItems(this.searchInput.value));
+            inputWrapper.appendChild(this.searchInput);
+            
+            // Search icon (positioned on the right inside the input)
+            const searchIcon = document.createElement('span');
+            searchIcon.className = 'list-component-search-icon';
+            searchIcon.textContent = '🔍';
+            inputWrapper.appendChild(searchIcon);
+            
+            wrapper.appendChild(searchContainer);
+        }
+        
+        // Create list container
+        this.listContainer = document.createElement('div');
+        this.listContainer.className = 'list-component-list-container';
+        wrapper.appendChild(this.listContainer);
+        
+        // Render the list
+        this.renderList();
+    }
+
+    filterItems(query) {
+        query = (query || '').toLowerCase();
+        
+        if (!query) {
+            this.items = [...this.allItems];
+        } else {
+            this.items = this.allItems.filter(item => this.filterCondition(item, query));
+        }
+        
+        this.renderList();
+    }
+
+    renderList() {
+        // Clear list container
+        this.listContainer.innerHTML = '';
+        
+        // Rebuild selectedIndices based on which items still exist
+        const oldSelectedCount = this.selectedIndices.length;
+        this.selectedIndices = [];
+        
+        this.items.forEach((item, idx) => {
+            if (this.selectedItems.has(item)) {
+                this.selectedIndices.push(idx);
+            }
+        });
+        
+        // Remove items from selectedItems that are no longer in the list
+        const currentItemsSet = new Set(this.items);
+        const itemsToRemove = [];
+        this.selectedItems.forEach(item => {
+            if (!currentItemsSet.has(item)) {
+                itemsToRemove.push(item);
+            }
+        });
+        itemsToRemove.forEach(item => this.selectedItems.delete(item));
+        
+        // Check if selection changed
+        const selectionChanged = oldSelectedCount !== this.selectedIndices.length;
+        
         const ul = document.createElement('ul');
         ul.className = 'list-component-list';
         let hasItems = false;
@@ -49,17 +141,29 @@ class ListComponent {
             li.textContent = 'No items found';
             ul.appendChild(li);
         }
-        this.container.appendChild(ul);
+        this.listContainer.appendChild(ul);
+        
+        // Notify if selection changed
+        if (selectionChanged && this.onSelect) {
+            const selectedItems = this.selectedIndices.map(i => this.items[i]);
+            this.onSelect(selectedItems);
+        }
     }
 
     handleSelect(idx) {
+        const item = this.items[idx];
+        
         if (this.selectionMode === ListComponent.SELECTION_MODE_SINGLE) {
             this.selectedIndices = [idx];
+            this.selectedItems.clear();
+            this.selectedItems.add(item);
         } else if (this.selectionMode === ListComponent.SELECTION_MODE_MULTIPLE) {
             if (this.selectedIndices.includes(idx)) {
                 this.selectedIndices = this.selectedIndices.filter(i => i !== idx);
+                this.selectedItems.delete(item);
             } else {
                 this.selectedIndices.push(idx);
+                this.selectedItems.add(item);
             }
         }
         // For 'none', do nothing

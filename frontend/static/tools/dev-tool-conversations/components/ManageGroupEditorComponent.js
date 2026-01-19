@@ -7,30 +7,33 @@
             this.container = container;
             this.groupName = groupName;
             this.groupDescription = groupDescription;
+            this.groupDescriptionInput = null;
             this.render();
         }
 
         render() {
-            // this.container.innerHTML = '';
-
             // Edit group section (for Properties tab)
-            const editGroupDiv = window.conversations.utils.createDivContainer(this.container, null, 'conversations-instruction-editor-tab');
+            const editGroupDiv = window.conversations.utils.createDivContainer(this.container);
 
             // Group Name 
-            const nameGroup = window.conversations.utils.createDivContainer(editGroupDiv, 'conversations-instruction-scrollable-group');
+            const nameGroup = window.conversations.utils.createDivContainer(editGroupDiv, null, 'conversation-container-vertical');
             window.conversations.utils.createLabel(nameGroup, 'Group Name:');
-            window.conversations.utils.createPatternTextInput(nameGroup, 'conversations-instruction-name-input', this.groupName);
-            
+            this.groupNameInput = new window.TextInputComponent(nameGroup, this.groupName, /.*/, 'Enter group name', (value) => {
+                this.groupName = value;
+            });
+
             // Group Description
-            const descriptionGroup = window.conversations.utils.createDivContainer(editGroupDiv, 'conversations-instruction-scrollable-group');
+            const descriptionGroup = window.conversations.utils.createDivContainer(editGroupDiv);
             window.conversations.utils.createLabel(descriptionGroup, 'Description:');
-            window.conversations.utils.createTextArea(descriptionGroup, 'conversations-instruction-description-input', this.groupDescription);
+            this.groupDescriptionInput = new window.TextAreaComponent(descriptionGroup, this.groupDescription, 'Enter group description', (value) => {
+                this.groupDescription = value;
+            });
         }
 
         updatedGroup() {
             const updatedGroup = {
-                groupName: this.container.querySelector('#conversations-instruction-name-input').getValue(),
-                groupDescription: this.container.querySelector('#conversations-instruction-description-input').value
+                groupName: this.groupNameInput.getValue(),
+                groupDescription: this.groupDescriptionInput.getValue()
             };
             return updatedGroup;
         }

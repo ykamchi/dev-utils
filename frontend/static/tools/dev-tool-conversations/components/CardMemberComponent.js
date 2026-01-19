@@ -14,32 +14,19 @@
         }
 
         render() {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'conversations-member-card-wrapper';
+            const wrapper = window.conversations.utils.createDivContainer(this.container, null, 'conversations-card-wrapper');
 
-            // Avatar 
-            const avatar = document.createElement('div');
-            avatar.className = 'conversations-list-card-icon';
-            avatar.textContent = '👤';
-            wrapper.appendChild(avatar);
+            // Icon 
+            window.conversations.utils.createReadOnlyText(wrapper, null, '👤', 'conversations-list-card-icon');
 
             // Info
-            const info = document.createElement('div');
-            info.className = 'conversations-member-card-info';
+            const info = window.conversations.utils.createDivContainer(wrapper, null, 'conversations-card-info');
 
             // Name
-            const nameDiv = document.createElement('div');
-            nameDiv.className = 'conversations-member-card-name';
-            nameDiv.textContent = this.member.name;
-            info.appendChild(nameDiv);
+            window.conversations.utils.createReadOnlyText(info, null, this.member.name, 'conversations-card-name');
 
-            const metaDiv = document.createElement('div');
-            metaDiv.className = 'conversations-member-card-meta';
-            metaDiv.textContent = `${this.member.location} • ${this.member.age}`;
-            info.appendChild(metaDiv);
-
-            wrapper.appendChild(info);
-            this.container.appendChild(wrapper);
+            // Description
+            window.conversations.utils.createReadOnlyText(info, null, `${this.member.location} • ${this.member.age}`, 'conversations-card-description');
         }
     }
 

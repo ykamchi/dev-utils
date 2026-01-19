@@ -38,7 +38,7 @@
             const groupDescription = groups.find(g => g.group_name === this.groupName).group_description; 
 
             // Page content
-            const contentDiv = window.conversations.utils.createDivContainer(null, null, '');
+            const contentDiv = window.conversations.utils.createDivContainer();
             const tabsetTabs = [
                 {
                     name: 'Properties',
@@ -59,20 +59,17 @@
 
         populateEditTab(container, groupDescription) {
             // Edit group section (for Properties tab)
-            const editGroupDiv = window.conversations.utils.createDivContainer(container, null, 'conversations-instruction-editor-tab');
-            const buttonContainer = window.conversations.utils.createDivContainer(editGroupDiv, null, 'conversations-buttons-container');
-            new window.ButtonComponent(buttonContainer, '💾', () => this.saveGroupSettings(), window.ButtonComponent.TYPE_GHOST, '💾 Save instruction');
-            
-            this.groupEditor = new window.conversations.ManageGroupEditorComponent(editGroupDiv, this.groupName, groupDescription); 
-
+            const buttonContainer = window.conversations.utils.createDivContainer(container, null, 'conversations-buttons-container');
+            new window.ButtonComponent(buttonContainer, '💾', () => this.saveGroupProperties(), window.ButtonComponent.TYPE_GHOST, '💾 Save instruction');
+            this.groupEditor = new window.conversations.ManageGroupEditorComponent(container, this.groupName, groupDescription); 
         }
     
         async populateSeedDataTab(container) {
             container.innerHTML = '';
 
-            const seedGroupDiv = window.conversations.utils.createDivContainer(container, null, 'conversations-instruction-editor-tab');
+            const seedGroupDiv = window.conversations.utils.createDivContainer(container);
 
-            const seedingData = await window.conversations.api.fetchGroupSeedFiles(seedGroupDiv, this.groupName);
+            const seedingData = await window.conversations.api.fetchGroupSeedFiles(null, this.groupName);
             if (seedingData && seedingData.length > 0) {
                 // Pre-load instruction file contents for valid entries
                 for (const seedEntry of seedingData) {
@@ -89,32 +86,52 @@
 
                 // Buttons container
                 const buttonContainer = window.conversations.utils.createDivContainer(seedGroupDiv, null, 'conversations-buttons-container');
-                new window.ButtonComponent(buttonContainer, '📤 Start seeding selected items', () => this.startSeeding(seedingData), window.ButtonComponent.TYPE_GHOST, '💾 Save instruction');
+                new window.ButtonComponent(buttonContainer, '📤 Start seeding selected items', () => this.startSeedingData(seedingData), window.ButtonComponent.TYPE_GHOST, '💾 Save instruction');
 
                 // Seed data list
                 new window.ListComponent(seedGroupDiv, seedingData, (seedEntry) => {
                     // Create header content
-                    const headerContent = window.conversations.utils.createDivContainer(); 
-                    new window.CheckboxComponent(headerContent, seedEntry.include, (checked) => {
+                    const icon = seedEntry.type === 'members' ? '👥 ' : seedEntry?.infoContent?.conversation_type ? window.conversations.CONVERSATION_TYPES_ICONS[seedEntry?.infoContent?.conversation_type] + ' ' : '✘ ';
+                     
+                    // const headerContent = window.conversations.utils.createDivContainer(); 
+
+                    const headerContent = window.conversations.utils.createDivContainer(this.container, null, 'conversations-card-wrapper');
+
+                    // Icon 
+                    window.conversations.utils.createReadOnlyText(headerContent, null, icon, 'conversations-list-card-icon');
+
+                    // Info
+                    const info = window.conversations.utils.createDivContainer(headerContent, null, 'conversations-card-info');
+
+                    // Name
+                    const nameWrapper = window.conversations.utils.createDivContainer(info, null, 'conversation-container-horizontal');
+                    new window.CheckboxComponent(nameWrapper, seedEntry.include, (checked) => {
                         seedEntry.include = checked;
-                    }, seedEntry.type + ' - ' + seedEntry.folderName + (!seedEntry.valid ? ' <b style="color: var(--color-warning-error)">(Invalid)</b>' : ''), !seedEntry.valid);
+                    }, null, !seedEntry.valid);
+
+                    window.conversations.utils.createReadOnlyText(nameWrapper, null, seedEntry.type + ' - ' + seedEntry.folderName, 'conversations-card-name');
+
+                    // Description
+                    const description = `${seedEntry.type} • ${seedEntry.folderName} ${!seedEntry.valid ? ' • Invalid' : ''}`
+                    window.conversations.utils.createReadOnlyText(info, null, description, seedEntry.valid ? 'conversations-card-description' : 'conversations-error');
+
 
                     // Create body content
                     const bodyContent = window.conversations.utils.createDivContainer();
                     if (!seedEntry.valid) {
-                        const errorDiv = window.conversations.utils.createReadOnlyText(bodyContent, null, seedEntry.error, 'conversations-message-error');
+                        window.conversations.utils.createReadOnlyText(bodyContent, null, seedEntry.error, 'conversations-message-error');
                     } else {
 
                         if (seedEntry.type === 'members') {
                             window.conversations.utils.createJsonDiv(bodyContent, seedEntry.fileContent);
                         } else if (seedEntry.type === 'instruction') {
-                            const infoGroup = window.conversations.utils.createDivContainer(bodyContent, 'conversations-instruction-scrollable-group');
+                            const infoGroup = window.conversations.utils.createDivContainer(bodyContent);
                             window.conversations.utils.createLabel(infoGroup, 'Info Content:');
                             window.conversations.utils.createJsonDiv(infoGroup, seedEntry.infoContent);
-                            const instructionsGroup = window.conversations.utils.createDivContainer(bodyContent, 'conversations-instruction-scrollable-group');
+                            const instructionsGroup = window.conversations.utils.createDivContainer(bodyContent);
                             window.conversations.utils.createLabel(instructionsGroup, 'Instruction Content:');
                             window.conversations.utils.createReadOnlyText(instructionsGroup, null, seedEntry.instructionContent || 'No content', null);
-                            const feedbackGroup = window.conversations.utils.createDivContainer(bodyContent, 'conversations-instruction-scrollable-group');
+                            const feedbackGroup = window.conversations.utils.createDivContainer(bodyContent, null, 'conversation-container-vertical');
                             window.conversations.utils.createLabel(feedbackGroup, 'Feedback Content:');
                             window.conversations.utils.createJsonDiv(feedbackGroup, seedEntry.feedbackContent);
                         }
@@ -131,7 +148,7 @@
             }
         }
 
-        async startSeeding(seedingData) {
+        async startSeedingData(seedingData) {
             for (const entry of seedingData) {
                 if (entry.include) {
                     if (entry.type === 'members') {
@@ -148,7 +165,7 @@
             
         }
 
-        async saveGroupSettings() {
+        async saveGroupProperties() {
             const updatedGroup = this.groupEditor.updatedGroup();
             const newGroupName = updatedGroup.groupName;
             const newDescription = updatedGroup.groupDescription;

@@ -14,35 +14,19 @@
         }
 
         render() {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'conversations-manage-card-wrapper';
+            const wrapper = window.conversations.utils.createDivContainer(this.container, null, 'conversations-card-wrapper');
 
             // Icon 
-            const icon = document.createElement('div');
-            icon.className = 'conversations-list-card-icon';
-            icon.textContent = this.manageOption.icon;
-            wrapper.appendChild(icon);
+            window.conversations.utils.createReadOnlyText(wrapper, null, this.manageOption.icon, 'conversations-list-card-icon');
 
             // Info
-            const info = document.createElement('div');
-            info.className = 'conversations-manage-card-info';
+            const info = window.conversations.utils.createDivContainer(wrapper, null, 'conversations-card-info');
 
             // Name
-            const nameDiv = document.createElement('div');
-            nameDiv.className = 'conversations-manage-card-name';
-            nameDiv.textContent = this.manageOption.name;
-            info.appendChild(nameDiv);
+            window.conversations.utils.createReadOnlyText(info, null, this.manageOption.name, 'conversations-card-name');
 
             // Description
-            if (this.manageOption.description) {
-                const descDiv = document.createElement('div');
-                descDiv.className = 'conversations-manage-card-description';
-                descDiv.textContent = this.manageOption.description;
-                info.appendChild(descDiv);
-            }
-
-            wrapper.appendChild(info);
-            this.container.appendChild(wrapper);
+            window.conversations.utils.createReadOnlyText(info, null, this.manageOption.description, 'conversations-card-description');
         }
     }
 

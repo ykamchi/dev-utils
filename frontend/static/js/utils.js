@@ -5,10 +5,21 @@ const Utils = {
     /**
      * Formats a date string as YYYY-MM-DD HH:mm:ss
      */
-    formatDateTime(dateStr) {
+    formatDateTime(dateStr, includeSeconds = false) {
         const d = new Date(dateStr);
         if (isNaN(d.getTime())) return dateStr;
-        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}${includeSeconds ? ':' + String(d.getSeconds()).padStart(2,'0') : ''}`;
+    },
+    durationSecondsToHMS(totalSeconds) {
+        totalSeconds = Math.max(0, Math.floor(totalSeconds));
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        const parts = [];
+        if (hours > 0) parts.push(`${hours}h`);
+        if (minutes > 0) parts.push(`${minutes}m`);
+        parts.push(`${seconds}s`);
+        return parts.join(' ');
     },
     /**
      * Dynamically load a script if a global is not present

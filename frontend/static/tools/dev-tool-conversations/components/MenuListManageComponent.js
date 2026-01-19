@@ -13,14 +13,14 @@
 
         render() {
             // Create wrapper
-            const wrapper = window.conversations.utils.createDivContainer(this.container, null, 'conversations-manage-wrapper');
+            const wrapper = window.conversations.utils.createDivContainer(this.container);
 
             // Manage header
-            const headerDiv = window.conversations.utils.createDivContainer(wrapper, null, 'conversations-group-manage-header');
-            window.conversations.utils.createReadOnlyText(headerDiv, null, 'Manage', 'conversations-selection-header');
+            const headerDiv = window.conversations.utils.createDivContainer(wrapper, null, 'conversations-menu-manage-header');
+            window.conversations.utils.createReadOnlyText(headerDiv, null, 'Manage', 'conversations-menu-selection-header');
 
             // Manage list container
-            this.manageListItems = window.conversations.utils.createDivContainer(wrapper, null, 'conversations-manage-list-items');
+            this.manageListItems = window.conversations.utils.createDivContainer(wrapper, null, 'conversations-menu-list-items');
         }
 
         // Load management interface for the selected group
@@ -86,7 +86,11 @@
                         this.onManageOptionSelect(selectedItems[0].id, this.manageOptions);
                         list.storeLastSelected('manage-list-last-selection', item => item.id);
                     }
+                },
+                (item, query) => {
+                    return (item.option.name || '').toLowerCase().includes(query.toLowerCase());
                 }
+
             );
 
             // Restore last selection, or select first item

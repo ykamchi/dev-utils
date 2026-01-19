@@ -27,14 +27,21 @@
             
             // Page control
             const controlDiv = window.conversations.utils.createDivContainer(null, null, '-');
+            this.onlyLastCheckbox = new window.CheckboxComponent(controlDiv, false, (checked) => {
+                this.loadContent();
+            }, 'Only show latest decision', false, 'If checked, only the latest decision will be shown for each decision type.');
+
             this.page.updateControlArea(controlDiv);
 
             // Page buttons
             const buttonsDiv = window.conversations.utils.createDivContainer(null, null, 'conversations-buttons-container');
-            this.onlyLastCheckbox = new window.CheckboxComponent(buttonsDiv, false, (checked) => {
-                this.loadContent();
-            }, 'Only show latest decision', false, 'If checked, only the latest decision will be shown for each decision type.');
-            new window.ButtonComponent(buttonsDiv, '⚖️ Start new decision', this.startNewDecisionPopup.bind(this), window.ButtonComponent.TYPE_GHOST, '⚖️ Start new decision');
+            
+            // Create "Start new ..." button text
+            let startNewConversationButtonText = window.conversations.CONVERSATION_TYPES_ICONS[this.conversation_type];
+            startNewConversationButtonText += ' Start new ';
+            startNewConversationButtonText += window.conversations.CONVERSATION_TYPES_STRING(this.conversation_type, false, true, false, false);
+
+            new window.ButtonComponent(buttonsDiv, startNewConversationButtonText, this.startNewDecisionPopup.bind(this), window.ButtonComponent.TYPE_GHOST, startNewConversationButtonText);
             this.page.updateButtonsArea(buttonsDiv);
 
             this.loadContent();
@@ -42,27 +49,28 @@
 
         async loadContent() {
             // Fetch decisions for the member
-            const decisions = await window.conversations.api.fetchMemberConversations('', this.memberId, this.conversation_type, this.onlyLastCheckbox.isChecked());
+            const conversations = await window.conversations.api.fetchMemberConversations('', this.memberId, this.conversation_type, this.onlyLastCheckbox.isChecked());
             
             // Page content
-            const contentDiv = window.conversations.utils.createDivContainer(null, null, '');
-            new window.ListComponent(contentDiv, decisions, (decision) => {
-                const decisionDiv = window.conversations.utils.createDivContainer(null, null, '');
-                new window.conversations.CardMemberDecisionComponent(decisionDiv, decision, this.memberId, this.membersMap, this.groupInstructions);
-                return decisionDiv;
+            const contentDiv = window.conversations.utils.createDivContainer();
+            new window.ListComponent(contentDiv, conversations, (conversation) => {
+                const conversationDiv = window.conversations.utils.createDivContainer();
+                new window.conversations.CardMemberConversationComponent(conversationDiv, conversation, this.memberId, this.membersMap, this.groupInstructions);
+                return conversationDiv;
             });
             this.page.updateContentArea(contentDiv);
         }
 
         startNewDecisionPopup() {
             let popup = new window.PopupComponent({
-                title: 'Start New Decision',
+                icon: window.conversations.CONVERSATION_TYPES_ICONS[this.conversation_type],
+                title: 'Start new ' + window.conversations.CONVERSATION_TYPES_STRING(this.conversation_type, false, true, false, false),
                 content: (container) => {
                     new window.conversations.MemberConversationStartComponent(container, this.groupName, this.memberId, this.membersMap, this.groupInstructions, this.conversation_type, popup);
                 },
                 closable: true,
-                width: '660px',
-                height: '600px'
+                width: '910px',
+                height: '900px'
             });
             popup.show();
         }

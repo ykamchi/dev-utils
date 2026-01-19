@@ -11,8 +11,6 @@ class RateComponent {
     }
 
     render() {
-        this.container.innerHTML = '';
-
         const wrapper = document.createElement('div');
         wrapper.className = 'rate-wrapper';
         wrapper.style.width = this.width;

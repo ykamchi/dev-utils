@@ -38,7 +38,7 @@
             this.instructions = await window.conversations.api.fetchGroupInstructions(null, this.groupName, this.manageOptions[this.optionId].info.conversationType);
 
             // Create content container for instruction details
-            const tabContent = window.conversations.utils.createDivContainer(null, null, 'conversations-manage-instructions-content');
+            const tabContent = window.conversations.utils.createDivContainer(null, null, null);
 
             // Set the selected instruction as the first one and add select component
             const controlDiv = window.conversations.utils.createDivContainer(null, null, '-');
@@ -74,11 +74,12 @@
             const selectedInstruction = instructions.find(entry => entry.instructions_type === instructionType);
             
             // Update the instructions editor
-            const content = window.conversations.utils.createDivContainer(null, null, 'conversations-manage-instructions-content');
+            const content = window.conversations.utils.createDivContainer(null, null, null);
             this.instructionsEditor = new window.conversations.ManageInstructionsEditorComponent(content, this.groupName, selectedInstruction);
             this.page.updateContentArea(content);
         }
 
+        // Save the selected instruction
         async saveInstruction() {
             const updatedInstructions = this.instructionsEditor.updatedInstructions();
             const selectedInstruction = this.instructions.find(entry => entry.instructions_type === this.selectedInstructionType);
@@ -101,6 +102,7 @@
             this.loadContent();
         }
 
+        // Delete the selected instruction
         async deleteInstruction() {
             new window.AlertComponent('Delete Instructions', 'Are you sure you want to delete these instructions?', [
                 ['Confirm Delete', async () => {
@@ -109,7 +111,7 @@
 
                     // Clear selected instruction type
                     this.selectedInstructionType = null;
-                    
+
                     // Reload content
                     this.loadContent();
                 }],
@@ -117,9 +119,10 @@
             ]);
         }
 
+        // Add new instruction
         async addInstruction() {
             const popup = new window.PopupComponent({
-                icon: '👀',
+                icon: this.manageOptions[this.optionId].icon,
                 title: 'View Profile Candidates',
                 width: 420,
                 height: 720,
@@ -137,7 +140,6 @@
                             updatedData.info
                         );
                         popup.hide();
-                        console.log('Add instruction result:', result);
                         this.selectedInstructionType = result.data.instructions_type;
                         this.loadContent();
 
@@ -152,7 +154,7 @@
                         feedback_def: window.conversations.DEFAULT_FEEDBACK_DEF
                     }
 
-                    const editorDiv = window.conversations.utils.createDivContainer(container, null, 'conversations-manage-instructions-content');
+                    const editorDiv = window.conversations.utils.createDivContainer(container, null, null);
                     const instructionsEditor = new window.conversations.ManageInstructionsEditorComponent(editorDiv, this.groupName, instructions);
                 },
             });

@@ -1,4 +1,4 @@
-:root {
+/* :root {
     --color-rate-bucket-1: #ff4d4d;
     --color-rate-bucket-2: #ff764d;
     --color-rate-bucket-3: #ff9f4d;
@@ -9,7 +9,7 @@
     --color-rate-bucket-8: #8bf24d;
     --color-rate-bucket-9: #4df276;
     --color-rate-bucket-10: #2ecc71;
-}
+} */
 
 .rate-wrapper {
     position: relative;

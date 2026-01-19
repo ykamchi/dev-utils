@@ -4,35 +4,6 @@
 window.conversations = window.conversations || {};
 window.conversations.api = window.conversations.api || {};
 
-window.conversations.api.addGroupMembers = async function (spinnerContainer, groupName, members) {
-    // Show loading spinner while adding members
-    const spinner = new window.SpinnerComponent(spinnerContainer, { text: 'Adding members ...', size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
-
-    try {
-        const resp = await fetch('/api/dev-tool-conversations/add_members', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                group_name: groupName,
-                members: members
-            })
-        });
-
-        const result = await resp.json();
-        spinner.remove();
-        if (result.success) {
-            return result;
-        } else {
-            throw new Error('Failed to add members to group ' + groupName + ': ' + (result.error || 'Unknown error'));
-        }
-    } catch (e) {
-        spinner.remove();
-        new window.AlertComponent('API Error', 'Error adding members to group ' + groupName + '\nError: ' + (e.message || e.toString()));
-        console.error('Error adding members to group ' + groupName + ':', e);
-        throw e;
-    }
-};
-
 // Fetch group members from backend
 window.conversations.api.fetchGroupMembers = async function (spinnerContainer, group_name) {
     // Show loading spinner while fetching
@@ -63,33 +34,32 @@ window.conversations.api.fetchGroupMembers = async function (spinnerContainer, g
 
 };
 
-// Fetch group instructions from backend
-window.conversations.api.fetchGroupInstructions = async function (spinnerContainer, groupName, conversation_type = null) {
-    // Show loading spinner while fetching
-    const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Loading instructions definitions for ${groupName}...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+// Add members to group
+window.conversations.api.addGroupMembers = async function (spinnerContainer, groupName, members) {
+    // Show loading spinner while adding members
+    const spinner = new window.SpinnerComponent(spinnerContainer, { text: 'Adding members ...', size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
 
     try {
-        const resp = await fetch('/api/dev-tool-conversations/group_instructions', {
+        const resp = await fetch('/api/dev-tool-conversations/add_members', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 group_name: groupName,
-                conversation_type: conversation_type
+                members: members
             })
         });
 
         const result = await resp.json();
         spinner.remove();
-        if (result.success && result.data && typeof result.data === 'object') {
-            return result.data;
+        if (result.success) {
+            return result;
         } else {
-            throw new Error('Failed to load group instructions for group ' + groupName + ': ' + (result.error || 'Unknown error'));
+            throw new Error('Failed to add members to group ' + groupName + ': ' + (result.error || 'Unknown error'));
         }
-
     } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error fetching group instructions for ' + groupName + '\nError: ' + (e.message || e.toString()));
-        console.error('Error fetching group instructions for ' + groupName + ':', e);
+        new window.AlertComponent('API Error', 'Error adding members to group ' + groupName + '\nError: ' + (e.message || e.toString()));
+        console.error('Error adding members to group ' + groupName + ':', e);
         throw e;
     }
 };
@@ -124,6 +94,7 @@ window.conversations.api.fetchGroups = async function (spinnerContainer) {
     }
 };
 
+// Add new group
 window.conversations.api.addGroup = async function (spinnerContainer, groupName, groupDescription) {
     // Show loading spinner while adding group
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Adding group ${groupName}...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
@@ -152,6 +123,7 @@ window.conversations.api.addGroup = async function (spinnerContainer, groupName,
     }
 };
 
+// Delete group
 window.conversations.api.deleteGroup = async function (spinnerContainer, groupName) {
     // Show loading spinner while deleting group
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Deleting group ${groupName}...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
@@ -179,6 +151,7 @@ window.conversations.api.deleteGroup = async function (spinnerContainer, groupNa
     }
 };
 
+// Update group
 window.conversations.api.updateGroup = async function (spinnerContainer, oldGroupName, newGroupName, newDescription) {
     // Show loading spinner while updating group
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Updating group ${oldGroupName}...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
@@ -216,10 +189,10 @@ window.conversations.api.fetchMemberConversations = async function (container, m
         const resp = await fetch('/api/dev-tool-conversations/member_conversations', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                member_id: memberId, 
-                conversation_type: 
-                conversation_type, only_last: only_last 
+            body: JSON.stringify({
+                member_id: memberId,
+                conversation_type:
+                    conversation_type, only_last: only_last
             })
         });
 
@@ -235,6 +208,37 @@ window.conversations.api.fetchMemberConversations = async function (container, m
         spinner.remove();
         new window.AlertComponent('API Error', 'Error fetching member conversations for ' + memberId + '\nError: ' + (e.message || e.toString()));
         console.error('Error fetching member conversations:', e);
+        throw e;
+    }
+};
+
+// Fetch group instructions from backend
+window.conversations.api.fetchGroupInstructions = async function (spinnerContainer, groupName, conversation_type = null) {
+    // Show loading spinner while fetching
+    const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Loading instructions definitions for ${groupName}...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+
+    try {
+        const resp = await fetch('/api/dev-tool-conversations/group_instructions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                group_name: groupName,
+                conversation_type: conversation_type
+            })
+        });
+
+        const result = await resp.json();
+        spinner.remove();
+        if (result.success && result.data && typeof result.data === 'object') {
+            return result.data;
+        } else {
+            throw new Error('Failed to load group instructions for group ' + groupName + ': ' + (result.error || 'Unknown error'));
+        }
+
+    } catch (e) {
+        spinner.remove();
+        new window.AlertComponent('API Error', 'Error fetching group instructions for ' + groupName + '\nError: ' + (e.message || e.toString()));
+        console.error('Error fetching group instructions for ' + groupName + ':', e);
         throw e;
     }
 };
@@ -334,36 +338,6 @@ window.conversations.api.addGroupInstructions = async function (spinnerContainer
     }
 };
 
-// // Decision start
-// window.conversations.api.decisionStart = async function (spinnerContainer, groupName, selectedInstruction, participant_members_nick_names) {
-//     // Show loading spinner while starting decision
-//     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Starting decision for ${participant_members_nick_names.join(', ')}...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
-//     try {
-//         const resp = await fetch('/api/dev-tool-conversations/decision_start', {
-//             method: 'POST',
-//             headers: { 'Content-Type': 'application/json' },
-//             body: JSON.stringify({
-//                 group_name: groupName,
-//                 context: { type: selectedInstruction },
-//                 participant_members_nick_names: participant_members_nick_names
-//             })
-//         });
-
-//         const result = await resp.json();
-//         spinner.remove();
-//         if (result.success) {
-//             return result;
-//         } else {
-//             throw new Error('Failed to start decision for group ' + groupName + ': ' + (result.error || 'Unknown error'));
-//         }
-//     } catch (e) {
-//         spinner.remove();
-//         new window.AlertComponent('API Error', 'Error starting decision for ' + groupName + '\nError: ' + (e.message || e.toString()));
-//         console.error('Error starting decision for ' + groupName + ':', e);
-//         throw e;
-//     }
-// };
-
 // Conversation start
 window.conversations.api.conversationStart = async function (spinnerContainer, groupName, conversation_type, selectedInstruction, participant_members_nick_names) {
     // Show loading spinner while starting conversation
@@ -391,6 +365,34 @@ window.conversations.api.conversationStart = async function (spinnerContainer, g
         spinner.remove();
         new window.AlertComponent('API Error', 'Error starting conversation for ' + groupName + '\nError: ' + (e.message || e.toString()));
         console.error('Error starting conversation for ' + groupName + ':', e);
+        throw e;
+    }
+};
+
+window.conversations.api.fetchGroupSeeds = async function (spinnerContainer) {
+    // Show loading spinner while fetching
+    const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Loading group seeds ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+
+    try {
+        const resp = await fetch('/api/dev-tool-conversations/group_seeds', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        });
+
+        const result = await resp.json();
+        if (result.success && result.seeds && Array.isArray(result.seeds)) {
+            spinner.remove();
+            return await extractGroupsSeedData(result.seeds);
+        } else {
+            spinner.remove();
+            throw new Error('Failed to fetch group seeds: ' + (result.error || 'Unknown error'));
+        }
+    }
+    catch (e) {
+        spinner.remove();
+        new window.AlertComponent('API Error', 'Error fetching group seeds.\nError: ' + (e.message || e.toString()));
+        console.error('Error fetching group seeds:', e);
         throw e;
     }
 };
@@ -423,6 +425,25 @@ window.conversations.api.fetchGroupSeedFiles = async function (spinnerContainer,
     }
 };
 
+
+
+
+async function extractGroupsSeedData(result) {
+    const seeds = result.map(entry => {
+        entry.valid = true;
+        entry.error = '';
+        try {
+            entry.fileContent = entry.content ? JSON.parse(entry.content) : {};
+        } catch (e) {
+            entry.valid = false;
+            entry.error = 'Invalid JSON content';
+            entry.fileContent = {};
+        }
+        return entry;
+    });
+    return seeds;
+}
+
 async function extractSeedData(files) {
     // const ret = await window.conversations.api.fetchGroupSeedFiles(this.groupName);
 
@@ -434,11 +455,6 @@ async function extractSeedData(files) {
     // Loop through selected files
     for (const file of files) {
         const pathParts = file.webkitRelativePath.split('/');
-
-        // Skip files not in the selected group folder
-        // if (pathParts[1] !== this.groupName) {
-        //     continue;
-        // }
 
         // 1. Check for the root members_seed.json
         // (It should be in the root of the selection, so path length is 2: "root/file.json")
@@ -598,7 +614,7 @@ async function extractSeedData(files) {
             valid: false
         });
     }
-    return seedingData;  
+    return seedingData;
 }
 
 function validateMembers(members) {

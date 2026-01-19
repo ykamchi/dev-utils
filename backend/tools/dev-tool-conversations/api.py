@@ -19,8 +19,35 @@ import requests
 from requests.exceptions import RequestException
 
 upstream_base = 'http://127.0.0.1:8443'
-sleep_time = 0.5 # Sleep time to simulate network delay - testing
+sleep_time = 0 # Sleep time to simulate network delay - testing
 def register_apis(app, base_path: str):
+
+    @app.route(f"{base_path}/group_seeds", methods=["PUT"])
+    def group_seeds():
+        """
+        Returns a list of seed names (subfolder names) in the conversations-examples folder.
+        Expects JSON payload: {"group_name": ...}
+        """
+        sleep(sleep_time)
+        
+        seed_root = os.path.expanduser(os.path.join('~/code/conversations-examples'))
+        if not os.path.exists(seed_root):
+            return jsonify({'success': True, 'seeds':[] })
+        result = []
+        for entry in os.scandir(seed_root):
+            if entry.is_dir():
+                group_name = entry.name
+                group_folder = os.path.join(seed_root, group_name)
+                group_seed_file = os.path.join(group_folder, 'group_seed.json')
+                if os.path.exists(group_seed_file):
+                    try:
+                        with open(group_seed_file, 'r', encoding='utf-8') as f:
+                            content = f.read()
+                    except Exception:
+                        content = ''
+                    result.append({'group_name': group_name, 'content': content})
+
+        return jsonify({'success': True, 'seeds': result})
 
     @app.route(f"{base_path}/group_seed_files", methods=["PUT"])
     def group_seed_files():

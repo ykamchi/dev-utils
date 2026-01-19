@@ -5,208 +5,204 @@
     class ManageInstructionsEditorComponent {
         constructor(container, groupName, instruction) {
             this.container = container;
+            this.feedbackTab = null;
             this.groupName = groupName;
-            this.instruction = instruction;
-            this.tabsetDiv = null;
+
+            // To make the edit easier, convert feedback_def from object to array
+            // This allows easier editing of the feedback name
+            this.instruction = JSON.parse(JSON.stringify(instruction));
+            this.instruction.feedback_def = Object.entries(this.instruction.feedback_def).map(([feedbackName, feedbackDef]) => ({
+                feedbackName,
+                ...feedbackDef
+            }));
             this.render();
         }
-
+        
         render() {
-            this.container.innerHTML = '';
-
             // Create tabset for Info, Instructions, Feedback
-            this.tabsetDiv = window.conversations.utils.createDivContainer(this.container, 'conversations-manage-instruction-editor-tabset-div');
-            this.tabsetDiv.className = 'conversations-manage-instruction-editor-tabset';
+            const tabsetDiv = window.conversations.utils.createDivContainer(this.container);
 
             // Add tabs for instruction details
             const storageKey = `conversations-instruction-editor-${this.groupName}-${this.instruction.instructions_type}`;
-            new window.TabsetComponent(this.tabsetDiv, [
-                { name: 'Info', populateFunc: (c) => this.renderInfoTab(c) },
-                { name: 'Instructions', populateFunc: (c) => this.renderInstructionsEditorTab(c) },
-                { name: 'Feedback', populateFunc: (c) => this.renderFeedbackTab(c) }
-            ], storageKey, this.onTabSwitch.bind(this));
+            new window.TabsetComponent(tabsetDiv, [
+                { name: 'Info', populateFunc: (c) => this.populateInfoTab(c) },
+                { name: 'Instructions', populateFunc: (c) => this.populateInstructionsEditorTab(c) },
+                { name: 'Feedback', populateFunc: (c) => { this.feedbackTab = c; this.populateFeedbackTab(c); } }
+            ], storageKey);
         }
 
-        onTabSwitch(tabName) {
-            // Currently no specific actions on tab switch
-        }
-
-        // Render Info tab
-        renderInfoTab(container) {
-            container.innerHTML = '';
-            container.className = 'conversations-instruction-editor-tab';
-
+        // Populate Info tab
+        populateInfoTab(container) {
             // Name field (editable)
-            const infoNameGroup = window.conversations.utils.createDivContainer(container, 'conversations-instruction-scrollable-group');
+            const infoNameGroup = window.conversations.utils.createDivContainer(container, null, 'conversation-container-vertical');
             window.conversations.utils.createLabel(infoNameGroup, 'Name:');
-            window.conversations.utils.createPatternTextInput(infoNameGroup, 'conversations-instruction-name-input', this.instruction.info.name);
+            new window.TextInputComponent(infoNameGroup, this.instruction.info.name, /^[a-zA-Z0-9 _-]+$/, 'e.g., My Instruction Name', (value, isValid) => {
+                this.instruction.info.name = value;
+            });
             
             // Conversation Type field (read-only)
-            const infoConversationTypeGroup = window.conversations.utils.createDivContainer(container, 'conversations-instruction-scrollable-group');
+            const infoConversationTypeGroup = window.conversations.utils.createDivContainer(container, null, 'conversation-container-vertical');
             window.conversations.utils.createLabel(infoConversationTypeGroup, 'Conversation Type:');
-            window.conversations.utils.createReadOnlyText(infoConversationTypeGroup, 'conversations-instruction-conversation-type-value', this.instruction.info.conversation_type);
+            window.conversations.utils.createReadOnlyText(infoConversationTypeGroup, null, this.instruction.info.conversation_type);
 
             // Instructions type field (read-only)
-            const infoTypeGroup = window.conversations.utils.createDivContainer(container, 'conversations-instruction-scrollable-group');
+            const infoTypeGroup = window.conversations.utils.createDivContainer(container, null, 'conversation-container-vertical');
             window.conversations.utils.createLabel(infoTypeGroup, 'Instructions Type:');
-            // window.conversations.utils.createReadOnlyText(infoTypeGroup, 'conversations-instruction-type-value', this.instruction.info.type);
-            window.conversations.utils.createPatternTextInput(infoTypeGroup, 'conversations-instruction-type-value', this.instruction.info.type, /^[a-z-]+$/, 'e.g., custom_instruction_type');
+            new window.TextInputComponent(infoTypeGroup, this.instruction.info.type, /^[a-z-]+$/, 'e.g., custom_instruction_type', (value, isValid) => {
+                this.instruction.info.type = value;
+            });
 
             // Description field (editable)
             const infoDescriptionGroup = window.conversations.utils.createDivContainer(container);
             window.conversations.utils.createLabel(infoDescriptionGroup, 'Description:');
-            window.conversations.utils.createTextArea(infoDescriptionGroup, 'conversations-instruction-description-textarea', this.instruction.info.description, 3);
+            new window.TextAreaComponent(infoDescriptionGroup, this.instruction.info.description, 'Description', (value) => {
+                this.instruction.info.description = value;
+            });
         }
 
-        // Render Instructions Editor tab
-        renderInstructionsEditorTab(container) {
-            container.innerHTML = '';
-            container.className = 'conversations-instruction-editor-tab';
-
+        // Populate Instructions Editor tab
+        populateInstructionsEditorTab(container) {
             // Instructions field (editable)
             const instructionsGroup = window.conversations.utils.createDivContainer(container);
             instructionsGroup.style.flex = '1'; //TODO: Move to CSS
             window.conversations.utils.createLabel(instructionsGroup, 'Instructions:');
-            window.conversations.utils.createTextArea(instructionsGroup, 'conversations-instruction-instructions-textarea', this.instruction.instructions);
+            new window.TextAreaComponent(instructionsGroup, this.instruction.instructions, 'Conversation instructions', (value) => {
+                this.instruction.instructions = value;
+            });
         }
 
-        // Render Feedback tab
-        renderFeedbackTab(container) {
+        // Populate Feedback tab
+        populateFeedbackTab(container) {
+            // Clear existing content - populateFeedbackTab may be called multiple times
             container.innerHTML = '';
-            container.className = 'conversations-instruction-editor-tab';
-            container.id = 'conversations-instruction-feedback-tab';
 
             // Add button container below tabset
-            const buttonContainer = window.conversations.utils.createDivContainer(container, 'conversations-buttons-container', 'conversations-buttons-container');
-            new window.ButtonComponent(buttonContainer, '+ Add feedback', () => this.handleAddFeedback(), window.ButtonComponent.TYPE_GHOST);
+            const buttonContainer = window.conversations.utils.createDivContainer(container, null, 'conversations-buttons-container');
+            new window.ButtonComponent(buttonContainer, '+ Add feedback field', () => this.handleAddFeedback(), window.ButtonComponent.TYPE_GHOST);
 
-            const feedbackEntries = Object.entries(this.instruction.feedback_def);
-
-            if (feedbackEntries.length === 0) {
-                const emptyMsg = window.conversations.utils.createDivContainer(container);
-                emptyMsg.className = 'conversations-instruction-field-empty';
-                emptyMsg.textContent = 'No feedback definitions found.';
-                container.appendChild(emptyMsg);
+            if (this.instruction.feedback_def.length === 0) {
+                window.conversations.utils.createReadOnlyText(container, null, 'No feedback definitions found.', 'conversations-message-empty');
                 return;
             }
 
-            const feedbackCards = window.conversations.utils.createDivContainer(container, null, 'conversations-instruction-scrollable-group');
-            feedbackEntries.forEach(([fieldName, fieldDef], index) => {
-                const feedbackCard = window.conversations.utils.createDivContainer(feedbackCards, `conversations-feedback-card-${index}`, 'conversations-feedback-card');
+            // container, items, renderItemFunction, selectionMode = ListComponent.SELECTION_MODE_NONE, onSelect = null, filterCondition = null
+            new window.ListComponent(container, this.instruction.feedback_def, 
+                (feedback_def) => {
+                    const feedbackDiv = document.createElement('div');
+                    
+                    // Name (editable)
+                    const feedbackNameGroup = window.conversations.utils.createDivContainer(feedbackDiv, null, 'conversation-container-vertical');
+                    window.conversations.utils.createLabel(feedbackNameGroup, 'Name:');
+                    new window.TextInputComponent(feedbackNameGroup, feedback_def.feedbackName, /^[a-z_]+$/, 'e.g., feedback_name', (value, isValid) => {
+                        feedback_def.feedbackName = value;
+                    });
+                    
+                    // Description field (editable)
+                    const feedbackDescriptionGroup = window.conversations.utils.createDivContainer(feedbackDiv, null, 'conversation-container-vertical');
+                    window.conversations.utils.createLabel(feedbackDescriptionGroup, 'Description:');
+                    new window.TextAreaComponent(feedbackDescriptionGroup, feedback_def.description, 2, (value) => {
+                        feedback_def.description = value;
+                    });
 
-                // Name (editable)
-                const feedbackNameGroup = window.conversations.utils.createDivContainer(feedbackCard);
-                window.conversations.utils.createLabel(feedbackNameGroup, 'Name:');
-                window.conversations.utils.createPatternTextInput(
-                    feedbackNameGroup, 
-                    `conversations-feedback-name-input-${index}`, 
-                    fieldName,
-                    /^[a-z_]+$/,
-                    'e.g., feedback_name'
-                );
+                    // Type field (editable)
+                    const feedbackTypeContainer = window.conversations.utils.createDivContainer(feedbackDiv, null, 'conversation-container-vertical');
+                    window.conversations.utils.createLabel(feedbackTypeContainer, 'Type:');
+                    const feedbackTypeSelectContainer = window.conversations.utils.createDivContainer(feedbackTypeContainer);
+                    new window.SelectComponent(
+                        feedbackTypeSelectContainer,
+                        [ { label: 'Integer', value: 'integer' }, { label: 'String', value: 'string' } ],
+                        (value) => { 
+                            feedback_def.type = value;
+                            // Clear other type-specific properties
+                            delete feedback_def.min;
+                            delete feedback_def.max;
+                            delete feedback_def['optional-values'];
+                            this.renderFeedbackTypeOptions(feedbackTypeOptionsContainer, feedback_def);
+                        },
+                        'Select type ...',
+                        feedback_def.type
+                    );
 
-                // Description field (editable)
-                const feedbackDescriptionGroup = window.conversations.utils.createDivContainer(feedbackCard);
-                window.conversations.utils.createLabel(feedbackDescriptionGroup, 'Description:');
-                window.conversations.utils.createTextArea(feedbackDescriptionGroup, `conversations-feedback-description-textarea-${index}`, fieldDef.description, 2);
+                    // Options Area
+                    const feedbackTypeOptionsContainer  = window.conversations.utils.createDivContainer(feedbackDiv, null, 'conversation-container-vertical');
+                    this.renderFeedbackTypeOptions(feedbackTypeOptionsContainer, feedback_def);
 
-                const typeContainer = window.conversations.utils.createDivContainer(feedbackCard);
-                typeContainer.className = 'conversations-feedback-type-container';
+                    const buttonContainer = window.conversations.utils.createDivContainer(feedbackDiv, null, 'conversations-buttons-container');
 
-                // Type field (editable)
-                const feedbackTypeContainer = window.conversations.utils.createDivContainer(typeContainer);
-                window.conversations.utils.createLabel(feedbackTypeContainer, 'Type:');
-                const feedbackTypeSelectContainer = window.conversations.utils.createDivContainer(feedbackTypeContainer, `conversations-feedback-type-select-${index}`);
-                new window.SelectComponent(
-                    feedbackTypeSelectContainer,
-                    [ { label: 'Integer', value: 'integer' }, { label: 'String', value: 'string' } ],
-                    (value) => { 
-                        fieldDef = { type: value };
-                        this.renderFeedbackTypeOptions(feedbackTypeOptionsContainer, index, fieldDef);
-                    },
-                    'Select type ...',
-                    fieldDef.type
-                );
+                    new window.CheckboxComponent(buttonContainer,this.instruction.info.meta?.feedbackImportant?.[feedback_def.feedbackName],(checked) => { 
+                        if (!this.instruction.info.meta) this.instruction.info.meta = {};
+                        if (!this.instruction.info.meta.feedbackImportant) this.instruction.info.meta.feedbackImportant = {};
+                        this.instruction.info.meta.feedbackImportant[feedback_def.feedbackName] = checked;
+                    },'Show on list');
 
-                // Options Area
-                const feedbackTypeOptionsContainer  = window.conversations.utils.createDivContainer(typeContainer, `conversations-feedback-type-options-container-${index}`);
-                this.renderFeedbackTypeOptions(feedbackTypeOptionsContainer, index, fieldDef);
+                    // Required checkbox
+                    new window.CheckboxComponent(buttonContainer,feedback_def.required,(checked) => {feedback_def.required = checked;},'Required');
 
-                const buttonContainer = window.conversations.utils.createDivContainer(feedbackCard, null, 'conversations-buttons-container');
-                new window.ButtonComponent(buttonContainer, '🗙', () => {   
-                    delete this.instruction.feedback_def[fieldName];
-                    this.renderFeedbackTab(container);
-                }, window.ButtonComponent.TYPE_GHOST_DANGER, '🗙 Delete feedback');
-            });
+                    // Add delete button
+                    new window.ButtonComponent(buttonContainer, '🗙', () => {
+                        this.instruction.feedback_def = this.instruction.feedback_def.filter(fd => fd.feedbackName !== feedback_def.feedbackName);
+                        this.populateFeedbackTab(container);
+                    }, window.ButtonComponent.TYPE_GHOST_DANGER, '🗙 Delete feedback field');
+                    
+                    return feedbackDiv;
+                }
+            );
         }
 
-        renderFeedbackTypeOptions(container, feedbackIndex, fieldDef) {
+        // Render type-specific options for feedback definition
+        renderFeedbackTypeOptions(container, feedback_def) {
             container.innerHTML = '';
 
-            if (fieldDef.type === 'integer') {
-                // Use RangeComponent for integer type
-                window.conversations.utils.createLabel(container, 'Value Range:');
-                container.rangeComponent = new window.RangeComponent(container, fieldDef.min, fieldDef.max);
+            const feedbackTypeOptionsContainer = window.conversations.utils.createDivContainer(container, null, 'conversation-container-vertical');
 
-            } else if (fieldDef.type === 'string') {
+            if (feedback_def.type === 'integer') {
+                // Use RangeComponent for integer type
+                window.conversations.utils.createLabel(feedbackTypeOptionsContainer, 'Value Range:');
+                feedbackTypeOptionsContainer.rangeComponent = new window.RangeComponent(feedbackTypeOptionsContainer, 
+                    feedback_def.min, feedback_def.max || 10,
+                    (range) => {
+                        feedback_def.min = range.min; feedback_def.max = range.max;
+                    }
+                );
+                feedback_def.min = feedbackTypeOptionsContainer.rangeComponent.range.min;
+                feedback_def.max = feedbackTypeOptionsContainer.rangeComponent.range.max;
+
+
+            } else if (feedback_def.type === 'string') {
                 // Optional values field - store reference on the container for later retrieval
-                window.conversations.utils.createLabel(container, 'Optional Values:');
-                container.stringArrayComponent = new window.StringArrayComponent(container, fieldDef['optional-values'], 'Add optional value...', window.StringArrayComponent.STYLE_WRAP);
+                window.conversations.utils.createLabel(feedbackTypeOptionsContainer, 'Optional Values:');
+                feedbackTypeOptionsContainer.stringArrayComponent = new window.StringArrayComponent(feedbackTypeOptionsContainer, 
+                    feedback_def['optional-values'], 'Add optional value...', (values) => {
+                        feedback_def['optional-values'] = values;
+                    }, window.StringArrayComponent.STYLE_WRAP);
 
             }
         }
 
+        // Handle adding a new feedback definition
         handleAddFeedback() {
-            this.instruction.feedback_def['new_feedback_field'] = {
-                description: 'Description of the new feedback field',
-                type: 'integer',
-                min: 0,
-                max: 10, 
-                required: true
-            };
-            // Re-render Feedback tab
-            const feedbackTab = this.tabsetDiv.querySelector('#conversations-instruction-feedback-tab');
-            this.renderFeedbackTab(feedbackTab);
+            let nextIndex = 1;
+            while (this.instruction.feedback_def.find(fd => fd.feedbackName === `feedback_${nextIndex}`)) {
+                nextIndex++;
+            }
+            this.instruction.feedback_def.push({
+                feedbackName: `feedback_${nextIndex}`,
+                description: 'Description of the feedback field',
+                type: 'integer', min: 0, max: 10, required: true
+            });
+            this.populateFeedbackTab(this.feedbackTab);
         }
 
+        // Get the updated instruction object for saving
         updatedInstructions() {
-            const updatedData = {
-                info: {
-                    name: this.container.querySelector('#conversations-instruction-name-input').getValue(),
-                    description: this.container.querySelector('#conversations-instruction-description-textarea').value,
-                    conversation_type: this.container.querySelector('#conversations-instruction-conversation-type-value').textContent,
-                    type: this.container.querySelector('#conversations-instruction-type-value').getValue()
-                },
-                instructions: this.container.querySelector('#conversations-instruction-instructions-textarea').value,
-                feedback_def: {}
-            };
-
-            // Fill Feedback values
-            const feedbackCards = this.container.querySelector('#conversations-instruction-feedback-tab').querySelectorAll('.conversations-feedback-card');
-            feedbackCards.forEach((card, index) => {
-                const feedbackName = card.querySelector(`#conversations-feedback-name-input-${index}`).getValue();
-                const feedbackDescription = card.querySelector(`#conversations-feedback-description-textarea-${index}`).value;
-                const feedbackTypeContainer = card.querySelector(`#conversations-feedback-type-select-${index}`);
-                const feedbackType = feedbackTypeContainer.querySelector('select').value;
-                updatedData.feedback_def[feedbackName] = {
-                    description: feedbackDescription,
-                    type: feedbackType,
-                    required: true
-                };
-
-                if (feedbackType === 'integer') {
-                    // Get range from RangeComponent
-                    const optionalValuesContainer = card.querySelector(`#conversations-feedback-type-options-container-${index}`);
-                    const range = optionalValuesContainer.rangeComponent.getRange();
-                    updatedData.feedback_def[feedbackName].min = range.min;
-                    updatedData.feedback_def[feedbackName].max = range.max;
-                } else if (feedbackType === 'string') {
-                    // Get values from StringArrayComponent
-                    const optionalValuesContainer = card.querySelector(`#conversations-feedback-type-options-container-${index}`);
-                    updatedData.feedback_def[feedbackName]['optional-values'] = optionalValuesContainer.stringArrayComponent.getValues();
-                }
-            });
-            return updatedData;
+            // Convert the instruction back to original format where feedback_def is an object
+            const ret = {...this.instruction};
+            ret.feedback_def = this.instruction.feedback_def.reduce((acc, feedbackDef) => {
+                const { feedbackName, ...rest } = feedbackDef;
+                acc[feedbackName] = rest;
+                return acc;
+            }, {});
+            return ret;
         }
     }
 

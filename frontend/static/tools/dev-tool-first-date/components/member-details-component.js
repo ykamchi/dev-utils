@@ -32,7 +32,7 @@ class MemberDetailsComponent {
 
         const tabs = [
             { name: '📝 Details', populateFunc: this.populateDetailsTab.bind(this) },
-            { name: '👀 Viewed Profiles', populateFunc: this.populateViewedProfilesTab.bind(this) },
+            { name: '⚖️ Viewed Profiles', populateFunc: this.populateViewedProfilesTab.bind(this) },
             { name: '💑 First Dates', populateFunc: this.populateFirstDatesTab.bind(this) }
         ];
         // Use a unique storageKey per member
@@ -358,7 +358,7 @@ class MemberDetailsComponent {
 
     async showViewProfilePopup() {
         new window.PopupComponent({
-            icon: '👀',
+            icon: '⚖️',
             title: 'View Profile Candidates',
             width: 420,
             height: 720,

@@ -5,10 +5,11 @@
     - Supports getting the current array of strings
 */
 class StringArrayComponent {
-    constructor(container, initialValues = [], placeholder = 'Add new value...', style = StringArrayComponent.STYLE_COLUMN) {
+    constructor(container, initialValues = [], placeholder = 'Add new value...', onChange = null,style = StringArrayComponent.STYLE_COLUMN) {
         this.container = container;
         this.values = [...initialValues]; // Create a copy of the array
         this.placeholder = placeholder;
+        this.onChange = onChange;
         this.style = style;
         this.stylesMap = {
             [StringArrayComponent.STYLE_WRAP]: 'string-array-list-wrap',
@@ -103,6 +104,9 @@ class StringArrayComponent {
             });
             this.renderAddInput(listContainer);
         }
+        if (this.onChange) {
+            this.onChange(this.getValues());
+        }
     }
 
     removeValue(index) {
@@ -116,16 +120,19 @@ class StringArrayComponent {
             });
             this.renderAddInput(listContainer);
         }
+        if (this.onChange) {
+            this.onChange(this.getValues());
+        }
     }
 
     getValues() {
         return [...this.values]; // Return a copy of the array
     }
 
-    setValues(newValues) {
-        this.values = [...newValues];
-        this.render();
-    }
+    // setValues(newValues) {
+    //     this.values = [...newValues];
+    //     this.render();
+    // }
 }
 
 window.StringArrayComponent = StringArrayComponent;
