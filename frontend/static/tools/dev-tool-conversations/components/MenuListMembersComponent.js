@@ -19,13 +19,13 @@
             const wrapper = window.conversations.utils.createDivContainer(this.container);
 
             // Create header
-            const headerDiv = window.conversations.utils.createDivContainer(wrapper, null, 'conversations-menu-manage-header');
+            const headerDiv = window.conversations.utils.createDivContainer(wrapper, 'conversations-menu-manage-header');
 
             // Members header
-            window.conversations.utils.createReadOnlyText(headerDiv, null, 'Members', 'conversations-menu-selection-header');
+            window.conversations.utils.createReadOnlyText(headerDiv, 'Members', 'conversations-menu-selection-header');
 
             // Members list container
-            this.membersListItems = window.conversations.utils.createDivContainer(wrapper, null, 'conversations-menu-list-items');
+            this.membersListItems = window.conversations.utils.createDivContainer(wrapper, 'conversations-menu-list-items');
         }
 
         // Load members for the selected group
@@ -65,12 +65,6 @@
                     return name.toLowerCase().includes(query.toLowerCase());
                 }
             );
-
-            
-            // Automatically select the first member if available
-            // if (items.length > 0) {
-            //     list.handleSelect(0);
-            // }
         }
     }
 

@@ -34,19 +34,19 @@
         // Populate Info tab
         populateInfoTab(container) {
             // Name field (editable)
-            const infoNameGroup = window.conversations.utils.createDivContainer(container, null, 'conversation-container-vertical');
+            const infoNameGroup = window.conversations.utils.createDivContainer(container, 'conversation-container-vertical');
             window.conversations.utils.createLabel(infoNameGroup, 'Name:');
             new window.TextInputComponent(infoNameGroup, this.instruction.info.name, /^[a-zA-Z0-9 _-]+$/, 'e.g., My Instruction Name', (value, isValid) => {
                 this.instruction.info.name = value;
             });
             
             // Conversation Type field (read-only)
-            const infoConversationTypeGroup = window.conversations.utils.createDivContainer(container, null, 'conversation-container-vertical');
+            const infoConversationTypeGroup = window.conversations.utils.createDivContainer(container, 'conversation-container-vertical');
             window.conversations.utils.createLabel(infoConversationTypeGroup, 'Conversation Type:');
-            window.conversations.utils.createReadOnlyText(infoConversationTypeGroup, null, this.instruction.info.conversation_type);
+            window.conversations.utils.createReadOnlyText(infoConversationTypeGroup, this.instruction.info.conversation_type);
 
             // Instructions type field (read-only)
-            const infoTypeGroup = window.conversations.utils.createDivContainer(container, null, 'conversation-container-vertical');
+            const infoTypeGroup = window.conversations.utils.createDivContainer(container, 'conversation-container-vertical');
             window.conversations.utils.createLabel(infoTypeGroup, 'Instructions Type:');
             new window.TextInputComponent(infoTypeGroup, this.instruction.info.type, /^[a-z-]+$/, 'e.g., custom_instruction_type', (value, isValid) => {
                 this.instruction.info.type = value;
@@ -77,11 +77,11 @@
             container.innerHTML = '';
 
             // Add button container below tabset
-            const buttonContainer = window.conversations.utils.createDivContainer(container, null, 'conversations-buttons-container');
+            const buttonContainer = window.conversations.utils.createDivContainer(container, 'conversations-buttons-container');
             new window.ButtonComponent(buttonContainer, '+ Add feedback field', () => this.handleAddFeedback(), window.ButtonComponent.TYPE_GHOST);
 
             if (this.instruction.feedback_def.length === 0) {
-                window.conversations.utils.createReadOnlyText(container, null, 'No feedback definitions found.', 'conversations-message-empty');
+                window.conversations.utils.createReadOnlyText(container, 'No feedback definitions found.', 'conversations-message-empty');
                 return;
             }
 
@@ -91,21 +91,21 @@
                     const feedbackDiv = document.createElement('div');
                     
                     // Name (editable)
-                    const feedbackNameGroup = window.conversations.utils.createDivContainer(feedbackDiv, null, 'conversation-container-vertical');
+                    const feedbackNameGroup = window.conversations.utils.createDivContainer(feedbackDiv, 'conversation-container-vertical');
                     window.conversations.utils.createLabel(feedbackNameGroup, 'Name:');
                     new window.TextInputComponent(feedbackNameGroup, feedback_def.feedbackName, /^[a-z_]+$/, 'e.g., feedback_name', (value, isValid) => {
                         feedback_def.feedbackName = value;
                     });
                     
                     // Description field (editable)
-                    const feedbackDescriptionGroup = window.conversations.utils.createDivContainer(feedbackDiv, null, 'conversation-container-vertical');
+                    const feedbackDescriptionGroup = window.conversations.utils.createDivContainer(feedbackDiv, 'conversation-container-vertical');
                     window.conversations.utils.createLabel(feedbackDescriptionGroup, 'Description:');
                     new window.TextAreaComponent(feedbackDescriptionGroup, feedback_def.description, 2, (value) => {
                         feedback_def.description = value;
                     });
 
                     // Type field (editable)
-                    const feedbackTypeContainer = window.conversations.utils.createDivContainer(feedbackDiv, null, 'conversation-container-vertical');
+                    const feedbackTypeContainer = window.conversations.utils.createDivContainer(feedbackDiv, 'conversation-container-vertical');
                     window.conversations.utils.createLabel(feedbackTypeContainer, 'Type:');
                     const feedbackTypeSelectContainer = window.conversations.utils.createDivContainer(feedbackTypeContainer);
                     new window.SelectComponent(
@@ -124,10 +124,10 @@
                     );
 
                     // Options Area
-                    const feedbackTypeOptionsContainer  = window.conversations.utils.createDivContainer(feedbackDiv, null, 'conversation-container-vertical');
+                    const feedbackTypeOptionsContainer  = window.conversations.utils.createDivContainer(feedbackDiv, 'conversation-container-vertical');
                     this.renderFeedbackTypeOptions(feedbackTypeOptionsContainer, feedback_def);
 
-                    const buttonContainer = window.conversations.utils.createDivContainer(feedbackDiv, null, 'conversations-buttons-container');
+                    const buttonContainer = window.conversations.utils.createDivContainer(feedbackDiv, 'conversations-buttons-container');
 
                     new window.CheckboxComponent(buttonContainer,this.instruction.info.meta?.feedbackImportant?.[feedback_def.feedbackName],(checked) => { 
                         if (!this.instruction.info.meta) this.instruction.info.meta = {};
@@ -153,7 +153,7 @@
         renderFeedbackTypeOptions(container, feedback_def) {
             container.innerHTML = '';
 
-            const feedbackTypeOptionsContainer = window.conversations.utils.createDivContainer(container, null, 'conversation-container-vertical');
+            const feedbackTypeOptionsContainer = window.conversations.utils.createDivContainer(container, 'conversation-container-vertical');
 
             if (feedback_def.type === 'integer') {
                 // Use RangeComponent for integer type

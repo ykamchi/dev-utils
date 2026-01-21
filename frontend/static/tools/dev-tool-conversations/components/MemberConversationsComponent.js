@@ -1,6 +1,6 @@
 (function () {
     /*
-        MemberConversationsComponent: displays decisions for a member in dev-tool-conversations
+        MemberConversationsComponent: displays conversations for a member in dev-tool-conversations
     */
     class MemberConversationsComponent {
         constructor(container, groupName, memberId, membersMap, groupInstructions, conversation_type) {
@@ -26,42 +26,58 @@
             this.page = new window.conversations.PageComponent(this.container);
             
             // Page control
-            const controlDiv = window.conversations.utils.createDivContainer(null, null, '-');
+            const controlDiv = window.conversations.utils.createDivContainer(null, '-');
             this.onlyLastCheckbox = new window.CheckboxComponent(controlDiv, false, (checked) => {
                 this.loadContent();
-            }, 'Only show latest decision', false, 'If checked, only the latest decision will be shown for each decision type.');
-
+            }, 'Only show latest ' + window.conversations.CONVERSATION_TYPES_STRING(this.conversation_type, false, true, false, false), false, `If checked, only the latest ${window.conversations.CONVERSATION_TYPES_STRING(this.conversation_type, false, true, false, false)} will be shown for each ${window.conversations.CONVERSATION_TYPES_STRING(this.conversation_type, false, true, false, false)} type.`);
             this.page.updateControlArea(controlDiv);
 
             // Page buttons
-            const buttonsDiv = window.conversations.utils.createDivContainer(null, null, 'conversations-buttons-container');
+            const buttonsDiv = window.conversations.utils.createDivContainer(null, '-');
             
             // Create "Start new ..." button text
             let startNewConversationButtonText = window.conversations.CONVERSATION_TYPES_ICONS[this.conversation_type];
             startNewConversationButtonText += ' Start new ';
             startNewConversationButtonText += window.conversations.CONVERSATION_TYPES_STRING(this.conversation_type, false, true, false, false);
 
-            new window.ButtonComponent(buttonsDiv, startNewConversationButtonText, this.startNewDecisionPopup.bind(this), window.ButtonComponent.TYPE_GHOST, startNewConversationButtonText);
+            new window.ButtonComponent(buttonsDiv, startNewConversationButtonText, this.showConversationStartPopup.bind(this), window.ButtonComponent.TYPE_GHOST, startNewConversationButtonText);
             this.page.updateButtonsArea(buttonsDiv);
 
             this.loadContent();
         }
 
         async loadContent() {
-            // Fetch decisions for the member
+            // Fetch conversations for the member
             const conversations = await window.conversations.api.fetchMemberConversations('', this.memberId, this.conversation_type, this.onlyLastCheckbox.isChecked());
-            
+            for (const conversation of conversations) {
+                conversation['names'] = conversation.members.map(m => m.member_nick_name).filter(name => name !== this.membersMap[this.memberId].name).join(', ');
+            }
+            // // Sort by created_at descending (newest first)
+            conversations.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
             // Page content
             const contentDiv = window.conversations.utils.createDivContainer();
             new window.ListComponent(contentDiv, conversations, (conversation) => {
-                const conversationDiv = window.conversations.utils.createDivContainer();
-                new window.conversations.CardMemberConversationComponent(conversationDiv, conversation, this.memberId, this.membersMap, this.groupInstructions);
-                return conversationDiv;
-            });
+                    const conversationDiv = window.conversations.utils.createDivContainer();
+                    new window.conversations.CardMemberConversationComponent(conversationDiv, conversation, this.memberId, this.membersMap, this.groupInstructions);
+                    return conversationDiv;
+                },
+                window.ListComponent.SELECTION_MODE_SINGLE, null, 
+                (item, query) => {
+                    
+                    return item.names.toLowerCase().includes(query.toLowerCase());
+                }, 
+                { 
+                    'Creation Date': (a, b) => new Date(b.created_at) - new Date(a.created_at),
+                    'Name': (a, b) => { return a.names < b.names ? -1 : 1; }
+                    
+
+                } 
+            );
             this.page.updateContentArea(contentDiv);
         }
 
-        startNewDecisionPopup() {
+        showConversationStartPopup() {
             let popup = new window.PopupComponent({
                 icon: window.conversations.CONVERSATION_TYPES_ICONS[this.conversation_type],
                 title: 'Start new ' + window.conversations.CONVERSATION_TYPES_STRING(this.conversation_type, false, true, false, false),

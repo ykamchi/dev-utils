@@ -1,3 +1,11 @@
+:root {
+    --color-state-running: #3498db; /* Blue */
+    --color-state-completed: #2ecc71; /* Green */
+    --color-state-pending: #f1c40f; /* Yellow */
+    --color-state-queued: #94a3b8; /* Slate */
+    --color-state-failed: #ff0000; /* Red */
+}
+
 /************************************************************************/
 /* Starting base styles for Conversations Tool                          */
 /************************************************************************/
@@ -312,6 +320,7 @@
 }
 
 .conversations-page-title-info {
+    width: 200px;
     display: flex;
     flex-direction: column;
 }
@@ -372,6 +381,17 @@
     padding: 4px 8px;
     border-radius: 4px;
     background: var(--color-state-pending);
+    color: var(--color-text-light);
+    font-weight: 700;
+}
+
+.conversations-badge-state-queued {
+    text-align: center;
+    margin-left: auto;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: var(--color-state-queued);
     color: var(--color-text-light);
     font-weight: 700;
 }

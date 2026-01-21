@@ -13,6 +13,23 @@
 }
 
 /* Centered modal container */
+.alert-component-title-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.alert-component-buttons-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    width: 100%;    
+}
+
+.alert-component-title-emoji {
+    font-size: 18px;
+}
 
 .alert-component-modal {
     position: fixed !important;

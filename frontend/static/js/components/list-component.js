@@ -11,7 +11,7 @@ class ListComponent {
      * @param {Function} [onSelect] - Callback(selectedItems)
      * @param {Function} [filterCondition] - Function(item, query) => boolean, returns true if item matches the search query
      */
-    constructor(container, items, renderItemFunction, selectionMode = ListComponent.SELECTION_MODE_NONE, onSelect = null, filterCondition = null) {
+    constructor(container, items, renderItemFunction, selectionMode = ListComponent.SELECTION_MODE_NONE, onSelect = null, filterCondition = null, sortFields = {} ) {
         this.container = container;
         this.allItems = items || [];
         this.items = items || [];
@@ -19,6 +19,7 @@ class ListComponent {
         this.selectionMode = selectionMode;
         this.onSelect = onSelect;
         this.filterCondition = filterCondition;
+        this.sortFields = sortFields;
         this.selectedIndices = [];
         this.selectedItems = new Set(); // Track selected items by reference
         this.searchInput = null;
@@ -38,33 +39,62 @@ class ListComponent {
         }
         wrapper.innerHTML = '';
         
-        // If filterCondition is provided, add search input
-        if (this.filterCondition) {
+        if (this.filterCondition || Object.keys(this.sortFields).length > 0) {
             const searchContainer = document.createElement('div');
             searchContainer.className = 'list-component-search-container';
-            
-            // Create search input wrapper with icon inside
-            const inputWrapper = document.createElement('div');
-            inputWrapper.className = 'list-component-search-input-wrapper';
-            searchContainer.appendChild(inputWrapper);
-            
-            // Search input
-            this.searchInput = document.createElement('input');
-            this.searchInput.type = 'text';
-            this.searchInput.className = 'search-input';
-            this.searchInput.placeholder = 'Search...';
-            this.searchInput.addEventListener('input', () => this.filterItems(this.searchInput.value));
-            inputWrapper.appendChild(this.searchInput);
-            
-            // Search icon (positioned on the right inside the input)
-            const searchIcon = document.createElement('span');
-            searchIcon.className = 'list-component-search-icon';
-            searchIcon.textContent = '🔍';
-            inputWrapper.appendChild(searchIcon);
-            
+        
+
+            if (Object.keys(this.sortFields).length > 0) {
+                const sortFieldsSelect = new window.SelectComponent(
+                    searchContainer,
+                    Object.keys(this.sortFields).map(key => ({ label: key, value: key })),
+                    (selectedSortField) => {
+                        if (selectedSortField) {
+                            console.log("Sorting by:", selectedSortField);
+                            this.items.sort(this.sortFields[selectedSortField]);
+                            this.renderList();
+                        }
+                    },
+                    'Sort by...'
+                );
+
+                const sortButton = document.createElement('button');
+                sortButton.className = 'list-component-sort-button';
+                sortButton.textContent = '⇅';
+                sortButton.title = 'Sort items';
+                sortButton.addEventListener('click', () => {
+                    if (this.sortFunction) {
+                        this.items.sort(this.sortFunction);
+                        this.renderList();
+                    }
+                });
+                searchContainer.appendChild(sortButton);
+            }
+
+            if (this.filterCondition) {
+                // Create search input wrapper with icon inside
+                const inputWrapper = document.createElement('div');
+                inputWrapper.className = 'list-component-search-input-wrapper';
+                searchContainer.appendChild(inputWrapper);
+                
+                // Search input
+                this.searchInput = document.createElement('input');
+                this.searchInput.type = 'text';
+                this.searchInput.className = 'search-input';
+                this.searchInput.placeholder = 'Search...';
+                this.searchInput.addEventListener('input', () => this.filterItems(this.searchInput.value));
+                inputWrapper.appendChild(this.searchInput);
+                
+                // Search icon (positioned on the right inside the input)
+                const searchIcon = document.createElement('span');
+                searchIcon.className = 'list-component-search-icon';
+                searchIcon.textContent = '🔍';
+                inputWrapper.appendChild(searchIcon);                
+            }
+
             wrapper.appendChild(searchContainer);
         }
-        
+            
         // Create list container
         this.listContainer = document.createElement('div');
         this.listContainer.className = 'list-component-list-container';

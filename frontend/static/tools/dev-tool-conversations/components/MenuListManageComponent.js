@@ -16,20 +16,38 @@
             const wrapper = window.conversations.utils.createDivContainer(this.container);
 
             // Manage header
-            const headerDiv = window.conversations.utils.createDivContainer(wrapper, null, 'conversations-menu-manage-header');
-            window.conversations.utils.createReadOnlyText(headerDiv, null, 'Manage', 'conversations-menu-selection-header');
+            const headerDiv = window.conversations.utils.createDivContainer(wrapper, 'conversations-menu-manage-header');
+            window.conversations.utils.createReadOnlyText(headerDiv, 'Manage', 'conversations-menu-selection-header');
 
             // Manage list container
-            this.manageListItems = window.conversations.utils.createDivContainer(wrapper, null, 'conversations-menu-list-items');
+            this.manageListItems = window.conversations.utils.createDivContainer(wrapper, 'conversations-menu-list-items');
         }
 
         // Load management interface for the selected group
         async load(selectedGroup) {
             // Define manage options
             this.manageOptions = {
-                groupSettings: { 
-                    name: 'Group Settings', 
+                system: { 
+                    name: 'System', 
                     icon: '🛠️',
+                    description: 'Manage system',
+                    component: 'ManageSystemComponent',
+                    info: {
+                        groupName: selectedGroup
+                    }
+                },
+                statistics: { 
+                    name: 'Statistics', 
+                    icon: '📊',
+                    description: 'View group statistics',
+                    component: 'ManageStatisticsComponent',
+                    info: {
+                        groupName: selectedGroup
+                    }
+                },
+                groupSettings: { 
+                    name: 'Settings', 
+                    icon: '⚙️',
                     description: 'Manage group settings',
                     component: 'ManageGroupSettingsComponent',
                     info: {

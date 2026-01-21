@@ -22,7 +22,7 @@
             );
 
             // Save, Add and Delete instructions button
-            const pageButtons = window.conversations.utils.createDivContainer(null, null, 'conversations-buttons-container');
+            const pageButtons = window.conversations.utils.createDivContainer(null, 'conversations-buttons-container');
             new window.ButtonComponent(pageButtons, '💾', () => this.saveInstruction(), window.ButtonComponent.TYPE_GHOST, '💾 Save instruction');
             new window.ButtonComponent(pageButtons, '+', () => this.addInstruction(), window.ButtonComponent.TYPE_GHOST, '+ Add instruction');
             new window.ButtonComponent(pageButtons, '🗙', () => this.deleteInstruction(), window.ButtonComponent.TYPE_GHOST_DANGER, '🗙 Delete instruction');
@@ -38,10 +38,10 @@
             this.instructions = await window.conversations.api.fetchGroupInstructions(null, this.groupName, this.manageOptions[this.optionId].info.conversationType);
 
             // Create content container for instruction details
-            const tabContent = window.conversations.utils.createDivContainer(null, null, null);
+            const tabContent = window.conversations.utils.createDivContainer();
 
             // Set the selected instruction as the first one and add select component
-            const controlDiv = window.conversations.utils.createDivContainer(null, null, '-');
+            const controlDiv = window.conversations.utils.createDivContainer(null, '-');
             if (this.instructions.length > 0) {
                 if (!this.selectedInstructionType) {
                     this.selectedInstructionType = this.instructions[0].instructions_type;
@@ -61,7 +61,7 @@
 
             // Render the first instruction details
             if (this.instructions.length === 0) {
-                const noInstructionsMessage = window.conversations.utils.createReadOnlyText(tabContent, null, 'No instructions available for this conversation type.', 'conversations-message-empty');
+                const noInstructionsMessage = window.conversations.utils.createReadOnlyText(tabContent, 'No instructions available for this conversation type.', 'conversations-message-empty');
                 this.page.updateContentArea(noInstructionsMessage);
             } else {
                 // Load details for the selected instruction type
@@ -74,7 +74,7 @@
             const selectedInstruction = instructions.find(entry => entry.instructions_type === instructionType);
             
             // Update the instructions editor
-            const content = window.conversations.utils.createDivContainer(null, null, null);
+            const content = window.conversations.utils.createDivContainer();
             this.instructionsEditor = new window.conversations.ManageInstructionsEditorComponent(content, this.groupName, selectedInstruction);
             this.page.updateContentArea(content);
         }
@@ -127,7 +127,7 @@
                 width: 420,
                 height: 720,
                 content: (container) => {
-                    const buttonContainer = window.conversations.utils.createDivContainer(container, null, 'conversations-buttons-container');
+                    const buttonContainer = window.conversations.utils.createDivContainer(container, 'conversations-buttons-container');
 
                     // Save instructions button
                     new window.ButtonComponent(buttonContainer, '💾', async () => {
@@ -154,7 +154,7 @@
                         feedback_def: window.conversations.DEFAULT_FEEDBACK_DEF
                     }
 
-                    const editorDiv = window.conversations.utils.createDivContainer(container, null, null);
+                    const editorDiv = window.conversations.utils.createDivContainer(container);
                     const instructionsEditor = new window.conversations.ManageInstructionsEditorComponent(editorDiv, this.groupName, instructions);
                 },
             });

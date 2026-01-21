@@ -16,16 +16,16 @@
             this.container.innerHTML = '';
 
             // Create wrapper
-            const wrapper = window.conversations.utils.createDivContainer(this.container, null, 'conversations-menu-selection-wrapper');
+            const wrapper = window.conversations.utils.createDivContainer(this.container, 'conversations-menu-selection-wrapper');
 
             // Create header
-            const headerDiv = window.conversations.utils.createDivContainer(wrapper, null, 'conversations-menu-manage-header');
+            const headerDiv = window.conversations.utils.createDivContainer(wrapper, 'conversations-menu-manage-header');
 
             // Header - Group
-            window.conversations.utils.createReadOnlyText(headerDiv, null, 'Group', 'conversations-menu-selection-header');
+            window.conversations.utils.createReadOnlyText(headerDiv, 'Group', 'conversations-menu-selection-header');
 
             // Add and Delete group button
-            const buttonContainer = window.conversations.utils.createDivContainer(headerDiv, null, 'conversations-buttons-container');
+            const buttonContainer = window.conversations.utils.createDivContainer(headerDiv, 'conversations-buttons-container');
             new window.ButtonComponent(buttonContainer, '+', () => this.addGroup(), window.ButtonComponent.TYPE_GHOST, '+ Add group');
             new window.ButtonComponent(buttonContainer, '🗙', () => this.deleteGroup(), window.ButtonComponent.TYPE_GHOST_DANGER, '🗙 Delete group');
 
@@ -61,7 +61,7 @@
             this.contentContainer.innerHTML = '';
 
             // Controls container for select group and mode buttons
-            const controlsContainer = window.conversations.utils.createDivContainer(this.contentContainer, null, 'conversations-menu-selection-controls');
+            const controlsContainer = window.conversations.utils.createDivContainer(this.contentContainer, 'conversations-menu-selection-controls');
 
             // Select group dropdown 
             new window.SelectComponent(
@@ -80,7 +80,7 @@
 
             // Option buttons (View/Manage)
             const options = [{ label: 'View', value: 'view' }, { label: 'Manage', value: 'manage' }];
-            new window.OptionButtonsComponent(
+            const viewModeButtons = new window.OptionButtonsComponent(
                 controlsContainer,
                 options,
                 'view',
@@ -88,10 +88,10 @@
                     this.selectedMode = selectedMode;
                     this.onChange();
                 },
-                // this.onModeChange.bind(this),
                 'conversations-menu-selection-mode'
             );
 
+            this.selectedMode = viewModeButtons.getSelection();
             // Trigger onChange callback with current selection
             this.onChange();
         }
@@ -121,7 +121,7 @@
             const seeds = await window.conversations.api.fetchGroupSeeds(null);
 
             // Seed group button
-            const buttonContainer = window.conversations.utils.createDivContainer(editorDiv, null, 'conversations-buttons-container');
+            const buttonContainer = window.conversations.utils.createDivContainer(editorDiv, 'conversations-buttons-container');
             new window.ButtonComponent(buttonContainer, '📤 Group seeding', async () => {
                 popup.hide();
 
@@ -146,7 +146,7 @@
                     // Create body content
                     const bodyContent = window.conversations.utils.createDivContainer();
                     if (!seedEntry.valid) {
-                        window.conversations.utils.createReadOnlyText(bodyContent, null, seedEntry.error, 'conversations-message-error');
+                        window.conversations.utils.createReadOnlyText(bodyContent, seedEntry.error, 'conversations-message-error');
                     } else {
                         window.conversations.utils.createJsonDiv(bodyContent, seedEntry.fileContent);
                     }
@@ -167,7 +167,7 @@
             const editorDiv = window.conversations.utils.createDivContainer(container);
 
             // Save group button
-            const buttonContainer = window.conversations.utils.createDivContainer(editorDiv, null, 'conversations-buttons-container');
+            const buttonContainer = window.conversations.utils.createDivContainer(editorDiv, 'conversations-buttons-container');
             new window.ButtonComponent(buttonContainer, '💾 Add group', async () => {
                 const updatedData = groupEditor.updatedGroup();
 

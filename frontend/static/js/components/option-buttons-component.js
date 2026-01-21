@@ -21,7 +21,7 @@ class OptionButtonsComponent {
             lastSelected = window.StorageService.getLocalStorageItem(storageKey, null);
         }
         this.selected = (lastSelected && options.some(opt => opt.value == lastSelected)) ? lastSelected : selected;
-        this.onChange(this.selected);
+        // this.onChange(this.selected);
         this.render();
     }
 

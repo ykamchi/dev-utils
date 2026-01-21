@@ -1,5 +1,5 @@
 class RateComponent {
-    constructor(container, min, max, value, width = '100px', height = '8px', showValue = false) {
+    constructor(container, min, max, value, width = '100px', height = '8px', showValue = false, title = null) {
         this.container = container;
         this.min = min;
         this.max = max;
@@ -7,6 +7,7 @@ class RateComponent {
         this.width = width;
         this.height = height;
         this.showValue = showValue;
+        this.title = title;
         this.render();
     }
 
@@ -15,6 +16,9 @@ class RateComponent {
         wrapper.className = 'rate-wrapper';
         wrapper.style.width = this.width;
         wrapper.style.height = this.height;
+        if (this.title) {
+            wrapper.title = this.title;
+        }
 
         const progressBar = document.createElement('progress');
         progressBar.className = 'rate-progress-bar';

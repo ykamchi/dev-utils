@@ -1,0 +1,97 @@
+/* toggle-button-component.css */
+
+:root {
+    --color-toggle-on: #22c55e;
+    --color-toggle-off: #cbd5e1;
+    --color-toggle-text: #ffffff;
+}
+
+.framework-toggle-container {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.framework-toggle-disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Hidden real input */
+.framework-toggle-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* Track */
+.framework-toggle-track {
+    position: relative;
+    border-radius: 999px;
+    background: var(--color-toggle-off);
+    border: 2px solid #cfd8e3;
+    overflow: hidden;
+    box-shadow: var(--shadow-button);
+}
+
+/* Thumb (circle) */
+.framework-toggle-thumb {
+    position: absolute;
+    top: 50%;
+    left: 4px;
+    transform: translateY(-50%);
+    width: var(--toggle-thumb-size, 28px);
+    height: var(--toggle-thumb-size, 28px);
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+    transition: left 0.2s ease;
+}
+
+/* Text container */
+.framework-toggle-text {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-toggle-text);
+    pointer-events: none;
+
+    /* smooth movement */
+    transition: left 0.2s ease, right 0.2s ease;
+    white-space: nowrap;
+}
+
+/* OFF -> text on the RIGHT side */
+.framework-toggle-input + .framework-toggle-track .framework-toggle-text {
+    left: auto;
+    right: calc(var(--toggle-thumb-size, 28px) / 2);
+}
+
+/* ON -> text on the LEFT side */
+.framework-toggle-input:checked + .framework-toggle-track .framework-toggle-text {
+    right: auto;
+    left: calc(var(--toggle-thumb-size, 28px) / 2);
+}
+
+/* ON state background */
+.framework-toggle-input:checked + .framework-toggle-track {
+    background: var(--color-toggle-on);
+}
+
+/* Move thumb to the right */
+.framework-toggle-input:checked + .framework-toggle-track .framework-toggle-thumb {
+    left: calc(100% - 4px - var(--toggle-thumb-size, 28px));
+}
+
+/* Disabled visuals */
+.framework-toggle-input:disabled + .framework-toggle-track {
+    box-shadow: none;
+    filter: grayscale(0.15);
+}

@@ -7,19 +7,22 @@
          * @param {function(value: any): void} onSelection - Callback when selection changes
          * @param {string} [placeholder] - Optional placeholder text
          * @param {any} [value] - Optional initial value
+         * @param {boolean} [disabled] - Optional disabled state
          */
-        constructor(container, selectOptions, onSelection, placeholder = '', value = undefined) {
+        constructor(container, selectOptions, onSelection, placeholder = '', value = undefined, disabled = false) {
             this.container = container;
             this.selectOptions = selectOptions;
             this.onSelection = onSelection;
             this.placeholder = placeholder;
             this.value = value;
+            this.disabled = disabled;
             this.select = this._createSelect();
             container.appendChild(this.select);
         }
 
         _createSelect() {
             const select = document.createElement('select');
+            select.disabled = this.disabled;
             select.className = 'framework-select-component';
             let placeholderOption = null;
             if (this.placeholder) {

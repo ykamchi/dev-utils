@@ -14,19 +14,19 @@
         }
 
         render() {
-            const wrapper = window.conversations.utils.createDivContainer(this.container, null, 'conversations-card-wrapper');
+            const wrapper = window.conversations.utils.createDivContainer(this.container, 'conversations-card-wrapper');
 
             // Icon 
-            window.conversations.utils.createReadOnlyText(wrapper, null, '👤', 'conversations-list-card-icon');
+            window.conversations.utils.createReadOnlyText(wrapper, '👤', 'conversations-list-card-icon');
 
             // Info
-            const info = window.conversations.utils.createDivContainer(wrapper, null, 'conversations-card-info');
+            const info = window.conversations.utils.createDivContainer(wrapper, 'conversations-card-info');
 
             // Name
-            window.conversations.utils.createReadOnlyText(info, null, this.member.name, 'conversations-card-name');
+            window.conversations.utils.createReadOnlyText(info, this.member.name, 'conversations-card-name');
 
             // Description
-            window.conversations.utils.createReadOnlyText(info, null, `${this.member.location} • ${this.member.age}`, 'conversations-card-description');
+            window.conversations.utils.createReadOnlyText(info, `${this.member.location} • ${this.member.age}`, 'conversations-card-description');
         }
     }
 

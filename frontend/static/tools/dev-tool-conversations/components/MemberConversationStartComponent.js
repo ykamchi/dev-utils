@@ -27,7 +27,7 @@
             );
 
             // Save, Add and Delete instructions button
-            const pageButtons = window.conversations.utils.createDivContainer(null, null, 'conversations-buttons-container');
+            const pageButtons = window.conversations.utils.createDivContainer(null, 'conversations-buttons-container');
             new window.ButtonComponent(pageButtons, 'Cancel', () => this.popupInstance.hide(), window.ButtonComponent.TYPE_GHOST_DANGER, 'Cancel');
             new window.ButtonComponent(pageButtons, 'Start', () => this.handleStartClick(), window.ButtonComponent.TYPE_GHOST, 'Start ' + window.conversations.CONVERSATION_TYPES_NAMES[this.conversation_type]);
             this.page.updateButtonsArea(pageButtons);
@@ -41,7 +41,7 @@
 
         loadContent() {
 
-            const controlDiv = window.conversations.utils.createDivContainer(null, null, '-');
+            const controlDiv = window.conversations.utils.createDivContainer(null, '-');
             const selectInstructionWrapper = window.conversations.utils.createDivContainer(controlDiv);
             window.conversations.utils.createLabel(selectInstructionWrapper, 'Select Instruction:');
                 
@@ -58,58 +58,23 @@
             this.page.updateControlArea(controlDiv);
             
             // Members chooser - filter out the current member
-            const contentDiv = window.conversations.utils.createDivContainer(null, null, null);
+            const contentDiv = window.conversations.utils.createDivContainer();
             const membersList = Object.entries(this.membersMap).filter(([id]) => id !== this.memberId).map(([id, member]) => ({label: id, value: member}));
             this.MenuListMembersComponent = new window.ListComponent(
                 contentDiv, 
                 membersList, 
                 (member) => {
-                    const tempDiv = window.conversations.utils.createDivContainer(null, null, '-');
+                    const tempDiv = window.conversations.utils.createDivContainer();
                     new window.conversations.CardMemberComponent(tempDiv, member.value);
                     return tempDiv;
                 }, 
-                window.ListComponent.SELECTION_MODE_MULTIPLE
+                window.ListComponent.SELECTION_MODE_MULTIPLE,
+                null,
+                (item, query) => {
+                    return item.value.name.toLowerCase().includes(query.toLowerCase());
+                }
             );
             this.page.updateContentArea(contentDiv);
-
-
-
-
-
-
-
-
-
-            // const wrapperDiv = window.conversations.utils.createDivContainer(this.container);
-
-            // // Instructions chooser
-            // const selectOptions = Object.values(this.groupInstructions).map(entry => ({ label: entry.info.name, value: entry.info.type }));
-            // new window.SelectComponent(
-            //     wrapperDiv, 
-            //     selectOptions, 
-            //     (selectedValue) => { 
-            //         this.selectedInstruction = selectedValue 
-            //     },
-            //     'Select an instruction...' 
-            // );
-
-            // // Members chooser - filter out the current member
-            // const membersList = Object.entries(this.membersMap).filter(([id]) => id !== this.memberId).map(([id, member]) => ({label: id, value: member}));
-            // this.MenuListMembersComponent = new window.ListComponent(
-            //     wrapperDiv, 
-            //     membersList, 
-            //     (member) => {
-            //         const tempDiv = window.conversations.utils.createDivContainer(null, null, '-');
-            //         new window.conversations.CardMemberComponent(tempDiv, member.value);
-            //         return tempDiv;
-            //     }, 
-            //     window.ListComponent.SELECTION_MODE_MULTIPLE
-            // );
-
-            // // Button
-            // const buttonContainer = window.conversations.utils.createDivContainer(wrapperDiv, null, 'conversations-buttons-container');
-            // new window.ButtonComponent(buttonContainer, 'Cancel', () => this.popupInstance.hide());
-            // new window.ButtonComponent(buttonContainer, 'Start', () => this.handleStartClick());
         }
 
         async handleStartClick() {
@@ -131,7 +96,7 @@
             window.conversations.api.conversationStart(null, this.groupName, this.conversation_type, this.selectedInstruction, participant_members_nick_names);
             
             // Close popup
-            this.popupInstance.hide();
+            // this.popupInstance.hide();
         }
     }
 

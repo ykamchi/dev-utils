@@ -7,19 +7,19 @@ window.tool_script = {
         container.innerHTML = '';
 
         // Create root
-        const root = window.conversations.utils.createDivContainer(container, null, 'conversations-tool-root');
+        const root = window.conversations.utils.createDivContainer(container, 'conversations-tool-root');
 
         // Create left
-        const left = window.conversations.utils.createDivContainer(root, null, 'conversations-layout-left');
+        const left = window.conversations.utils.createDivContainer(root, 'conversations-layout-left');
 
         // Create right
-        this.right = window.conversations.utils.createDivContainer(root, null, 'conversations-layout-right');
+        this.right = window.conversations.utils.createDivContainer(root, 'conversations-layout-right');
 
         // Create group selection container at the top of left
-        this.groupSelectionContainer = window.conversations.utils.createDivContainer(left, null, 'conversations-layout-group-container');
+        this.groupSelectionContainer = window.conversations.utils.createDivContainer(left, 'conversations-layout-group-container');
 
         // Create content container (will hold either members list or manage component) at the bottom of left
-        this.contentContainer = window.conversations.utils.createDivContainer(left, null, 'conversations-layout-content-container');
+        this.contentContainer = window.conversations.utils.createDivContainer(left, 'conversations-layout-content-container');
 
         // Initialize group selection component
         // MenuGroupSelectionComponent expose the selectedGroup and selectedMode properties
@@ -65,7 +65,6 @@ window.tool_script = {
     // Show member details in right pane after 
     // selection invoked by MenuListMembersComponent
     onMemberSelect(right, memberId, membersMap) {
-        console.log('onMemberSelect', memberId);
         right.innerHTML = '';
         if (memberId) {
             new window.conversations.MemberDetailsComponent(right, this.MenuGroupSelectionComponent.selectedGroup, memberId, membersMap);

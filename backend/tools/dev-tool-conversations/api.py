@@ -195,29 +195,6 @@ def register_apis(app, base_path: str):
             return jsonify({'success': False, 'error': 'Failed to contact upstream group_instructions'}), 502
 
 
-    # @app.route(f"{base_path}/group_instruction_info", methods=["POST"])
-    # def group_instruction_info():
-    #     """
-    #     Proxy to upstream /api/group_instruction_info with group_name and conversation_type from payload (no defaults).
-    #     """
-    #     payload = request.get_json(force=True)
-    #     group_name = payload.get('group_name')
-    #     conversation_type = payload.get('conversation_type')
-    #     if not group_name or not conversation_type:
-    #         return jsonify({'success': False, 'error': 'missing group_name or conversation_type'}), 400
-    #     try:
-    #         upstream_payload = {
-    #             'group_name': group_name,
-    #             'conversation_type': conversation_type
-    #         }
-    #         upstream_resp = _proxy_post('/api/group_instruction_info', upstream_payload)
-    #         return jsonify({ 'success': True, 'data': upstream_resp })
-    #     except RequestException:
-    #         app.logger.exception('Failed to contact upstream /api/group_instruction_info')
-    #         return jsonify({'success': False, 'error': 'Failed to contact upstream group_instruction_info'}), 502
-
-
-
     @app.route(f"{base_path}/delete_group_instructions", methods=["POST"])
     def delete_group_instructions():
         """
@@ -376,34 +353,6 @@ def register_apis(app, base_path: str):
             return jsonify({'success': False, 'error': 'Failed to contact upstream member_profile'}), 502
 
 
-    # @app.route(f"{base_path}/decision_start", methods=["POST"])
-    # def decision_start():
-    #     """
-    #     Proxy to upstream /api/decision_create (POST) to start a decision.
-    #     """
-    #     payload = request.get_json(force=True)
-    #     group_name = payload.get('group_name')
-    #     context = payload.get('context')
-    #     participant_members_nick_names = payload.get('participant_members_nick_names')
-
-    #     if not group_name:
-    #         return jsonify({'success': False, 'error': 'missing group_name'}), 400
-    #     if not context:
-    #         return jsonify({'success': False, 'error': 'missing context'}), 400
-
-    #     try:
-    #         decision_req = {
-    #             'group_name': group_name,
-    #             'participant_members_nick_names': participant_members_nick_names,
-    #             'context': context
-    #         }
-    #         app.logger.debug('Proxying decision_create with payload: %s', decision_req)
-    #         upstream_resp = _proxy_post('/api/decision_create', decision_req)
-    #         return jsonify({ "success": True, "decision": upstream_resp })
-    #     except RequestException:
-    #         app.logger.exception('Failed to contact upstream /api/decision_create')
-    #         return jsonify({'success': False, 'error': 'Failed to contact upstream decision service'}), 502
-
 
     @app.route(f"{base_path}/conversation_start", methods=["POST"])
     def conversation_start():
@@ -434,3 +383,72 @@ def register_apis(app, base_path: str):
         except RequestException:
             app.logger.exception('Failed to contact upstream /api/conversation_start')
             return jsonify({'success': False, 'error': 'Failed to contact upstream conversation service'}), 502
+        
+
+########################################################################################################################################################
+# System APIs
+# These APIs are intended to be used by the frontend system components for system management.
+########################################################################################################################################################
+    @app.route(f"{base_path}/status_queue_state", methods=["POST"])
+    def status_queue_state():
+        """
+        Proxy to upstream /api/status_queue_state (POST) to get the current queue state.
+        """
+        try:
+            upstream_resp = _proxy_post('/api/status_queue_state', {})
+            return jsonify(upstream_resp)
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/status_queue_state')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream status_queue_state service'}), 502
+    
+    @app.route(f"{base_path}/status_queue_pause", methods=["POST"])
+    def queue_pause():
+        """
+        Proxy to upstream /api/status_queue_pause (POST) to pause the queue.
+        """
+        try:
+            upstream_resp = _proxy_post('/api/status_queue_pause', {})
+            return jsonify(upstream_resp)
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/status_queue_pause')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream status_queue_pause service'}), 502      
+    
+    @app.route(f"{base_path}/status_queue_resume", methods=["POST"])
+    def queue_resume():
+        """
+        Proxy to upstream /api/status_queue_resume (POST) to resume the queue.
+        """
+        try:
+            upstream_resp = _proxy_post('/api/status_queue_resume', {})
+            return jsonify(upstream_resp)
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/status_queue_resume')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream status_queue_resume service'}), 502 
+        
+    @app.route(f"{base_path}/status_conversation_timeline", methods=["POST"])
+    def status_conversation_timeline():
+        """
+        Proxy to upstream /api/status_conversation_timeline (POST) to get conversation timeline.
+        Expects JSON payload: {"conversation_id": ...}
+        """
+        payload = request.get_json(force=True)
+        try:
+            request_payload = {}
+            if payload.get('group_name') is not None:
+                request_payload["group_name"] = payload.get('group_name')
+            if payload.get('conversation_type') is not None:
+                request_payload["conversation_type"] = payload.get('conversation_type') 
+            if (payload.get('instruction_type') is not None):
+                request_payload["instruction_type"] = payload.get('instruction_type')
+            if payload.get('states') is not None:
+                request_payload["states"] = payload.get('states')
+            if payload.get('hours_back') is not None:
+                request_payload["hours_back"] = payload.get('hours_back')
+            if payload.get('interval') is not None:
+                request_payload["interval"] = payload.get('interval')
+
+            upstream_resp = _proxy_post('/api/status_conversation_timeline', request_payload)
+            return jsonify(upstream_resp)
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/status_conversation_timeline')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream status_conversation_timeline service'}), 502

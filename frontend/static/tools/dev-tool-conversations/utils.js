@@ -19,10 +19,9 @@ window.conversations.utils.createLabel = function(container, text, alignRight = 
 
 
 // Create a read-only text div
-window.conversations.utils.createReadOnlyText = function(container, id, value, className = null, title = null) {
+window.conversations.utils.createReadOnlyText = function(container, value, className = null, title = null) {
     const div = document.createElement('div');
     div.className = className || 'conversations-instruction-field-readonly';
-    div.id = id;
     div.textContent = value;
     if (title) {
         div.title = title;
@@ -33,10 +32,9 @@ window.conversations.utils.createReadOnlyText = function(container, id, value, c
 
 
 // Create a text input element
-window.conversations.utils.createNumberInput = function(container, id, value) {
+window.conversations.utils.createNumberInput = function(container, value) {
     const input = document.createElement('input');
     input.className = 'conversations-instruction-field-input';
-    input.id = id;
     input.type = 'number';
     input.value = value;
     container.appendChild(input);
@@ -45,11 +43,8 @@ window.conversations.utils.createNumberInput = function(container, id, value) {
 
 
 // Create a span element
-window.conversations.utils.createSpan = function(container = null, id = null, value, className = null) {
+window.conversations.utils.createSpan = function(container = null, value, className = null) {
     const span = document.createElement('span');
-    if (id) {
-        span.id = id;
-    }
     span.className = className || '';
     span.textContent = value;
     container.appendChild(span);
@@ -58,11 +53,8 @@ window.conversations.utils.createSpan = function(container = null, id = null, va
 
 
 // Create a div container
-window.conversations.utils.createDivContainer = function(container = null, id = null, className = null, title = null) {
+window.conversations.utils.createDivContainer = function(container = null, className = null, title = null) {
     const div = document.createElement('div');
-    if (id) {
-        div.id = id;
-    }
     div.className = className || 'conversations-scrollable-group';
     if (container) {
         container.appendChild(div);
@@ -81,3 +73,13 @@ window.conversations.utils.createJsonDiv = function(container, json) {
     pre.textContent = JSON.stringify(json, null, 2);
     container.appendChild(pre);
 }
+
+
+const getCssVar = (name, fallback = '') => {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name);
+    return (v || fallback).trim();
+};
+
+const stateColor = (state) => {
+    return getCssVar(`--color-state-${state}`, '');
+};

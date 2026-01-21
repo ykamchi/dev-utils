@@ -21,11 +21,11 @@
             );
 
             // Page control
-            const controlDiv = window.conversations.utils.createDivContainer(null, null, '-');
+            const controlDiv = window.conversations.utils.createDivContainer(null, '-');
             this.page.updateControlArea(controlDiv);
 
             // Page buttons
-            const buttonsDiv = window.conversations.utils.createDivContainer(null, null, 'conversations-buttons-container');
+            const buttonsDiv = window.conversations.utils.createDivContainer(null, 'conversations-buttons-container');
             this.page.updateButtonsArea(buttonsDiv);
 
             this.loadContent();
@@ -59,7 +59,7 @@
 
         populateEditTab(container, groupDescription) {
             // Edit group section (for Properties tab)
-            const buttonContainer = window.conversations.utils.createDivContainer(container, null, 'conversations-buttons-container');
+            const buttonContainer = window.conversations.utils.createDivContainer(container, 'conversations-buttons-container');
             new window.ButtonComponent(buttonContainer, '💾', () => this.saveGroupProperties(), window.ButtonComponent.TYPE_GHOST, '💾 Save instruction');
             this.groupEditor = new window.conversations.ManageGroupEditorComponent(container, this.groupName, groupDescription); 
         }
@@ -85,7 +85,7 @@
                 }
 
                 // Buttons container
-                const buttonContainer = window.conversations.utils.createDivContainer(seedGroupDiv, null, 'conversations-buttons-container');
+                const buttonContainer = window.conversations.utils.createDivContainer(seedGroupDiv, 'conversations-buttons-container');
                 new window.ButtonComponent(buttonContainer, '📤 Start seeding selected items', () => this.startSeedingData(seedingData), window.ButtonComponent.TYPE_GHOST, '💾 Save instruction');
 
                 // Seed data list
@@ -95,31 +95,30 @@
                      
                     // const headerContent = window.conversations.utils.createDivContainer(); 
 
-                    const headerContent = window.conversations.utils.createDivContainer(this.container, null, 'conversations-card-wrapper');
+                    const headerContent = window.conversations.utils.createDivContainer(this.container, 'conversations-card-wrapper');
 
                     // Icon 
-                    window.conversations.utils.createReadOnlyText(headerContent, null, icon, 'conversations-list-card-icon');
+                    window.conversations.utils.createReadOnlyText(headerContent, icon, 'conversations-list-card-icon');
 
                     // Info
-                    const info = window.conversations.utils.createDivContainer(headerContent, null, 'conversations-card-info');
+                    const info = window.conversations.utils.createDivContainer(headerContent, 'conversations-card-info');
 
                     // Name
-                    const nameWrapper = window.conversations.utils.createDivContainer(info, null, 'conversation-container-horizontal');
+                    const nameWrapper = window.conversations.utils.createDivContainer(info, 'conversation-container-horizontal');
                     new window.CheckboxComponent(nameWrapper, seedEntry.include, (checked) => {
                         seedEntry.include = checked;
                     }, null, !seedEntry.valid);
 
-                    window.conversations.utils.createReadOnlyText(nameWrapper, null, seedEntry.type + ' - ' + seedEntry.folderName, 'conversations-card-name');
+                    window.conversations.utils.createReadOnlyText(nameWrapper, seedEntry.type + ' - ' + seedEntry.folderName, 'conversations-card-name');
 
                     // Description
                     const description = `${seedEntry.type} • ${seedEntry.folderName} ${!seedEntry.valid ? ' • Invalid' : ''}`
-                    window.conversations.utils.createReadOnlyText(info, null, description, seedEntry.valid ? 'conversations-card-description' : 'conversations-error');
-
+                    window.conversations.utils.createReadOnlyText(info, description, seedEntry.valid ? 'conversations-card-description' : 'conversations-error');
 
                     // Create body content
                     const bodyContent = window.conversations.utils.createDivContainer();
                     if (!seedEntry.valid) {
-                        window.conversations.utils.createReadOnlyText(bodyContent, null, seedEntry.error, 'conversations-message-error');
+                        window.conversations.utils.createReadOnlyText(bodyContent, seedEntry.error, 'conversations-message-error');
                     } else {
 
                         if (seedEntry.type === 'members') {
@@ -130,8 +129,8 @@
                             window.conversations.utils.createJsonDiv(infoGroup, seedEntry.infoContent);
                             const instructionsGroup = window.conversations.utils.createDivContainer(bodyContent);
                             window.conversations.utils.createLabel(instructionsGroup, 'Instruction Content:');
-                            window.conversations.utils.createReadOnlyText(instructionsGroup, null, seedEntry.instructionContent || 'No content', null);
-                            const feedbackGroup = window.conversations.utils.createDivContainer(bodyContent, null, 'conversation-container-vertical');
+                            window.conversations.utils.createReadOnlyText(instructionsGroup, seedEntry.instructionContent || 'No content');
+                            const feedbackGroup = window.conversations.utils.createDivContainer(bodyContent, 'conversation-container-vertical');
                             window.conversations.utils.createLabel(feedbackGroup, 'Feedback Content:');
                             window.conversations.utils.createJsonDiv(feedbackGroup, seedEntry.feedbackContent);
                         }
@@ -143,7 +142,7 @@
                     
                 });
             } else {
-                const noMembersSeedDiv = window.conversations.utils.createDivContainer(container, null, 'conversations-message-empty');
+                const noMembersSeedDiv = window.conversations.utils.createDivContainer(container, 'conversations-message-empty');
                 noMembersSeedDiv.textContent = 'No seed files were found.';
             }
         }

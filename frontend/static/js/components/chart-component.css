@@ -1,0 +1,38 @@
+/* chart-component.css */
+
+/* Optional theme vars */
+:root {
+    --color-chart-bg: transparent;
+    --color-chart-border: rgba(0,0,0,0.08);
+    --color-chart-title: var(--color-text-main, #333);
+}
+
+.framework-chart-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.framework-chart-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-chart-title);
+    line-height: 18px;
+}
+
+.framework-chart-wrapper {
+    position: relative; /* required for Chart.js responsive + maintainAspectRatio:false */
+    width: 100%;
+    border: 1px solid var(--color-chart-border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-button);
+    background: var(--color-chart-bg);
+    overflow: hidden;
+}
+
+.framework-chart-canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}

@@ -98,6 +98,7 @@ window.conversations.api.fetchGroups = async function (spinnerContainer) {
 window.conversations.api.addGroup = async function (spinnerContainer, groupName, groupDescription) {
     // Show loading spinner while adding group
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Adding group ${groupName}...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+    
     try {
         const resp = await fetch('/api/dev-tool-conversations/add_group', {
             method: 'POST',
@@ -127,6 +128,7 @@ window.conversations.api.addGroup = async function (spinnerContainer, groupName,
 window.conversations.api.deleteGroup = async function (spinnerContainer, groupName) {
     // Show loading spinner while deleting group
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Deleting group ${groupName}...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+    
     try {
         const resp = await fetch('/api/dev-tool-conversations/delete_group', {
             method: 'POST',
@@ -155,6 +157,7 @@ window.conversations.api.deleteGroup = async function (spinnerContainer, groupNa
 window.conversations.api.updateGroup = async function (spinnerContainer, oldGroupName, newGroupName, newDescription) {
     // Show loading spinner while updating group
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Updating group ${oldGroupName}...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+    
     try {
         const resp = await fetch('/api/dev-tool-conversations/update_group', {
             method: 'POST',
@@ -185,6 +188,7 @@ window.conversations.api.updateGroup = async function (spinnerContainer, oldGrou
 window.conversations.api.fetchMemberConversations = async function (container, memberId, conversation_type, only_last = false) {
     // Show loading spinner while fetching
     const spinner = new window.SpinnerComponent(container, { text: 'Loading member conversations ...', size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+    
     try {
         const resp = await fetch('/api/dev-tool-conversations/member_conversations', {
             method: 'POST',
@@ -277,6 +281,7 @@ window.conversations.api.deleteGroupInstructions = async function (spinnerContai
 window.conversations.api.updateGroupInstructions = async function (spinnerContainer, groupName, instructionsType, instructions, feedbackDef, info) {
     // Show loading spinner while updating instructions
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Updating instructions for ${groupName}...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+    
     try {
         const resp = await fetch('/api/dev-tool-conversations/update_group_instructions', {
             method: 'POST',
@@ -310,6 +315,7 @@ window.conversations.api.updateGroupInstructions = async function (spinnerContai
 window.conversations.api.addGroupInstructions = async function (spinnerContainer, groupName, instructions, feedbackDef, info) {
     // Show loading spinner while adding instructions
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Adding instructions ...${info.name}`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+    
     try {
         const resp = await fetch('/api/dev-tool-conversations/add_group_instructions', {
             method: 'POST',
