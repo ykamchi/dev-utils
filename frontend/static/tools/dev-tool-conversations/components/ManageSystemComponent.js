@@ -7,16 +7,9 @@
             this.container = container;
             this.groupName = groupName;
             this.optionId = optionId;
-            this.group = null;
             this.manageOptions = manageOptions;
-            this.groupEditor = null;
             this.page = null;
             this.queueState = null;
-            this.timelineDiv = null;
-
-            // IMPORTANT: make sure state is always an object (never null)
-            this._statusChartState = null;
-
             this.render();
         }
 
@@ -35,19 +28,23 @@
 
             // Page buttons
             const buttonsDiv = window.conversations.utils.createDivContainer(null, 'conversations-buttons-container');
-            new window.ButtonComponent(buttonsDiv, 'Button', null, window.ButtonComponent.TYPE_GHOST, 'Button');
+            // new window.ButtonComponent(buttonsDiv, 'Button', null, window.ButtonComponent.TYPE_GHOST, 'Button');
             this.page.updateButtonsArea(buttonsDiv);
 
+            this.load();
+        }
+
+        async load() {
+            // Fetch queue state
+            this.queueState = await window.conversations.system_api.fetchQueueState();
             this.loadControl();
             this.loadContent();
+
         }
 
         async loadControl() {
             // Page control
             const controlDiv = window.conversations.utils.createDivContainer(null, '-');
-
-            // Fetch queue state
-            this.queueState = await window.conversations.system_api.fetchQueueState(controlDiv);
 
             // Queue state toggle
             new window.conversations.utils.createLabel(controlDiv, 'Queue State:');
@@ -61,7 +58,7 @@
                     } else {
                         await window.conversations.system_api.queuePause(this.container);
                     }
-                    this.loadControl();
+                    this.load();
                 },
                 'Active',
                 'Paused',
@@ -77,8 +74,32 @@
             // Page content
             const contentDiv = window.conversations.utils.createDivContainer();
 
-            const statusTimelineChart = new window.conversations.charts.ChartStatusTimelineComponent(contentDiv);
+            // Create wrapper
+            const wrapper = window.conversations.utils.createDivContainer(contentDiv, 'conversations-page-wrapper');
+            
+            const systemQueueStatusDiv = window.conversations.utils.createDivContainer(wrapper);
 
+            // Running
+            const runningDiv = window.conversations.utils.createDivContainer(systemQueueStatusDiv,  'conversation-field-container-vertical');
+            window.conversations.utils.createLabel(runningDiv, 'Running:');
+            window.conversations.utils.createReadOnlyText(runningDiv, this.queueState.running);
+
+
+            // Paused
+            const pausedDiv = window.conversations.utils.createDivContainer(systemQueueStatusDiv,  'conversation-field-container-vertical');
+            window.conversations.utils.createLabel(pausedDiv, 'Paused:');
+            window.conversations.utils.createReadOnlyText(pausedDiv, this.queueState.paused);
+
+            // Max Concurrent
+            const maxConcurrentDiv = window.conversations.utils.createDivContainer(systemQueueStatusDiv, 'conversation-field-container-vertical');
+            window.conversations.utils.createLabel(maxConcurrentDiv, 'Max Concurrent:');
+            window.conversations.utils.createReadOnlyText(maxConcurrentDiv, this.queueState.max_concurrent);
+
+            // Available Slots
+            const availableSlotsDiv = window.conversations.utils.createDivContainer(systemQueueStatusDiv, 'conversation-field-container-vertical');
+            window.conversations.utils.createLabel(availableSlotsDiv, 'Available Slots:');
+            window.conversations.utils.createReadOnlyText(availableSlotsDiv, this.queueState.available_slots);
+            
             // Update content area
             this.page.updateContentArea(contentDiv);
         }

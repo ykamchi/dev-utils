@@ -1,6 +1,7 @@
 // dev-tool-conversations: Regular tool entry point for the conversations dev tool
 window.tool_script = {
     async init(container) {
+
         console.log('[Conversations Tool] Initializing conversations tool...');
 
         // Clear container
@@ -21,6 +22,13 @@ window.tool_script = {
         // Create content container (will hold either members list or manage component) at the bottom of left
         this.contentContainer = window.conversations.utils.createDivContainer(left, 'conversations-layout-content-container');
 
+        // Register the Chart datalabels plugin globally if available, but disable by default
+        if (typeof Chart !== 'undefined' && typeof ChartDataLabels !== 'undefined') {
+            Chart.register(ChartDataLabels);
+            Chart.defaults.set('plugins.datalabels', {
+                display: false // Disable by default
+            });
+        }
         // Initialize group selection component
         // MenuGroupSelectionComponent expose the selectedGroup and selectedMode properties
         // the initial values of selectedGroup and selectedMode will be available and triggered 

@@ -46,13 +46,30 @@
     gap: 16px;
 }
 
-.conversations-container-horizontal-space-between {
+.conversation-container-horizontal-space-between {
     display: flex;
     justify-content: space-between;
     align-items: end;
 }
 
 .conversation-container-vertical {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: auto;
+    gap: 16px;
+}
+
+.conversation-container-vertical-wrap {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: auto;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.conversation-field-container-vertical {
     display: flex;
     flex-direction: column;
     margin-bottom: 16px;
@@ -320,7 +337,7 @@
 }
 
 .conversations-page-title-info {
-    width: 200px;
+    /* width: 200px; */
     display: flex;
     flex-direction: column;
 }
@@ -354,7 +371,6 @@
 /************************************************************************/
 .conversations-badge-generic {
     text-align: center;
-    margin-left: auto;
     font-size: 12px;
     padding: 4px 8px;
     border-radius: 4px;
@@ -365,7 +381,6 @@
 
 .conversations-badge-state-running {
     text-align: center;
-    margin-left: auto;
     font-size: 12px;
     padding: 4px 8px;
     border-radius: 4px;
@@ -376,7 +391,6 @@
 
 .conversations-badge-state-pending {
     text-align: center;
-    margin-left: auto;
     font-size: 12px;
     padding: 4px 8px;
     border-radius: 4px;
@@ -385,20 +399,8 @@
     font-weight: 700;
 }
 
-.conversations-badge-state-queued {
-    text-align: center;
-    margin-left: auto;
-    font-size: 12px;
-    padding: 4px 8px;
-    border-radius: 4px;
-    background: var(--color-state-queued);
-    color: var(--color-text-light);
-    font-weight: 700;
-}
-
 .conversations-badge-state-completed {
     text-align: center;
-    margin-left: auto;
     font-size: 12px;
     padding: 4px 8px;
     border-radius: 4px;
@@ -408,7 +410,6 @@
 }
 .conversations-badge-state-failed {
     text-align: center;
-    margin-left: auto;
     font-size: 12px;
     padding: 4px 8px;
     border-radius: 4px;

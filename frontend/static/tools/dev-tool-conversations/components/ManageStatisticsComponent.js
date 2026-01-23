@@ -34,7 +34,7 @@
         async loadContent() {
             // Page content
             const contentDiv = window.conversations.utils.createDivContainer();
-            window.conversations.utils.createLabel(contentDiv, 'Manage statistics', 'conversations-page-section-header');
+            new window.conversations.charts.ChartStatusTimelineComponent(contentDiv);
             this.page.updateContentArea(contentDiv);
         }
     }

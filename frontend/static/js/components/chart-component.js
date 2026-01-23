@@ -232,12 +232,23 @@
                 }
             }
         },
-
+        
         [window.ChartComponent.TYPE_BAR]: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: true }
+                legend: { display: true },
+                datalabels: {
+                    display: true,
+                    color: 'white',
+                    font: {
+                        weight: 'bold',
+                        size: 11
+                    },
+                    formatter: (value) => {
+                        return value > 0 ? value : '';
+                    }
+                },
             },
             scales: {
                 y: { beginAtZero: true }

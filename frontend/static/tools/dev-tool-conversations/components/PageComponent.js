@@ -17,14 +17,12 @@
 
         // Render the main structure of the left side
         render() {
-            this.container.innerHTML = '';
-
             // Create wrapper
             const wrapper = window.conversations.utils.createDivContainer(this.container, 'conversations-page-wrapper');
 
             // Page header area
             const pageHeaderArea = window.conversations.utils.createDivContainer(wrapper, 'conversations-page-header-area');
-            
+
             // Page title box with emoji, title, and fields if provided
             if (this.emoji && this.title && this.fields) {
                 this.renderPageTitleBox(pageHeaderArea);
@@ -89,17 +87,23 @@
 
         updateControlArea(newControlArea) {
             this.pageControlArea.innerHTML = '';
-            this.pageControlArea.appendChild(newControlArea);
+            if (newControlArea !== null) {
+                this.pageControlArea.appendChild(newControlArea);
+            }
         }
 
         updateButtonsArea(newButtonsArea) {
             this.pageButtonsArea.innerHTML = '';
-            this.pageButtonsArea.appendChild(newButtonsArea);
+            if (newButtonsArea !== null) {
+                this.pageButtonsArea.appendChild(newButtonsArea);
+            }
         }
 
         updateContentArea(newContentArea) {
             this.pageContentArea.innerHTML = '';
-            this.pageContentArea.appendChild(newContentArea);
+            if (newContentArea !== null) {
+                this.pageContentArea.appendChild(newContentArea);
+            }
         }
     }
 

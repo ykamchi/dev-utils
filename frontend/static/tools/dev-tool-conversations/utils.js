@@ -6,7 +6,7 @@ window.conversations.utils = window.conversations.utils || {};
 
 
 // Create a label element
-window.conversations.utils.createLabel = function(container, text, alignRight = false) {
+window.conversations.utils.createLabel = function (container, text, alignRight = false) {
     const label = document.createElement('label');
     label.className = 'conversations-instruction-field-label';
     label.textContent = text;
@@ -19,7 +19,7 @@ window.conversations.utils.createLabel = function(container, text, alignRight = 
 
 
 // Create a read-only text div
-window.conversations.utils.createReadOnlyText = function(container, value, className = null, title = null) {
+window.conversations.utils.createReadOnlyText = function (container, value, className = null, title = null) {
     const div = document.createElement('div');
     div.className = className || 'conversations-instruction-field-readonly';
     div.textContent = value;
@@ -32,7 +32,7 @@ window.conversations.utils.createReadOnlyText = function(container, value, class
 
 
 // Create a text input element
-window.conversations.utils.createNumberInput = function(container, value) {
+window.conversations.utils.createNumberInput = function (container, value) {
     const input = document.createElement('input');
     input.className = 'conversations-instruction-field-input';
     input.type = 'number';
@@ -43,7 +43,7 @@ window.conversations.utils.createNumberInput = function(container, value) {
 
 
 // Create a span element
-window.conversations.utils.createSpan = function(container = null, value, className = null) {
+window.conversations.utils.createSpan = function (container = null, value, className = null) {
     const span = document.createElement('span');
     span.className = className || '';
     span.textContent = value;
@@ -53,7 +53,7 @@ window.conversations.utils.createSpan = function(container = null, value, classN
 
 
 // Create a div container
-window.conversations.utils.createDivContainer = function(container = null, className = null, title = null) {
+window.conversations.utils.createDivContainer = function (container = null, className = null, title = null) {
     const div = document.createElement('div');
     div.className = className || 'conversations-scrollable-group';
     if (container) {
@@ -67,16 +67,36 @@ window.conversations.utils.createDivContainer = function(container = null, class
 
 
 // Create a div that displays JSON content
-window.conversations.utils.createJsonDiv = function(container, json) {
+window.conversations.utils.createJsonDiv = function (container, json) {
     const pre = document.createElement('pre');
     pre.className = 'conversations-json-div';
     pre.textContent = JSON.stringify(json, null, 2);
     container.appendChild(pre);
 }
 
+window.conversations.utils.updateChartInstance = function (container, chartInstance, type, data, options) {
+    container.innerHTML = '';
+    if (chartInstance && typeof chartInstance.destroy === 'function') {
+        try { chartInstance.destroy(); } catch (e) { }
+    }
+    chartInstance = new window.ChartComponent(
+        container,
+        type,
+        data,
+        options,
+        '100%',
+        '320px',
+        'Status timeline'
+    );
+
+    if (chartInstance && typeof chartInstance.refresh === 'function') {
+        setTimeout(() => chartInstance.refresh(), 0);
+    }
+
+};
 
 const getCssVar = (name, fallback = '') => {
-    const v = getComputedStyle(document.documentElement).getPropertyValue(name);
+    const v = getComputedStyle(document.body).getPropertyValue(name);
     return (v || fallback).trim();
 };
 

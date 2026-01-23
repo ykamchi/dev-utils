@@ -9,21 +9,22 @@ class ListComponent {
      * @param {Function} renderItemFunction - Function(item) => HTMLElement, returns the DOM for each item.
      * @param {string} [selectionMode] - ListComponent.SELECTION_MODE_NONE | ListComponent.SELECTION_MODE_SINGLE | ListComponent.SELECTION_MODE_MULTIPLE
      * @param {Function} [onSelect] - Callback(selectedItems)
-     * @param {Function} [filterCondition] - Function(item, query) => boolean, returns true if item matches the search query
+     * @param {Function} [onFilter] - Function(item, query) => boolean, returns true if item matches the search query
      */
-    constructor(container, items, renderItemFunction, selectionMode = ListComponent.SELECTION_MODE_NONE, onSelect = null, filterCondition = null, sortFields = {} ) {
+    constructor(container, items, renderItemFunction, selectionMode = ListComponent.SELECTION_MODE_NONE, onSelect = null, onFilter = null, sortFields = []) {
         this.container = container;
         this.allItems = items || [];
         this.items = items || [];
         this.renderItemFunction = renderItemFunction;
         this.selectionMode = selectionMode;
         this.onSelect = onSelect;
-        this.filterCondition = filterCondition;
+        this.onFilter = onFilter;
         this.sortFields = sortFields;
         this.selectedIndices = [];
         this.selectedItems = new Set(); // Track selected items by reference
         this.searchInput = null;
         this.listContainer = null;
+        this.selectedSortField = null;
         this.render();
     }
 
@@ -38,45 +39,53 @@ class ListComponent {
             this.container.appendChild(wrapper);
         }
         wrapper.innerHTML = '';
-        
-        if (this.filterCondition || Object.keys(this.sortFields).length > 0) {
+
+        if (this.onFilter || (this.sortFields && this.sortFields.length > 0)) {
             const searchContainer = document.createElement('div');
             searchContainer.className = 'list-component-search-container';
-        
 
-            if (Object.keys(this.sortFields).length > 0) {
-                const sortFieldsSelect = new window.SelectComponent(
-                    searchContainer,
-                    Object.keys(this.sortFields).map(key => ({ label: key, value: key })),
+            if (this.sortFields && Object.keys(this.sortFields).length > 0) {
+                this.selectedSortField = this.sortFields[0];
+
+                const sortContainer = document.createElement('div');
+                sortContainer.className = 'list-component-sort-container';
+                searchContainer.appendChild(sortContainer);
+
+                // Create sort direction button
+                this.sortButton = document.createElement('button');
+                this.sortButton.className = 'list-component-sort-button';
+                this.sortButton.title = 'Sort items';
+                this.sortButton.addEventListener('click', () => {
+                    this.selectedSortField.direction = -this.selectedSortField.direction;
+                    this.sortItems();
+                    this.renderList();
+                });
+                sortContainer.appendChild(this.sortButton);
+
+                // Create sort select component
+                this.sortSelect = new window.SelectComponent(
+                    sortContainer,
+                    this.sortFields.map(field => ({ label: field.label, value: field.label })),
                     (selectedSortField) => {
                         if (selectedSortField) {
-                            console.log("Sorting by:", selectedSortField);
-                            this.items.sort(this.sortFields[selectedSortField]);
+                            this.selectedSortField = this.sortFields.find(field => field.label === selectedSortField);
+                            this.sortItems();
                             this.renderList();
                         }
                     },
                     'Sort by...'
                 );
 
-                const sortButton = document.createElement('button');
-                sortButton.className = 'list-component-sort-button';
-                sortButton.textContent = '⇅';
-                sortButton.title = 'Sort items';
-                sortButton.addEventListener('click', () => {
-                    if (this.sortFunction) {
-                        this.items.sort(this.sortFunction);
-                        this.renderList();
-                    }
-                });
-                searchContainer.appendChild(sortButton);
+                // Initial sort
+                this.sortItems();
             }
 
-            if (this.filterCondition) {
+            if (this.onFilter) {
                 // Create search input wrapper with icon inside
                 const inputWrapper = document.createElement('div');
                 inputWrapper.className = 'list-component-search-input-wrapper';
                 searchContainer.appendChild(inputWrapper);
-                
+
                 // Search input
                 this.searchInput = document.createElement('input');
                 this.searchInput.type = 'text';
@@ -84,52 +93,61 @@ class ListComponent {
                 this.searchInput.placeholder = 'Search...';
                 this.searchInput.addEventListener('input', () => this.filterItems(this.searchInput.value));
                 inputWrapper.appendChild(this.searchInput);
-                
+
                 // Search icon (positioned on the right inside the input)
                 const searchIcon = document.createElement('span');
                 searchIcon.className = 'list-component-search-icon';
                 searchIcon.textContent = '🔍';
-                inputWrapper.appendChild(searchIcon);                
+                inputWrapper.appendChild(searchIcon);
             }
 
             wrapper.appendChild(searchContainer);
         }
-            
+
         // Create list container
         this.listContainer = document.createElement('div');
         this.listContainer.className = 'list-component-list-container';
         wrapper.appendChild(this.listContainer);
-        
+
         // Render the list
         this.renderList();
     }
 
+    sortItems() {
+        this.sortSelect.setValue(this.selectedSortField.label);
+        this.sortButton.textContent = this.selectedSortField.direction === 1 ? '⬆' : '⬇';
+        this.items.sort(this.selectedSortField.func);
+        if (this.selectedSortField.direction === -1) {
+            this.items.reverse();
+        }
+    }
+
     filterItems(query) {
         query = (query || '').toLowerCase();
-        
+
         if (!query) {
             this.items = [...this.allItems];
         } else {
-            this.items = this.allItems.filter(item => this.filterCondition(item, query));
+            this.items = this.allItems.filter(item => this.onFilter(item, query));
         }
-        
+
         this.renderList();
     }
 
     renderList() {
         // Clear list container
         this.listContainer.innerHTML = '';
-        
+
         // Rebuild selectedIndices based on which items still exist
         const oldSelectedCount = this.selectedIndices.length;
         this.selectedIndices = [];
-        
+
         this.items.forEach((item, idx) => {
             if (this.selectedItems.has(item)) {
                 this.selectedIndices.push(idx);
             }
         });
-        
+
         // Remove items from selectedItems that are no longer in the list
         const currentItemsSet = new Set(this.items);
         const itemsToRemove = [];
@@ -139,10 +157,10 @@ class ListComponent {
             }
         });
         itemsToRemove.forEach(item => this.selectedItems.delete(item));
-        
+
         // Check if selection changed
         const selectionChanged = oldSelectedCount !== this.selectedIndices.length;
-        
+
         const ul = document.createElement('ul');
         ul.className = 'list-component-list';
         let hasItems = false;
@@ -172,7 +190,7 @@ class ListComponent {
             ul.appendChild(li);
         }
         this.listContainer.appendChild(ul);
-        
+
         // Notify if selection changed
         if (selectionChanged && this.onSelect) {
             const selectedItems = this.selectedIndices.map(i => this.items[i]);
@@ -182,7 +200,7 @@ class ListComponent {
 
     handleSelect(idx) {
         const item = this.items[idx];
-        
+
         if (this.selectionMode === ListComponent.SELECTION_MODE_SINGLE) {
             this.selectedIndices = [idx];
             this.selectedItems.clear();
@@ -259,7 +277,7 @@ class ListComponent {
             }
         }
     }
-}   
+}
 
 window.ListComponent = ListComponent;
 // Static selection mode constants for encapsulation and external usage

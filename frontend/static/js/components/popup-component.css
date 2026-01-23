@@ -81,7 +81,6 @@
 
 /* Popup content */
 .framework-popup-content {
-    padding: 20px;
     overflow: auto;
     display: flex;
     flex-direction: column;

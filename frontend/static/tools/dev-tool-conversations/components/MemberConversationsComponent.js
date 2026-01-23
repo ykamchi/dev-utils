@@ -52,9 +52,7 @@
             for (const conversation of conversations) {
                 conversation['names'] = conversation.members.map(m => m.member_nick_name).filter(name => name !== this.membersMap[this.memberId].name).join(', ');
             }
-            // // Sort by created_at descending (newest first)
-            conversations.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
+            
             // Page content
             const contentDiv = window.conversations.utils.createDivContainer();
             new window.ListComponent(contentDiv, conversations, (conversation) => {
@@ -67,12 +65,11 @@
                     
                     return item.names.toLowerCase().includes(query.toLowerCase());
                 }, 
-                { 
-                    'Creation Date': (a, b) => new Date(b.created_at) - new Date(a.created_at),
-                    'Name': (a, b) => { return a.names < b.names ? -1 : 1; }
-                    
-
-                } 
+                [
+                    { label: 'Name', func: (a, b) => { return a.names < b.names ? -1 : 1; } , direction: 1 },
+                    { label: 'Creation Date', func: (a, b) => new Date(a.created_at) - new Date(b.created_at), direction: -1 },
+                    { label: 'Instruction Type', func: (a, b) => a.info.type < b.info.type ? -1 : 1, direction: 1 },
+                ] 
             );
             this.page.updateContentArea(contentDiv);
         }

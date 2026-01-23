@@ -385,6 +385,26 @@ def register_apis(app, base_path: str):
             return jsonify({'success': False, 'error': 'Failed to contact upstream conversation service'}), 502
         
 
+
+    @app.route(f"{base_path}/conversation_messages", methods=["POST"])
+    def conversation_messages():
+        """
+        Proxy to upstream /api/conversation_messages (POST) to get conversation messages.
+        Expects JSON payload: {"conversation_id": ...}
+        """
+        payload = request.get_json(force=True)
+        conversation_id = payload.get('conversation_id')
+        if not conversation_id:
+            return jsonify({'success': False, 'error': 'missing conversation_id'}), 400
+        try:
+            upstream_resp = _proxy_post('/api/conversation_messages', {'conversation_id': conversation_id})
+            return jsonify(upstream_resp)
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/conversation_messages')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream conversation_messages service'}), 502
+
+
+
 ########################################################################################################################################################
 # System APIs
 # These APIs are intended to be used by the frontend system components for system management.

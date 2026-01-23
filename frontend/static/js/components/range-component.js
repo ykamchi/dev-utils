@@ -29,72 +29,72 @@ class RangeComponent {
             return;
         }
 
-    // Create .range-item containers for min and max
-    const minItem = document.createElement('div');
-    minItem.className = 'range-item';
-    const maxItem = document.createElement('div');
-    maxItem.className = 'range-item';
+        // Create .range-item containers for min and max
+        const minItem = document.createElement('div');
+        minItem.className = 'range-item';
+        const maxItem = document.createElement('div');
+        maxItem.className = 'range-item';
 
-    // Min input
-    const minInput = document.createElement('input');
-    minInput.type = 'number';
-    minInput.className = 'range-input';
-    minInput.id = 'range-min-input';
-    minInput.value = this.range.min;
-    minInput.setAttribute('aria-label', 'Min');
+        // Min input
+        const minInput = document.createElement('input');
+        minInput.type = 'number';
+        minInput.className = 'range-input';
+        minInput.id = 'range-min-input';
+        minInput.value = this.range.min;
+        minInput.setAttribute('aria-label', 'Min');
 
-    // Max input
-    const maxInput = document.createElement('input');
-    maxInput.type = 'number';
-    maxInput.className = 'range-input';
-    maxInput.id = 'range-max-input';
-    maxInput.value = this.range.max;
-    maxInput.setAttribute('aria-label', 'Max');
+        // Max input
+        const maxInput = document.createElement('input');
+        maxInput.type = 'number';
+        maxInput.className = 'range-input';
+        maxInput.id = 'range-max-input';
+        maxInput.value = this.range.max;
+        maxInput.setAttribute('aria-label', 'Max');
 
-    // Add event listeners
-    minInput.addEventListener('change', () => {
-        this.handleMinChange(minInput, maxInput)
-        if (this.onChange) {
-            this.onChange(this.getRange());
-        }
-    });
-    minInput.addEventListener('blur', () => {
-        this.handleMinChange(minInput, maxInput);
-        if (this.onChange) {
-            this.onChange(this.getRange());
-        }
-    });
-    maxInput.addEventListener('change', () => {
-        this.handleMaxChange(minInput, maxInput);
-        if (this.onChange) {
-            this.onChange(this.getRange());
-        }
-    });
-    maxInput.addEventListener('blur', () => {
-        this.handleMaxChange(minInput, maxInput);
-        if (this.onChange) {
-            this.onChange(this.getRange());
-        }
-    });
-    // Add inputs to their wrappers
-    minItem.appendChild(minInput);
-    maxItem.appendChild(maxInput);
+        // Add event listeners
+        minInput.addEventListener('change', () => {
+            this.handleMinChange(minInput, maxInput)
+            if (this.onChange) {
+                this.onChange(this.getRange());
+            }
+        });
+        minInput.addEventListener('blur', () => {
+            this.handleMinChange(minInput, maxInput);
+            if (this.onChange) {
+                this.onChange(this.getRange());
+            }
+        });
+        maxInput.addEventListener('change', () => {
+            this.handleMaxChange(minInput, maxInput);
+            if (this.onChange) {
+                this.onChange(this.getRange());
+            }
+        });
+        maxInput.addEventListener('blur', () => {
+            this.handleMaxChange(minInput, maxInput);
+            if (this.onChange) {
+                this.onChange(this.getRange());
+            }
+        });
+        // Add inputs to their wrappers
+        minItem.appendChild(minInput);
+        maxItem.appendChild(maxInput);
 
-    // Separator
-    const sep = document.createElement('span');
-    sep.className = 'range-separator';
-    sep.textContent = '–';
+        // Separator
+        const sep = document.createElement('span');
+        sep.className = 'range-separator';
+        sep.textContent = '–';
 
-    // Add to wrapper: minItem, sep, maxItem
-    this.rangeWrapper.appendChild(minItem);
-    this.rangeWrapper.appendChild(sep);
-    this.rangeWrapper.appendChild(maxItem);
+        // Add to wrapper: minItem, sep, maxItem
+        this.rangeWrapper.appendChild(minItem);
+        this.rangeWrapper.appendChild(sep);
+        this.rangeWrapper.appendChild(maxItem);
 
-    // Store references for future updates
-    this.rangeWrapper.minItem = minItem;
-    this.rangeWrapper.maxItem = maxItem;
-    this.rangeWrapper.minInput = minInput;
-    this.rangeWrapper.maxInput = maxInput;
+        // Store references for future updates
+        this.rangeWrapper.minItem = minItem;
+        this.rangeWrapper.maxItem = maxItem;
+        this.rangeWrapper.minInput = minInput;
+        this.rangeWrapper.maxInput = maxInput;
     }
 
     handleMinChange(minInput, maxInput) {

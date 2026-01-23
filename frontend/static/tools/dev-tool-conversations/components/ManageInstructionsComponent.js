@@ -29,54 +29,60 @@
             this.page.updateButtonsArea(pageButtons);
 
             // Load and display the content
-            this.loadContent();
+            this.load();
         }
 
         // Get the group available instructions and render them in tabs according to the conversation types
-        async loadContent() {
+        async load() {
             // Fetch instruction info
             this.instructions = await window.conversations.api.fetchGroupInstructions(null, this.groupName, this.manageOptions[this.optionId].info.conversationType);
 
-            // Create content container for instruction details
-            const tabContent = window.conversations.utils.createDivContainer();
-
-            // Set the selected instruction as the first one and add select component
+            // Page control
             const controlDiv = window.conversations.utils.createDivContainer(null, '-');
-            if (this.instructions.length > 0) {
+
+            if (this.instructions.length <= 0) {
+                // No instructions found show a message
+                window.conversations.utils.createReadOnlyText(controlDiv, 'No instructions available for this conversation type.', 'conversations-message-empty');
+                this.page.updateControlArea(controlDiv);
+                this.page.updateContentArea(null);
+            } else {
+                // Set the selected instruction as the first one if not already selected
                 if (!this.selectedInstructionType) {
+                    // Set to first instruction type by default
                     this.selectedInstructionType = this.instructions[0].instructions_type;
+
+                } else {
+                    // Continue using the existing selected instruction type
                 }
+
                 // Add select component with first instruction as default
-                const selectInstructionWrapper = window.conversations.utils.createDivContainer(controlDiv);
-                window.conversations.utils.createLabel(selectInstructionWrapper, 'Select Instruction:');
+                const selectInstructionDiv = window.conversations.utils.createDivContainer(controlDiv);
+                window.conversations.utils.createLabel(selectInstructionDiv , 'Select Instruction:');
                 new window.SelectComponent(
-                    selectInstructionWrapper,
+                    selectInstructionDiv, 
                     this.instructions.map(entry => ({ label: entry.info.name, value: entry.instructions_type })).sort((a, b) => a.label.localeCompare(b.label)),
-                    (selectedType) => this.loadSelectedInstructions(tabContent, this.instructions, selectedType),
+                    (selectedType) => {
+                        this.selectedInstructionType = selectedType;
+                        this.loadSelectedInstructions();
+                    },
                     'Select an instruction...',
                     this.selectedInstructionType
                 );
-            }
-            this.page.updateControlArea(controlDiv);
-
-            // Render the first instruction details
-            if (this.instructions.length === 0) {
-                const noInstructionsMessage = window.conversations.utils.createReadOnlyText(tabContent, 'No instructions available for this conversation type.', 'conversations-message-empty');
-                this.page.updateContentArea(noInstructionsMessage);
-            } else {
-                // Load details for the selected instruction type
-                this.loadSelectedInstructions(tabContent, this.instructions, this.selectedInstructionType);
-            }
+                
+                // Load the selected instruction details
+                this.loadSelectedInstructions();
+                this.page.updateControlArea(controlDiv);
+            } 
         }
 
-        loadSelectedInstructions(contentDiv, instructions, instructionType) {
+        loadSelectedInstructions() {
             // Find the selected instruction using the instructionType
-            const selectedInstruction = instructions.find(entry => entry.instructions_type === instructionType);
+            this.selectedInstruction = this.instructions.find(entry => entry.instructions_type === this.selectedInstructionType);
             
-            // Update the instructions editor
-            const content = window.conversations.utils.createDivContainer();
-            this.instructionsEditor = new window.conversations.ManageInstructionsEditorComponent(content, this.groupName, selectedInstruction);
-            this.page.updateContentArea(content);
+            // Update the page content with the instructions editor
+            const contentDiv = window.conversations.utils.createDivContainer();
+            this.instructionsEditor = new window.conversations.ManageInstructionsEditorComponent(contentDiv, this.groupName, this.selectedInstruction);
+            this.page.updateContentArea(contentDiv);
         }
 
         // Save the selected instruction
@@ -99,7 +105,7 @@
                 updatedInstructions.info
             );
             new window.AlertComponent('Save instructions', 'Instructions has been saved successfully.');
-            this.loadContent();
+            this.load();
         }
 
         // Delete the selected instruction
@@ -113,7 +119,7 @@
                     this.selectedInstructionType = null;
 
                     // Reload content
-                    this.loadContent();
+                    this.load();
                 }],
                 ['Cancel', () => { }]
             ]);
@@ -123,11 +129,12 @@
         async addInstruction() {
             const popup = new window.PopupComponent({
                 icon: this.manageOptions[this.optionId].icon,
-                title: 'View Profile Candidates',
-                width: 420,
+                title: 'Add new '+ window.conversations.CONVERSATION_TYPES_STRING(this.manageOptions[this.optionId].info.conversationType, false, true, false, false),
+                width: 720,
                 height: 720,
                 content: (container) => {
-                    const buttonContainer = window.conversations.utils.createDivContainer(container, 'conversations-buttons-container');
+                    const wrapperDiv = window.conversations.utils.createDivContainer(container, 'conversations-page-wrapper');
+                    const buttonContainer = window.conversations.utils.createDivContainer(wrapperDiv, 'conversations-buttons-container');
 
                     // Save instructions button
                     new window.ButtonComponent(buttonContainer, '💾', async () => {
@@ -141,7 +148,7 @@
                         );
                         popup.hide();
                         this.selectedInstructionType = result.data.instructions_type;
-                        this.loadContent();
+                        this.load();
 
                     }, window.ButtonComponent.TYPE_GHOST, '💾 Save instruction');
                     
@@ -154,7 +161,7 @@
                         feedback_def: window.conversations.DEFAULT_FEEDBACK_DEF
                     }
 
-                    const editorDiv = window.conversations.utils.createDivContainer(container);
+                    const editorDiv = window.conversations.utils.createDivContainer(wrapperDiv);
                     const instructionsEditor = new window.conversations.ManageInstructionsEditorComponent(editorDiv, this.groupName, instructions);
                 },
             });

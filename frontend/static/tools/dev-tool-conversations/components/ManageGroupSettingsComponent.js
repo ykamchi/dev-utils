@@ -65,8 +65,6 @@
         }
     
         async populateSeedDataTab(container) {
-            container.innerHTML = '';
-
             const seedGroupDiv = window.conversations.utils.createDivContainer(container);
 
             const seedingData = await window.conversations.api.fetchGroupSeedFiles(null, this.groupName);
@@ -130,7 +128,7 @@
                             const instructionsGroup = window.conversations.utils.createDivContainer(bodyContent);
                             window.conversations.utils.createLabel(instructionsGroup, 'Instruction Content:');
                             window.conversations.utils.createReadOnlyText(instructionsGroup, seedEntry.instructionContent || 'No content');
-                            const feedbackGroup = window.conversations.utils.createDivContainer(bodyContent, 'conversation-container-vertical');
+                            const feedbackGroup = window.conversations.utils.createDivContainer(bodyContent, 'conversation-field-container-vertical');
                             window.conversations.utils.createLabel(feedbackGroup, 'Feedback Content:');
                             window.conversations.utils.createJsonDiv(feedbackGroup, seedEntry.feedbackContent);
                         }

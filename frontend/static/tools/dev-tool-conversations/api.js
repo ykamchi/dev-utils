@@ -375,6 +375,33 @@ window.conversations.api.conversationStart = async function (spinnerContainer, g
     }
 };
 
+window.conversations.api.fetchConversationMessages = async function (spinnerContainer, conversationId) {
+    // Show loading spinner while fetching
+    const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Loading conversation messages ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+
+    try {
+        const resp = await fetch('/api/dev-tool-conversations/conversation_messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ conversation_id: conversationId })
+        });
+
+        const result = await resp.json();
+        spinner.remove();
+        if (result.success && result.data && Array.isArray(result.data)) {
+            return result.data;
+        } else {
+            throw new Error('Failed to fetch conversation messages: ' + (result.error || 'Unknown error'));
+        }
+    }
+    catch (e) {
+        spinner.remove();
+        new window.AlertComponent('API Error', 'Error fetching conversation messages.\nError: ' + (e.message || e.toString()));
+        console.error('Error fetching conversation messages:', e);
+        throw e;
+    }
+}
+
 window.conversations.api.fetchGroupSeeds = async function (spinnerContainer) {
     // Show loading spinner while fetching
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Loading group seeds ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });

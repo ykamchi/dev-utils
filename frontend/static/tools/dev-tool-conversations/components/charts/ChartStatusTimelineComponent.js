@@ -1,13 +1,5 @@
 (function () {
 
-    // Register the datalabels plugin globally if available, but disable by default
-    if (typeof Chart !== 'undefined' && typeof ChartDataLabels !== 'undefined') {
-        Chart.register(ChartDataLabels);
-        Chart.defaults.set('plugins.datalabels', {
-            display: false // Disable by default
-        });
-    }
-
     // All option value
     const ALL_VALUE = 'all';
 
@@ -55,13 +47,12 @@
     ];
 
     const STATES = [
-        { label: 'All', value: ALL_VALUE },
-        { label: 'Queued', value: 'queued' },
         { label: 'Running', value: 'running' },
         { label: 'Completed', value: 'completed' },
         { label: 'Pending', value: 'pending' },
         { label: 'Failed', value: 'failed' }
     ];
+    const STATE_VALUES = STATES.map(s => s.value);
 
     const INTERVALS = [
         { label: 'Hour', value: 'hour' },
@@ -80,13 +71,11 @@
                 group_name: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_group_name') || ALL_VALUE,
                 conversation_type: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_conversation_type') || ALL_VALUE,
                 instruction_type: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_instruction_type') || ALL_VALUE,
-                states: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_states') || ALL_VALUE,
+                states: window.StorageService.getStorageJSON('conversations_chart_status_timeline_states') || STATE_VALUES,
                 hours_back: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_hours_back') || 24,
                 interval: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_interval') || 'hour',
                 measure_field: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_measure_field') || 'total_conversations'
             };
-
-            this.page = null;
 
             this.instructionTypeControlDiv = null;
             this.charWrapper = null;
@@ -95,44 +84,69 @@
         }
 
         render() {
-            // Create the main page component
-            this.page = new window.conversations.PageComponent(this.container);
-
-            this.loadControl();
-
-            // Page buttons
-            const buttonsDiv = window.conversations.utils.createDivContainer(null, 'conversations-buttons-container');
-            this.page.updateButtonsArea(buttonsDiv);
-
             this.loadContent();
         }
 
-        async loadControl() {
-            // Page control
-            const controlDiv = window.conversations.utils.createDivContainer(null, '-');
+        async loadContent() {
+            // Timeline container - holds the filters and the chart side by side
+            const timelineWrapperDiv = window.conversations.utils.createDivContainer(this.container, 'conversation-container-horizontal');
 
+            // Filter area
+            const filterAreaDiv = window.conversations.utils.createDivContainer(timelineWrapperDiv, '-');
+            this.renderFilters(filterAreaDiv);
+
+            // Chart area
+            const chartAreaDiv = window.conversations.utils.createDivContainer(timelineWrapperDiv);
+
+            // Chart area divided into top area, chart area and bottom areas
+            const chartTopAreaDiv = window.conversations.utils.createDivContainer(chartAreaDiv, 'chart-status-timeline-chart');
+            this.charWrapper = window.conversations.utils.createDivContainer(chartAreaDiv, 'chart-status-timeline-chart');
+            const chartBottomAreaDiv = window.conversations.utils.createDivContainer(chartAreaDiv, 'chart-status-timeline-chart');
+
+            // Chart top area - Measure div
+            const measuredDiv = window.conversations.utils.createDivContainer(chartTopAreaDiv, 'conversation-field-container-vertical');
+            new window.conversations.utils.createLabel(measuredDiv, 'Measure:');
+            const measureControlDiv = window.conversations.utils.createDivContainer(measuredDiv);
+
+            // Chart bottom area - Interval div
+            const intervalDiv = window.conversations.utils.createDivContainer(chartBottomAreaDiv, 'conversation-field-container-vertical');
+            new window.conversations.utils.createLabel(intervalDiv, 'Interval:');
+            const intervalControlDiv = window.conversations.utils.createDivContainer(intervalDiv, 'conversation-field-container-vertical');
+
+
+            // Measure select
+            this.renderMeasureSelect(measureControlDiv);
+
+            // Interval options
+            this.renderIntervalOptions(intervalControlDiv);
+
+            // Initial chart render
+            await this.renderChart();
+        }
+
+        async renderFilters(container) {
             // Filter area - Group name div 
-            const groupNameDiv = window.conversations.utils.createDivContainer(controlDiv, 'conversation-container-vertical');
+            const groupNameDiv = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
             new window.conversations.utils.createLabel(groupNameDiv, 'Group:');
             const groupNameSelectDiv = window.conversations.utils.createDivContainer(groupNameDiv);
 
             // Filter area - Conversation type div
-            const conversationTypeDiv = window.conversations.utils.createDivContainer(controlDiv, 'conversation-container-vertical');
+            const conversationTypeDiv = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
             new window.conversations.utils.createLabel(conversationTypeDiv, 'Type:');
             const conversationTypeSelectDiv = window.conversations.utils.createDivContainer(conversationTypeDiv);
 
             // Filter area - Instruction div
-            const instructionTypeDiv = window.conversations.utils.createDivContainer(controlDiv, 'conversation-container-vertical');
+            const instructionTypeDiv = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
             new window.conversations.utils.createLabel(instructionTypeDiv, 'Instruction:');
             this.instructionTypeControlDiv = window.conversations.utils.createDivContainer(instructionTypeDiv);
 
             // Filter area - States div
-            const statesDiv = window.conversations.utils.createDivContainer(controlDiv, 'conversation-container-vertical');
+            const statesDiv = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
             new window.conversations.utils.createLabel(statesDiv, 'States:');
             const statesControlDiv = window.conversations.utils.createDivContainer(statesDiv);
 
             // Filter area - Hours back div
-            const hoursBackDiv = window.conversations.utils.createDivContainer(controlDiv, 'conversation-container-vertical');
+            const hoursBackDiv = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
             new window.conversations.utils.createLabel(hoursBackDiv, 'Hours back:');
             const hoursBackControlDiv = window.conversations.utils.createDivContainer(hoursBackDiv);
 
@@ -150,44 +164,10 @@
 
             // Hours back options
             this.renderHoursBackOptions(hoursBackControlDiv);
-
-            // Update control area
-            this.page.updateControlArea(controlDiv);
-        }
-
-        async loadContent() {
-            // Page content
-            const contentDiv = window.conversations.utils.createDivContainer();
-
-            const chartTopAreaDiv = window.conversations.utils.createDivContainer(contentDiv, 'chart-status-timeline-chart');
-            this.charWrapper = window.conversations.utils.createDivContainer(contentDiv, 'chart-status-timeline-chart');
-            const chartBottomAreaDiv = window.conversations.utils.createDivContainer(contentDiv, 'chart-status-timeline-chart');
-
-            // Chart top area - Measure div
-            const measuredDiv = window.conversations.utils.createDivContainer(chartTopAreaDiv, 'conversation-container-vertical');
-            new window.conversations.utils.createLabel(measuredDiv, 'Measure:');
-            const measureControlDiv = window.conversations.utils.createDivContainer(measuredDiv);
-
-            // Chart bottom area - Interval div
-            const intervalDiv = window.conversations.utils.createDivContainer(chartBottomAreaDiv, 'conversation-container-vertical');
-            new window.conversations.utils.createLabel(intervalDiv, 'Interval:');
-            const intervalControlDiv = window.conversations.utils.createDivContainer(intervalDiv, 'conversation-container-vertical');
-
-
-            // Measure select
-            this.renderMeasureSelect(measureControlDiv);
-
-            // Interval options
-            this.renderIntervalOptions(intervalControlDiv);
-
-            // Initial chart render
-            await this.renderChart();
-
-            this.page.updateContentArea(contentDiv);
         }
 
         async renderGroupNameSelect(groupNameSelectDiv) {
-            // Group select
+            // Group name select
             const groups = await window.conversations.api.fetchGroups(groupNameSelectDiv);
             const groupOptions = groups.map(g => ({ label: g.group_name, value: g.group_name }));
             new window.SelectComponent(
@@ -206,6 +186,7 @@
         }
 
         async renderConversationTypeSelect(conversationTypeDiv) {
+            // Conversation type select
             new window.SelectComponent(
                 conversationTypeDiv,
                 CONVERSATION_TYPES,
@@ -222,6 +203,7 @@
         }
 
         async renderInstructionSelect() {
+            // Instruction type select - called when group or conversation type changes
             this.instructionTypeControlDiv.innerHTML = '';
 
             if (this.state.group_name === ALL_VALUE) {
@@ -256,35 +238,41 @@
         };
 
         renderStatesOptions(statesDiv) {
+            // States options
             new window.OptionButtonsComponent(
                 statesDiv,
                 STATES,
                 this.state.states,
                 (v) => {
-                    this.state.states = [v];
+                    this.state.states = v;
+                    console.log('Selected states:', v);
                     this.renderChart();
-                    window.StorageService.setLocalStorageItem('conversations_chart_status_timeline_states', v);
+                    window.StorageService.setStorageJSON('conversations_chart_status_timeline_states', v);
                 },
+                null,
+                true
             );
         }
 
         renderHoursBackOptions(hoursBackControlDiv) {
+            // Hours back options
+            // TODO: currently it uses a range component, but need to revisit
             new window.RangeComponent(
                 hoursBackControlDiv,
                 1,
-                24 * 365,
+                this.state.hours_back,
                 (v) => {
-                    const n = Number(v);
-                    this.state.hours_back = n;
+                    console.log('Hours back selected:', v.max);
+                    this.state.hours_back = v.max;
                     this.renderChart();
-                    window.StorageService.setLocalStorageItem('conversations_chart_status_timeline_hours_back', this.state.hours_back);
+                    window.StorageService.setLocalStorageItem('conversations_chart_status_timeline_hours_back', v.max);
                 }
             );
 
         }
 
         renderMeasureSelect(measureControlDiv) {
-            measureControlDiv.innerHTML = '';
+            // Measure select
             new window.SelectComponent(
                 measureControlDiv,
                 Object.entries(MEASURE_FIELDS).map(([key, mf]) => ({ label: mf.label, value: key })),
@@ -300,6 +288,7 @@
         }
 
         renderIntervalOptions(intervalControlDiv) {
+            // Interval options
             new window.OptionButtonsComponent(
                 intervalControlDiv,
                 INTERVALS,
@@ -314,71 +303,60 @@
         }
 
         async renderChart() {
-            this.charWrapper.innerHTML = '';
-
-            const resp = await window.conversations.system_api.fetchStatusConversationTimeline(
+            // Fetch data from API
+            const allStatesSelected = STATE_VALUES.every(v => this.state.states.includes(v));
+            console.log(this.state.hours_back)
+            const timelineResponseData = await window.conversations.system_api.fetchStatusConversationTimeline(
                 this.charWrapper,
                 this.state.hours_back,
                 this.state.interval,
                 this.state.group_name !== ALL_VALUE ? this.state.group_name : null,
                 this.state.conversation_type !== ALL_VALUE ? this.state.conversation_type : null,
                 this.state.instruction_type !== ALL_VALUE ? this.state.instruction_type : null,
-                this.state.states !== ALL_VALUE ? [this.state.states] : null
+                !allStatesSelected ? this.state.states : null
             );
 
-            const barData = this.buildBarData(resp);
-
+            // Build chart data and options
+            const barData = this.buildBarData(timelineResponseData);
             const barOptions = this.buildBarOptions();
 
-            if (this.chartInstance && typeof this.chartInstance.destroy === 'function') {
-                try { this.chartInstance.destroy(); } catch (e) { }
-            }
+            // Create or update chart instance and render the graph
+            window.conversations.utils.updateChartInstance(this.charWrapper, this.chartInstance, window.ChartComponent.TYPE_BAR, barData, barOptions);
 
-            const chartDiv = window.conversations.utils.createDivContainer(this.charWrapper, 'conversation-container-vertical');
-            this.chartInstance = new window.ChartComponent(
-                chartDiv,
-                window.ChartComponent.TYPE_BAR,
-                barData,
-                barOptions,
-                '100%',
-                '320px',
-                'Status timeline'
-            );
-
-            if (this.chartInstance && typeof this.chartInstance.refresh === 'function') {
-                setTimeout(() => this.chartInstance.refresh(), 0);
-            }
         }
 
-        buildBarData(resp) {
+        buildBarData(timelineResponseData) {
+            // Build chart data based on the measure field type and the response data according to the selected group
             const groupKey = (this.state.group_name === ALL_VALUE) ? 'all' : this.state.group_name;
-            const rawData = resp[groupKey];
+            const timelineData = timelineResponseData[groupKey];
+            
             // X-Axis Labels (Interval timestamps)
-            const labels = rawData.map(bucket => new Date(bucket.interval_start).toLocaleString());
+            const labels = timelineData.map(bucket => new Date(bucket.interval_start).toLocaleString());
 
+            // Build datasets according to measure field type
+            const datasetCommon = { borderColor: getCssVar('--color-border-light'), backgroundColor: getCssVar('--color-secondary-accent'), borderWidth: 2 };
             let datasets = [];
-
             if (MEASURE_FIELDS[this.state.measure_field].type === 'summary') {
                 datasets = [{
+                    ...datasetCommon,
                     label: MEASURE_FIELDS[this.state.measure_field].label,
-                    data: rawData.map((bucket) => bucket.summary[MEASURE_FIELDS[this.state.measure_field].field] || 0),
-                    backgroundColor: getCssVar('--color-secondary-accent'),
-                    borderColor: 'black',
-                    borderWidth: 3
+                    data: timelineData.map((bucket) => bucket.summary[MEASURE_FIELDS[this.state.measure_field].field] || 0),
                 }];
+
             } else if (MEASURE_FIELDS[this.state.measure_field].type === 'conversations_by_state') {
                 // Simple stacked bars by interval (states summed up across all types)
-                const allStates = [...new Set(rawData.flatMap(d => Object.keys(d.summary.by_state)))];
+                const allStates = [...new Set(timelineData.flatMap(d => Object.keys(d.summary.by_state)))];
 
                 datasets = allStates.map(state => ({
+                    ...datasetCommon,
                     label: state,
-                    data: rawData.map(entry => entry.summary.by_state[state] || 0),
-                    backgroundColor: stateColor(state)
+                    data: timelineData.map(entry => entry.summary.by_state[state] || 0),
+                    backgroundColor: stateColor(state),
                 }));
 
             } else if (MEASURE_FIELDS[this.state.measure_field].type === 'conversation_types_by_state') {
                 datasets = [];
-                const rawData = resp[groupKey];
+                const rawData = timelineResponseData[groupKey];
 
                 const allStates = [...new Set(rawData.flatMap(entry =>
                     Object.values(entry.by_type).flatMap(typeObj => Object.keys(typeObj.summary.by_state))
@@ -389,13 +367,16 @@
                 allTypes.forEach(type => {
                     allStates.forEach(state => {
                         datasets.push({
+                            ...datasetCommon,
                             label: `${type} - ${state}`,
                             data: rawData.map(entry => entry.by_type[type]?.summary?.by_state?.[state] || 0),
+                            stack: type,
                             backgroundColor: stateColor(state),
-                            stack: type
+                            borderColor: type === 'ai_decision' ? 'magenta' : 'black',
                         });
                     });
                 });
+
             } else {
                 new window.AlertComponent("Chart error", 'Unknown measure field type: ' + MEASURE_FIELDS[this.state.measure_field].type, null, window.AlertComponent.TYPE_DANGER);
                 datasets = [];
@@ -407,57 +388,15 @@
             };
         };
 
-
-
         buildBarOptions() {
-            // Shared options for all stacked scenarios
-            const stackedScales = {
-                x: { stacked: true },
-                y: { stacked: true, beginAtZero: true }
-            };
-
-            // Options for standard, non-stacked bars
-            const regularScales = {
-                x: { stacked: false },
-                y: { stacked: false, beginAtZero: true }
-            };
-
-            if (MEASURE_FIELDS[this.state.measure_field].type === 'conversations_by_state') {
-                // Simple stacked bars over time
+            if (MEASURE_FIELDS[this.state.measure_field].type === 'conversations_by_state' || 
+                MEASURE_FIELDS[this.state.measure_field].type === 'conversation_types_by_state') {
                 return {
-                    plugins: { legend: { display: true } },
-                    scales: stackedScales
-                };
-            } else if (MEASURE_FIELDS[this.state.measure_field].type === 'conversation_types_by_state') {
-                // Grouped stacked bars (intervals on X, types grouped within the interval, states stacked within the type)
-                return {
-                    plugins: {
-                        legend: {
-                            display: true
-                        },
-                        datalabels: {
-                            display: true,
-                            color: 'white',
-                            font: {
-                                weight: 'bold',
-                                size: 11
-                            },
-                            formatter: (value) => {
-                                return value > 0 ? value : '';
-                            }
-                        }
-                    },
-                    scales: stackedScales
-                };
-            } else {
-                // Default case (e.g., 'summary' type)
-                return {
-                    plugins: { legend: { display: true } },
-                    scales: regularScales
+                    scales: { x: { stacked: true }, y: { stacked: true } }
                 };
             }
+            return null;
         }
-
 
         destroy() {
             if (this.chartInstance && typeof this.chartInstance.destroy === 'function') {

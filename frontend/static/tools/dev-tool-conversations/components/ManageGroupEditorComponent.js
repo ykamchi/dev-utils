@@ -16,7 +16,7 @@
             const editGroupDiv = window.conversations.utils.createDivContainer(this.container);
 
             // Group Name 
-            const nameGroup = window.conversations.utils.createDivContainer(editGroupDiv, 'conversation-container-vertical');
+            const nameGroup = window.conversations.utils.createDivContainer(editGroupDiv, 'conversation-field-container-vertical');
             window.conversations.utils.createLabel(nameGroup, 'Group Name:');
             this.groupNameInput = new window.TextInputComponent(nameGroup, this.groupName, /.*/, 'Enter group name', (value) => {
                 this.groupName = value;
