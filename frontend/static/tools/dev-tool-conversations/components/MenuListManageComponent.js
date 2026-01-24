@@ -27,13 +27,22 @@
         async load(selectedGroup) {
             // Define manage options
             this.manageOptions = {
-                system: { 
-                    name: 'System', 
-                    icon: '🛠️',
-                    description: 'Manage system',
-                    component: 'ManageSystemComponent',
+                decisions: { 
+                    name: 'Decisions', 
+                    icon: '⚖️',
+                    description: 'Manage group decisions',
+                    component: 'ManageInstructionsComponent',
                     info: {
-                        groupName: selectedGroup
+                        conversationType: 'ai_decision'
+                    }
+                },
+                conversation: { 
+                    name: 'Conversations', 
+                    icon: '💬',
+                    description: 'Manage group conversations',
+                    component: 'ManageInstructionsComponent',
+                    info: {
+                        conversationType: 'ai_conversation'
                     }
                 },
                 statistics: { 
@@ -57,22 +66,13 @@
                         }
                     }
                 },
-                decisions: { 
-                    name: 'Decisions', 
-                    icon: '⚖️',
-                    description: 'Manage group decisions',
-                    component: 'ManageInstructionsComponent',
+                system: { 
+                    name: 'System', 
+                    icon: '🛠️',
+                    description: 'Manage system',
+                    component: 'ManageSystemComponent',
                     info: {
-                        conversationType: 'ai_decision'
-                    }
-                },
-                conversation: { 
-                    name: 'Conversations', 
-                    icon: '💬',
-                    description: 'Manage group conversations',
-                    component: 'ManageInstructionsComponent',
-                    info: {
-                        conversationType: 'ai_conversation'
+                        groupName: selectedGroup
                     }
                 },
                 editMembers: { 

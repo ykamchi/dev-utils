@@ -85,7 +85,7 @@ window.conversations.utils.createInput = function(container, labelText, value, p
 }
 
 window.conversations.utils.createTextArea = function (container, labelText, value, placeholder = '', onChange = null, rows = -1) {
-    const textAreaGroup = window.conversations.utils.createDivContainer(container);
+    const textAreaGroup = window.conversations.utils.createDivContainer(container, rows === -1 ? 'conversation-field-container-vertical-full' : 'conversation-field-container-vertical');
     window.conversations.utils.createLabel(textAreaGroup, labelText);
     new window.TextAreaComponent(textAreaGroup, value, placeholder, onChange, rows);
 }
