@@ -185,7 +185,7 @@ window.conversations.api.updateGroup = async function (spinnerContainer, oldGrou
 };
 
 // Fetch member conversations from backend
-window.conversations.api.fetchMemberConversations = async function (container, memberId, conversation_type, only_last = false) {
+window.conversations.api.fetchMemberConversations = async function (container, memberId, conversationType, only_last = false) {
     // Show loading spinner while fetching
     const spinner = new window.SpinnerComponent(container, { text: 'Loading member conversations ...', size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
     
@@ -196,7 +196,7 @@ window.conversations.api.fetchMemberConversations = async function (container, m
             body: JSON.stringify({
                 member_id: memberId,
                 conversation_type:
-                    conversation_type, only_last: only_last
+                    conversationType, only_last: only_last
             })
         });
 
@@ -217,7 +217,7 @@ window.conversations.api.fetchMemberConversations = async function (container, m
 };
 
 // Fetch group instructions from backend
-window.conversations.api.fetchGroupInstructions = async function (spinnerContainer, groupName, conversation_type = null) {
+window.conversations.api.fetchGroupInstructions = async function (spinnerContainer, groupName, conversationType = null) {
     // Show loading spinner while fetching
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Loading instructions definitions for ${groupName}...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
 
@@ -227,7 +227,7 @@ window.conversations.api.fetchGroupInstructions = async function (spinnerContain
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 group_name: groupName,
-                conversation_type: conversation_type
+                conversation_type: conversationType
             })
         });
 
@@ -345,7 +345,7 @@ window.conversations.api.addGroupInstructions = async function (spinnerContainer
 };
 
 // Conversation start
-window.conversations.api.conversationStart = async function (spinnerContainer, groupName, conversation_type, selectedInstruction, participant_members_nick_names) {
+window.conversations.api.conversationStart = async function (spinnerContainer, groupName, conversationType, selectedInstruction, participant_members_nick_names) {
     // Show loading spinner while starting conversation
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Starting conversation for ${participant_members_nick_names.join(', ')}...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
     try {
@@ -354,7 +354,7 @@ window.conversations.api.conversationStart = async function (spinnerContainer, g
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 group_name: groupName,
-                conversation_type: conversation_type,
+                conversation_type: conversationType,
                 context: { type: selectedInstruction },
                 participant_members_nick_names: participant_members_nick_names
             })
@@ -375,7 +375,7 @@ window.conversations.api.conversationStart = async function (spinnerContainer, g
     }
 };
 
-window.conversations.api.fetchConversationMessages = async function (spinnerContainer, conversationId) {
+window.conversations.api.fetchConversationMessages = async function (spinnerContainer, conversationType, conversationId) {
     // Show loading spinner while fetching
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Loading conversation messages ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
 
@@ -383,7 +383,7 @@ window.conversations.api.fetchConversationMessages = async function (spinnerCont
         const resp = await fetch('/api/dev-tool-conversations/conversation_messages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ conversation_id: conversationId })
+            body: JSON.stringify({ conversation_type: conversationType, conversation_id: conversationId })
         });
 
         const result = await resp.json();

@@ -5,7 +5,6 @@
             this.container = container;
             this.feedback = feedback;
             this.instructions = instructions;
-            console.log('ConversationFeedbackInfoComponent instructions:', this.instructions);
             this.onlyImportant = onlyImportant;
             this.vertical = vertical;
             this.render();
@@ -22,17 +21,11 @@
             // Get the feedback definitions and important flags from instructions
             const feedback_def = this.instructions?.feedback_def;
             const feedbackImportant = this.instructions?.info?.meta?.feedbackImportant || {};
-
-            console.log('Rendering ConversationFeedbackInfoComponent with feedback:', this.feedback);
-            console.log('Rendering feedback with definitions:', feedback_def);
-            console.log('Feedback important flags:', feedbackImportant);
             
             // Iterate over feedback entries and create fields
             for (const [key, value] of Object.entries(this.feedback)) {
-                console.log(`Processing feedback key: ${key} with value: ${value} and only important flag: ${this.onlyImportant}`);
                 // Check if we should display this feedback field
                 if (!this.onlyImportant || (feedbackImportant && feedbackImportant[key])) {
-                    console.log(`Rendering feedback field: ${key} with value: ${value}`);
                     const feedbackDef = feedback_def[key];
                     
                     // Skip if no definition found - this is an error case

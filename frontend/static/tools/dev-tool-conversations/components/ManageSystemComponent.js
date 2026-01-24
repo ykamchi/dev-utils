@@ -80,25 +80,16 @@
             const systemQueueStatusDiv = window.conversations.utils.createDivContainer(wrapper);
 
             // Running
-            const runningDiv = window.conversations.utils.createDivContainer(systemQueueStatusDiv,  'conversation-field-container-vertical');
-            window.conversations.utils.createLabel(runningDiv, 'Running:');
-            window.conversations.utils.createReadOnlyText(runningDiv, this.queueState.running);
-
+            window.conversations.utils.createField(systemQueueStatusDiv, 'Running', this.queueState.running, true);
 
             // Paused
-            const pausedDiv = window.conversations.utils.createDivContainer(systemQueueStatusDiv,  'conversation-field-container-vertical');
-            window.conversations.utils.createLabel(pausedDiv, 'Paused:');
-            window.conversations.utils.createReadOnlyText(pausedDiv, this.queueState.paused);
+            window.conversations.utils.createField(systemQueueStatusDiv, 'Paused', this.queueState.paused, true);
 
             // Max Concurrent
-            const maxConcurrentDiv = window.conversations.utils.createDivContainer(systemQueueStatusDiv, 'conversation-field-container-vertical');
-            window.conversations.utils.createLabel(maxConcurrentDiv, 'Max Concurrent:');
-            window.conversations.utils.createReadOnlyText(maxConcurrentDiv, this.queueState.max_concurrent);
+            window.conversations.utils.createField(systemQueueStatusDiv, 'Max Concurrent', this.queueState.max_concurrent, true);
 
             // Available Slots
-            const availableSlotsDiv = window.conversations.utils.createDivContainer(systemQueueStatusDiv, 'conversation-field-container-vertical');
-            window.conversations.utils.createLabel(availableSlotsDiv, 'Available Slots:');
-            window.conversations.utils.createReadOnlyText(availableSlotsDiv, this.queueState.available_slots);
+            window.conversations.utils.createField(systemQueueStatusDiv, 'Available Slots', this.queueState.available_slots, true);
             
             // Update content area
             this.page.updateContentArea(contentDiv);

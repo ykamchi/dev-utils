@@ -249,6 +249,25 @@ class ListComponent {
     }
 
     /**
+     * Clears all selections.
+     */
+    clearSelection() {
+        this.selectedIndices = [];
+        this.selectedItems.clear();
+        
+        // Update selection classes in the DOM
+        if (this.itemElements) {
+            this.itemElements.forEach((li) => {
+                li.classList.remove('selected');
+            });
+        }
+        
+        if (this.onSelect) {
+            this.onSelect([]);
+        }
+    }
+
+    /**
      * Stores the last selected items based on storageKey and getKeyFn.
      * @param {string} storageKey
      * @param {Function} getKeyFn - Function(item) => key used for storage.

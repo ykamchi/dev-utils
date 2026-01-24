@@ -14,6 +14,7 @@ class TabsetComponent {
         this.storageKey = storageKey;
         this.onTabSwitch = onTabSwitch;
         this.tabContentContainers = {};
+        this.populatedTabs = new Set(); // Track which tabs have been populated
         // Load last selected tab if storageKey is provided
         let lastTab = null;
         if (storageKey && window.StorageService) {
@@ -47,12 +48,12 @@ class TabsetComponent {
             this.tabContentContainers[tab.name] = tabContent;
             this.container.appendChild(tabContent);
         });
-        // Populate each tab if populateFunc exists
-        this.tabsArray.forEach(tab => {
-            if (typeof tab.populateFunc === 'function') {
-                this.populateTab(tab.name, tab.populateFunc);
-            }
-        });
+        // Populate only the active tab initially (lazy loading for others)
+        const activeTabObj = this.tabsArray.find(tab => tab.name === this.activeTab);
+        if (activeTabObj && typeof activeTabObj.populateFunc === 'function') {
+            this.populateTab(activeTabObj.name, activeTabObj.populateFunc);
+            this.populatedTabs.add(activeTabObj.name);
+        }
         // Invoke callback for initial active tab
         if (typeof this.onTabSwitch === 'function') {
             this.onTabSwitch(this.activeTab);
@@ -74,6 +75,16 @@ class TabsetComponent {
         Object.entries(this.tabContentContainers).forEach(([name, content]) => {
             content.style.display = (name === tabName) ? '' : 'none';
         });
+        
+        // Populate tab lazily if not yet populated
+        if (!this.populatedTabs.has(tabName)) {
+            const tabObj = this.tabsArray.find(tab => tab.name === tabName);
+            if (tabObj && typeof tabObj.populateFunc === 'function') {
+                this.populateTab(tabName, tabObj.populateFunc);
+                this.populatedTabs.add(tabName);
+            }
+        }
+        
         // Invoke callback if provided
         if (typeof this.onTabSwitch === 'function') {
             this.onTabSwitch(tabName);

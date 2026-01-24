@@ -65,6 +65,36 @@ window.conversations.utils.createDivContainer = function (container = null, clas
     return div;
 }
 
+window.conversations.utils.createFieldDiv = function (container, labelText) {
+    const fieldDiv = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
+    window.conversations.utils.createLabel(fieldDiv, labelText);
+    return fieldDiv;   
+}
+
+window.conversations.utils.createField = function (container, labelText, value, readOnly = false) {
+    const fieldDiv = window.conversations.utils.createFieldDiv(container, labelText);
+    window.conversations.utils.createReadOnlyText(fieldDiv, value, readOnly ? null : 'conversations-field-value');
+    return fieldDiv;
+}
+
+window.conversations.utils.createInput = function(container, labelText, value, pattern = /.*/, placeholder = '', onChange = null) {
+    const infoNameGroup = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
+    window.conversations.utils.createLabel(infoNameGroup, labelText);
+    new window.TextInputComponent(infoNameGroup, value, pattern, placeholder, onChange);
+
+}
+
+window.conversations.utils.createTextArea = function (container, labelText, value, placeholder = '', onChange = null, rows = -1) {
+    const textAreaGroup = window.conversations.utils.createDivContainer(container);
+    window.conversations.utils.createLabel(textAreaGroup, labelText);
+    new window.TextAreaComponent(textAreaGroup, value, placeholder, onChange, rows);
+}
+
+window.conversations.utils.createBadge = function (container, labelText, value, badgeType = 'generic') {
+    const badgeDiv = window.conversations.utils.createFieldDiv(container, labelText);
+    window.conversations.utils.createReadOnlyText(badgeDiv, value, 'conversations-badge-' + badgeType);
+    return badgeDiv;
+}
 
 // Create a div that displays JSON content
 window.conversations.utils.createJsonDiv = function (container, json) {

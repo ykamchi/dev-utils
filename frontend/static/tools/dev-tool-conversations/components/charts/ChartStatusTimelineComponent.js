@@ -99,19 +99,17 @@
             const chartAreaDiv = window.conversations.utils.createDivContainer(timelineWrapperDiv);
 
             // Chart area divided into top area, chart area and bottom areas
-            const chartTopAreaDiv = window.conversations.utils.createDivContainer(chartAreaDiv, 'chart-status-timeline-chart');
-            this.charWrapper = window.conversations.utils.createDivContainer(chartAreaDiv, 'chart-status-timeline-chart');
-            const chartBottomAreaDiv = window.conversations.utils.createDivContainer(chartAreaDiv, 'chart-status-timeline-chart');
+            const chartTopAreaDiv = window.conversations.utils.createDivContainer(chartAreaDiv, '-');
+            this.charWrapper = window.conversations.utils.createDivContainer(chartAreaDiv, '-');
+            const chartBottomAreaDiv = window.conversations.utils.createDivContainer(chartAreaDiv, '-');
 
             // Chart top area - Measure div
-            const measuredDiv = window.conversations.utils.createDivContainer(chartTopAreaDiv, 'conversation-field-container-vertical');
-            new window.conversations.utils.createLabel(measuredDiv, 'Measure:');
+            const measuredDiv =window.conversations.utils.createFieldDiv(chartTopAreaDiv, 'Measure:');
             const measureControlDiv = window.conversations.utils.createDivContainer(measuredDiv);
 
             // Chart bottom area - Interval div
-            const intervalDiv = window.conversations.utils.createDivContainer(chartBottomAreaDiv, 'conversation-field-container-vertical');
-            new window.conversations.utils.createLabel(intervalDiv, 'Interval:');
-            const intervalControlDiv = window.conversations.utils.createDivContainer(intervalDiv, 'conversation-field-container-vertical');
+            const intervalDiv = window.conversations.utils.createFieldDiv(chartBottomAreaDiv, 'Interval:');
+            const intervalControlDiv = window.conversations.utils.createDivContainer(intervalDiv);
 
 
             // Measure select
@@ -126,28 +124,23 @@
 
         async renderFilters(container) {
             // Filter area - Group name div 
-            const groupNameDiv = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
-            new window.conversations.utils.createLabel(groupNameDiv, 'Group:');
+            const groupNameDiv = window.conversations.utils.createFieldDiv(container, 'Group:');
             const groupNameSelectDiv = window.conversations.utils.createDivContainer(groupNameDiv);
 
             // Filter area - Conversation type div
-            const conversationTypeDiv = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
-            new window.conversations.utils.createLabel(conversationTypeDiv, 'Type:');
+            const conversationTypeDiv = window.conversations.utils.createFieldDiv(container, 'Type:');
             const conversationTypeSelectDiv = window.conversations.utils.createDivContainer(conversationTypeDiv);
 
             // Filter area - Instruction div
-            const instructionTypeDiv = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
-            new window.conversations.utils.createLabel(instructionTypeDiv, 'Instruction:');
+            const instructionTypeDiv = window.conversations.utils.createFieldDiv(container, 'Instruction:');
             this.instructionTypeControlDiv = window.conversations.utils.createDivContainer(instructionTypeDiv);
 
             // Filter area - States div
-            const statesDiv = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
-            new window.conversations.utils.createLabel(statesDiv, 'States:');
+            const statesDiv = window.conversations.utils.createFieldDiv(container, 'States:');
             const statesControlDiv = window.conversations.utils.createDivContainer(statesDiv);
 
             // Filter area - Hours back div
-            const hoursBackDiv = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
-            new window.conversations.utils.createLabel(hoursBackDiv, 'Hours back:');
+            const hoursBackDiv = window.conversations.utils.createFieldDiv(container, 'Hours back:');
             const hoursBackControlDiv = window.conversations.utils.createDivContainer(hoursBackDiv);
 
             // Group select

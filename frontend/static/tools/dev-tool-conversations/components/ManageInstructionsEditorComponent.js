@@ -34,28 +34,18 @@
         // Populate Info tab
         populateInfoTab(container) {
             // Name field (editable)
-            const infoNameGroup = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
-            window.conversations.utils.createLabel(infoNameGroup, 'Name:');
-            new window.TextInputComponent(infoNameGroup, this.instruction.info.name, /^[a-zA-Z0-9 _-]+$/, 'e.g., My Instruction Name', (value, isValid) => {
+            window.conversations.utils.createInput(container, 'Name:', this.instruction.info.name, /^[a-zA-Z0-9 _-]+$/,'e.g., My Instruction Name',(value, isValid) => {
                 this.instruction.info.name = value;
             });
             
             // Conversation Type field (read-only)
-            const infoConversationTypeGroup = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
-            window.conversations.utils.createLabel(infoConversationTypeGroup, 'Conversation Type:');
-            window.conversations.utils.createReadOnlyText(infoConversationTypeGroup, this.instruction.info.conversation_type);
+            window.conversations.utils.createField(container, 'Conversation Type:', this.instruction.info.conversation_type, true);
 
             // Instructions type field (read-only)
-            const infoTypeGroup = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
-            window.conversations.utils.createLabel(infoTypeGroup, 'Instructions Type:');
-            new window.TextInputComponent(infoTypeGroup, this.instruction.info.type, /^[a-z-]+$/, 'e.g., custom_instruction_type', (value, isValid) => {
-                this.instruction.info.type = value;
-            });
+            window.conversations.utils.createField(container, 'Conversation Type:', this.instruction.instructions_type, true);
 
             // Description field (editable)
-            const infoDescriptionGroup = window.conversations.utils.createDivContainer(container);
-            window.conversations.utils.createLabel(infoDescriptionGroup, 'Description:');
-            new window.TextAreaComponent(infoDescriptionGroup, this.instruction.info.description, 'Description', (value) => {
+            window.conversations.utils.createTextArea(container, 'Description:', this.instruction.info.description, 'My Instruction Description', (value) => {
                 this.instruction.info.description = value;
             });
         }
@@ -63,10 +53,7 @@
         // Populate Instructions Editor tab
         populateInstructionsEditorTab(container) {
             // Instructions field (editable)
-            const instructionsGroup = window.conversations.utils.createDivContainer(container);
-            instructionsGroup.style.flex = '1'; //TODO: Move to CSS
-            window.conversations.utils.createLabel(instructionsGroup, 'Instructions:');
-            new window.TextAreaComponent(instructionsGroup, this.instruction.instructions, 'Conversation instructions', (value) => {
+            window.conversations.utils.createTextArea(container, 'Instructions:', this.instruction.instructions, 'My Instruction', (value) => {
                 this.instruction.instructions = value;
             });
         }
@@ -91,20 +78,17 @@
                     const feedbackDiv = document.createElement('div');
                     
                     // Name (editable)
-                    const feedbackNameGroup = window.conversations.utils.createDivContainer(feedbackDiv, 'conversation-field-container-vertical');
-                    window.conversations.utils.createLabel(feedbackNameGroup, 'Name:');
-                    new window.TextInputComponent(feedbackNameGroup, feedback_def.feedbackName, /^[a-z_]+$/, 'e.g., feedback_name', (value, isValid) => {
+                    window.conversations.utils.createInput(feedbackDiv, 'Name:', feedback_def.feedbackName,  /^[a-z_]+$/, 'e.g., feedback_name',(value, isValid) => {
                         feedback_def.feedbackName = value;
                     });
                     
                     // Description field (editable)
-                    const feedbackDescriptionGroup = window.conversations.utils.createDivContainer(feedbackDiv, 'conversation-field-container-vertical');
-                    window.conversations.utils.createLabel(feedbackDescriptionGroup, 'Description:');
-                    new window.TextAreaComponent(feedbackDescriptionGroup, feedback_def.description, 2, (value) => {
+                    window.conversations.utils.createTextArea(feedbackDiv, 'Description:', feedback_def.description, 'Detail description of the feedback', (value) => {
                         feedback_def.description = value;
-                    });
+                    }, 2);
 
                     // Type field (editable)
+                    // TODO: Create a util function for creating labeled select fields
                     const feedbackTypeContainer = window.conversations.utils.createDivContainer(feedbackDiv, 'conversation-field-container-vertical');
                     window.conversations.utils.createLabel(feedbackTypeContainer, 'Type:');
                     const feedbackTypeSelectContainer = window.conversations.utils.createDivContainer(feedbackTypeContainer);
