@@ -104,20 +104,16 @@ window.conversations.utils.createJsonDiv = function (container, json) {
     container.appendChild(pre);
 }
 
-window.conversations.utils.updateChartInstance = function (container, chartInstance, type, data, options) {
+
+//TODO: move to ChartComponent?
+window.conversations.utils.updateChartInstance = function (container, chartInstance, type, data, options = {}, title = null) {
     container.innerHTML = '';
     if (chartInstance && typeof chartInstance.destroy === 'function') {
         try { chartInstance.destroy(); } catch (e) { }
     }
-    chartInstance = new window.ChartComponent(
-        container,
-        type,
-        data,
-        options,
-        '100%',
-        '320px',
-        'Status timeline'
-    );
+
+    const field = window.conversations.utils.createFieldDiv(container, title);
+    chartInstance = new window.ChartComponent(field, type, data, options, '100%', '320px',title);
 
     if (chartInstance && typeof chartInstance.refresh === 'function') {
         setTimeout(() => chartInstance.refresh(), 0);

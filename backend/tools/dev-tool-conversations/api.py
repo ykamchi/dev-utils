@@ -360,22 +360,20 @@ def register_apis(app, base_path: str):
         Proxy to upstream /api/conversation_start (POST) to start a conversation.
         """
         payload = request.get_json(force=True)
-        conversation_type = payload.get('conversation_type')
-        group_name = payload.get('group_name')
-        context = payload.get('context')
-        participant_members_nick_names = payload.get('participant_members_nick_names')
 
-        if not group_name:
+        if not payload.get('group_name'):
             return jsonify({'success': False, 'error': 'missing group_name'}), 400
-        if not context:
+        if not payload.get('context'):
             return jsonify({'success': False, 'error': 'missing context'}), 400
 
         try:
             conversation_req = {
-                'group_name': group_name,
-                'participant_members_nick_names': participant_members_nick_names,
-                'context': context,
-                'conversation_type': conversation_type
+                'group_name': payload.get('group_name'),
+                'participant_members_nick_names': payload.get('participant_members_nick_names'),
+                'context': payload.get('context'),
+                'conversation_type': payload.get('conversation_type'),
+                'max_messages': payload.get('max_messages', 10),
+                'debug': payload.get('debug', []),
             }
             app.logger.debug('Proxying conversation_start with payload: %s', conversation_req)
             upstream_resp = _proxy_post('/api/conversation_start', conversation_req)

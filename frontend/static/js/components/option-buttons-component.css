@@ -4,6 +4,7 @@
   display: flex;
   gap: 8px;
   height: 100%;
+  flex-wrap: wrap;
 }
 .option-buttons-component .option-btn {
   padding: 6px 18px;

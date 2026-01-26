@@ -11,7 +11,6 @@
             options = null,     // NULL -> use defaults by type
             width = '100%',
             height = '260px',
-            title = null,
             tooltip = ''
         ) {
             if (!container)
@@ -34,14 +33,6 @@
             /* Root */
             this.root = document.createElement('div');
             this.root.className = 'framework-chart-container';
-
-            /* Title */
-            if (title) {
-                this.titleEl = document.createElement('div');
-                this.titleEl.className = 'framework-chart-title';
-                this.titleEl.textContent = title;
-                this.root.appendChild(this.titleEl);
-            }
 
             /* Wrapper */
             this.wrapper = document.createElement('div');
@@ -213,14 +204,15 @@
     window.ChartComponent = ChartComponent;
 
     window.ChartComponent.TYPE_LINE = 'line';
-    window.ChartComponent.TYPE_BAR  = 'bar';
-    window.ChartComponent.TYPE_PIE  = 'pie';
+    window.ChartComponent.TYPE_BAR = 'bar';
+    window.ChartComponent.TYPE_PIE = 'pie';
 
     window.ChartComponent.TYPE_DEFAULTS = {
 
         [window.ChartComponent.TYPE_LINE]: {
             responsive: true,
             maintainAspectRatio: false,
+            spanGaps: true, // IMPORTANT: This connects the dots across the null values
             plugins: {
                 legend: { display: true },
                 tooltip: { enabled: true }
@@ -228,11 +220,14 @@
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: { stepSize: 50 }
+                    // Removed stepSize: 50 so you can see the 1-10 scale properly
+                    ticks: {
+                        precision: 0 // Optional: ensures only whole numbers are shown
+                    }
                 }
             }
         },
-        
+
         [window.ChartComponent.TYPE_BAR]: {
             responsive: true,
             maintainAspectRatio: false,

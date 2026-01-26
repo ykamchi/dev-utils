@@ -71,8 +71,8 @@
                     new window.conversations.MemberConversationDetailsComponent(container, this.conversation, this.memberId, this.membersMap, this.groupInstructions);
                 },
                 closable: true,
-                width: '800px',
-                height: '1200px'
+                width: '1200px',
+                height: '800px'
             }).show();
         }
     }

@@ -66,8 +66,8 @@
                     return item.names.toLowerCase().includes(query.toLowerCase());
                 }, 
                 [
-                    { label: 'Name', func: (a, b) => { return a.names < b.names ? -1 : 1; } , direction: 1 },
                     { label: 'Creation Date', func: (a, b) => new Date(a.created_at) - new Date(b.created_at), direction: -1 },
+                    { label: 'Name', func: (a, b) => { return a.names < b.names ? -1 : 1; } , direction: 1 },
                     { label: 'Instruction Type', func: (a, b) => a.info.type < b.info.type ? -1 : 1, direction: 1 },
                 ] 
             );

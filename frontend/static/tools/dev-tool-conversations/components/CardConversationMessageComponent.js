@@ -31,7 +31,7 @@
             const secondLine = window.conversations.utils.createDivContainer(info, 'conversation-container-horizontal-space-between');            
 
             // Description
-            window.conversations.utils.createReadOnlyText(secondLine, this.message.message_text, 'conversations-card-description');
+            window.conversations.utils.createReadOnlyText(secondLine, this.message.message_text.length > 100  ? this.message.message_text.substring(0, 100) + "..." : this.message.message_text, 'conversations-card-description');
 
             // Body content
             const bodyContent = window.conversations.utils.createDivContainer(null, 'conversations-card-wrapper');
@@ -41,6 +41,9 @@
                 new window.conversations.ConversationFeedbackInfoComponent(bodyContent, this.message.feedback, this.instructions, true, true);
             }
 
+            // Full message text
+            window.conversations.utils.createField(bodyContent, 'Full message text:', this.message.message_text);
+            
             new window.ExpandDivComponent(
                 this.container,                
                 wrapper,

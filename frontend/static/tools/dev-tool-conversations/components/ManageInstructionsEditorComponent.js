@@ -27,8 +27,14 @@
             new window.TabsetComponent(tabsetDiv, [
                 { name: 'Info', populateFunc: (c) => this.populateInfoTab(c) },
                 { name: 'Instructions', populateFunc: (c) => this.populateInstructionsEditorTab(c) },
-                { name: 'Feedback', populateFunc: (c) => { this.feedbackTab = c; this.populateFeedbackTab(c); } }
+                { name: 'Feedback', populateFunc: (c) => { this.feedbackTab = c; this.populateFeedbackTab(c); } },
+                { name: 'Assistant', populateFunc: (c) => this.populateAssistantTab(c) }
             ], storageKey);
+        }
+
+        // Populate Assistant tab
+        populateAssistantTab(container) {
+            new window.conversations.ManageInstructionsAssistantComponent(container, this.groupName, this.instruction);
         }
 
         // Populate Info tab
@@ -63,17 +69,19 @@
             // Clear existing content - populateFeedbackTab may be called multiple times
             container.innerHTML = '';
 
+            const wrapper = window.conversations.utils.createDivContainer(container, 'conversation-container-vertical');
+
             // Add button container below tabset
-            const buttonContainer = window.conversations.utils.createDivContainer(container, 'conversations-buttons-container');
+            const buttonContainer = window.conversations.utils.createDivContainer(wrapper, 'conversations-buttons-container');
             new window.ButtonComponent(buttonContainer, '+ Add feedback field', () => this.handleAddFeedback(), window.ButtonComponent.TYPE_GHOST);
 
             if (this.instruction.feedback_def.length === 0) {
-                window.conversations.utils.createReadOnlyText(container, 'No feedback definitions found.', 'conversations-message-empty');
+                window.conversations.utils.createReadOnlyText(wrapper, 'No feedback definitions found.', 'conversations-message-empty');
                 return;
             }
 
             // container, items, renderItemFunction, selectionMode = ListComponent.SELECTION_MODE_NONE, onSelect = null, filterCondition = null
-            new window.ListComponent(container, this.instruction.feedback_def, 
+            new window.ListComponent(wrapper, this.instruction.feedback_def, 
                 (feedback_def) => {
                     const feedbackDiv = document.createElement('div');
                     

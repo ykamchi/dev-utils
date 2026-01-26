@@ -345,7 +345,7 @@ window.conversations.api.addGroupInstructions = async function (spinnerContainer
 };
 
 // Conversation start
-window.conversations.api.conversationStart = async function (spinnerContainer, groupName, conversationType, selectedInstruction, participant_members_nick_names) {
+window.conversations.api.conversationStart = async function (spinnerContainer, groupName, conversationType, selectedInstruction, participant_members_nick_names, maxMessages) {
     // Show loading spinner while starting conversation
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Starting conversation for ${participant_members_nick_names.join(', ')}...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
     try {
@@ -356,7 +356,9 @@ window.conversations.api.conversationStart = async function (spinnerContainer, g
                 group_name: groupName,
                 conversation_type: conversationType,
                 context: { type: selectedInstruction },
-                participant_members_nick_names: participant_members_nick_names
+                participant_members_nick_names: participant_members_nick_names,
+                max_messages: maxMessages,
+                debug: ['instructions_assistance']
             })
         });
 

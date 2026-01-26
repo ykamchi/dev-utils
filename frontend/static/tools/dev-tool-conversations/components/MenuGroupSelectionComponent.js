@@ -103,7 +103,7 @@
                 width: 640,
                 height: 720,
                 content: (container) => {
-                    const contentDiv = window.conversations.utils.createDivContainer(container);
+                    const contentDiv = window.conversations.utils.createDivContainer(container, 'conversations-page-wrapper');
                     const tabsetTabs = [
                         { name: 'Edit', populateFunc: (c) => this.populateAddGroupTab(c, popup), },
                         { name: 'Seed Data', populateFunc: (c) => this.populateSeedGroupsTab(c, popup), }

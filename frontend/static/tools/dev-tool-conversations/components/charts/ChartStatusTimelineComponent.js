@@ -119,7 +119,7 @@
             this.renderIntervalOptions(intervalControlDiv);
 
             // Initial chart render
-            await this.renderChart();
+            this.renderChart();
         }
 
         async renderFilters(container) {
@@ -298,7 +298,7 @@
         async renderChart() {
             // Fetch data from API
             const allStatesSelected = STATE_VALUES.every(v => this.state.states.includes(v));
-            console.log(this.state.hours_back)
+
             const timelineResponseData = await window.conversations.system_api.fetchStatusConversationTimeline(
                 this.charWrapper,
                 this.state.hours_back,

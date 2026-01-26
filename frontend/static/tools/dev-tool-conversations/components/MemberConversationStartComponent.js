@@ -35,8 +35,6 @@
             // Load and display the content
             this.loadContent();
 
-
-
         }
 
         loadContent() {
@@ -44,19 +42,33 @@
             const controlDiv = window.conversations.utils.createDivContainer(null, '-');
             const selectInstructionWrapper = window.conversations.utils.createDivContainer(controlDiv);
             window.conversations.utils.createLabel(selectInstructionWrapper, 'Select Instruction:');
-                
-            // Instructions chooser
-            const selectOptions = Object.values(this.groupInstructions).map(entry => ({ label: entry.info.name, value: entry.info.type }));
-            new window.SelectComponent(
-                selectInstructionWrapper, 
-                selectOptions, 
-                (selectedValue) => { 
-                    this.selectedInstruction = selectedValue 
-                },
-                'Select an instruction...' 
-            );
-            this.page.updateControlArea(controlDiv);
             
+            if (Object.entries(this.groupInstructions).length > 1) {
+                // Instructions chooser
+                const selectOptions = Object.values(this.groupInstructions).map(entry => ({ label: entry.info.name, value: entry.info.type }));
+                new window.SelectComponent(
+                    selectInstructionWrapper, 
+                    selectOptions, 
+                    (selectedValue) => { 
+                        this.selectedInstruction = selectedValue 
+                    },
+                    'Select an instruction...' 
+                );
+                this.page.updateControlArea(controlDiv);
+            } else if (Object.entries(this.groupInstructions).length === 1) {
+
+                this.selectedInstruction = Object.values(this.groupInstructions)[0].info.type;
+                const instructionType =  window.conversations.utils.createReadOnlyText(selectInstructionWrapper, this.selectedInstruction);
+                this.page.updateControlArea(instructionType);
+                
+            } else {
+                this.page.updateControlArea(null);
+                const missingInstructionsDiv = window.conversations.utils.createReadOnlyText(controlDiv, 'No instructions available for this conversation type.', 'conversations-message-empty');
+                this.page.updateContentArea(missingInstructionsDiv);
+                // new window.AlertComponent('No Instructions Available', 'There are no instructions available to start a conversation.');
+                return;
+            }
+
             // Members chooser - filter out the current member
             const contentDiv = window.conversations.utils.createDivContainer();
             const membersList = Object.entries(this.membersMap).filter(([id]) => id !== this.memberId).map(([id, member]) => ({label: id, value: member}));
@@ -90,13 +102,12 @@
                 return;
             }
             const participant_members_nick_names = selectedMembers.map(m => m.value.name);
-            participant_members_nick_names.push(this.membersMap[this.memberId].name);
+            if (this.memberId) {
+                participant_members_nick_names.push(this.membersMap[this.memberId].name);
+            }
 
-            // Start the decision
-            window.conversations.api.conversationStart(null, this.groupName, this.conversation_type, this.selectedInstruction, participant_members_nick_names);
-            
-            // Close popup
-            // this.popupInstance.hide();
+            // Start the conversation
+            window.conversations.api.conversationStart(null, this.groupName, this.conversation_type, this.selectedInstruction, participant_members_nick_names, participant_members_nick_names.length * 5);
         }
     }
 

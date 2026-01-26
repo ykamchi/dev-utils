@@ -10,19 +10,20 @@
             this.memberId = memberId;
             this.membersMap = membersMap;
             this.groupInstructions = groupInstructions;
-            this.feedbackDefMap = this.groupInstructions[this.conversation.context.type]?.feedback_def;
+            this.feedbackDefMap = this.groupInstructions[this.conversation.context.type].feedback_def;
             this.page = null;
             this.contentDiv = null;
+            this.chartInstance = null;
+            this.messages = null;
             this.render();
         }
 
         render() {
-
             // Create the main page component
-            this.page = new window.conversations.PageComponent(this.container, 
+            this.page = new window.conversations.PageComponent(this.container,
                 window.conversations.CONVERSATION_TYPES_ICONS[this.conversation.info.conversation_type],
-                window.conversations.CONVERSATION_TYPES_STRING(this.conversation.info.conversation_type, false, true, true, false) + 
-                ' - ' + 
+                window.conversations.CONVERSATION_TYPES_STRING(this.conversation.info.conversation_type, false, true, true, false) +
+                ' - ' +
                 this.conversation.info.name +
                 ` (${this.conversation.names})`,
                 {
@@ -47,88 +48,80 @@
             const instructionDescriptionLine = window.conversations.utils.createDivContainer(wrapperDiv, 'conversation-field-container-vertical');
 
             // Instruction description
-            const instructionDescriptionDiv = window.conversations.utils.createDivContainer(instructionDescriptionLine);
-            window.conversations.utils.createLabel(instructionDescriptionDiv, 'Instruction description:');
-            window.conversations.utils.createReadOnlyText(instructionDescriptionDiv, this.conversation.info.description, 'conversations-field-value');
+            window.conversations.utils.createField(instructionDescriptionLine, 'Instruction description:', this.conversation.info.description);
 
             this.page.updateContentArea(this.contentDiv);
 
-            // Queue info container
-            const statusDiv = window.conversations.utils.createDivContainer(wrapperDiv, 'conversation-container-horizontal');
-
-            //total duration
-            const durationDiv = window.conversations.utils.createDivContainer(statusDiv, 'conversation-field-container-vertical');
-            window.conversations.utils.createLabel(durationDiv, 'Total duration:');
-            window.conversations.utils.createReadOnlyText(durationDiv, Utils.durationSecondsToHMS(this.conversation.status?.duration_seconds), 'conversations-badge-generic', 'Duration');
-
-            //message count
-            const messageCountDiv = window.conversations.utils.createDivContainer(statusDiv, 'conversation-field-container-vertical');
-            window.conversations.utils.createLabel(messageCountDiv, 'Message count:');
-            window.conversations.utils.createReadOnlyText(messageCountDiv, this.conversation.status?.message_count?.toString() || '0', 'conversations-badge-generic', 'Message Count');
-
-
-            // Queue info container
-            const queueInfoDiv = window.conversations.utils.createDivContainer(wrapperDiv, 'conversation-container-horizontal');
-
-            // Queue status
-            const queueStatusDiv = window.conversations.utils.createDivContainer(queueInfoDiv, 'conversation-field-container-vertical');
-            window.conversations.utils.createLabel(queueStatusDiv, 'Queue status:');
-            window.conversations.utils.createReadOnlyText(queueStatusDiv, this.conversation.queue_info.status, 'conversations-badge-state-' + this.conversation.queue_info.status);
-
-            // Queued at
-            const queuedAtDiv = window.conversations.utils.createDivContainer(queueInfoDiv, 'conversation-field-container-vertical');
-            window.conversations.utils.createLabel(queuedAtDiv, 'Queued at:');
-            const queuedAtText = this.conversation.queue_info.queued_at ? Utils.formatDateTime(this.conversation.queue_info.queued_at) : 'N/A';
-            window.conversations.utils.createReadOnlyText(queuedAtDiv, queuedAtText, 'conversations-field-value');
-
-            if (this.conversation.queue_info.position) {
-                // Position in queue
-                const positionDiv = window.conversations.utils.createDivContainer(queueInfoDiv, 'conversation-field-container-vertical');
-                window.conversations.utils.createLabel(positionDiv, 'Position in queue:');
-                window.conversations.utils.createReadOnlyText(positionDiv, this.conversation.queue_info.position.toString(), 'conversations-field-value');
-            }
-
-            if (this.conversation.queue_info.started_at) {
-                // Started at
-                const startedAtDiv = window.conversations.utils.createDivContainer(queueInfoDiv, 'conversation-field-container-vertical');
-                window.conversations.utils.createLabel(startedAtDiv, 'Started at:');
-                const startedAtText = Utils.formatDateTime(this.conversation.queue_info.started_at);
-                window.conversations.utils.createReadOnlyText(startedAtDiv, startedAtText, 'conversations-field-value');
-            }
-
-            if (this.conversation.queue_info.completed_at) {
-                // Completed at
-                const completedAtDiv = window.conversations.utils.createDivContainer(queueInfoDiv, 'conversation-field-container-vertical');
-                window.conversations.utils.createLabel(completedAtDiv, 'Completed at:');
-                const completedAtText = Utils.formatDateTime(this.conversation.queue_info.completed_at);
-                window.conversations.utils.createReadOnlyText(completedAtDiv, completedAtText, 'conversations-field-value');
-            }
-
-            if  (this.conversation.queue_info.error_message) {
-                // Error message
-                const errorMessageDiv = window.conversations.utils.createDivContainer(queueInfoDiv, 'conversation-field-container-vertical');
-                window.conversations.utils.createLabel(errorMessageDiv, 'Error message:');
-                window.conversations.utils.createReadOnlyText(errorMessageDiv, this.conversation.queue_info.error_message, 'conversations-field-value');
-            }   
-
-
+            // Tabs Div
             this.tabsDiv = window.conversations.utils.createDivContainer(wrapperDiv);
 
             // Tabs container
-            const tabs = [
-                { name: 'Feedback', populateFunc: (container) => this.populateFeedbackTab(container) },
-                { name: 'Messages', populateFunc: (container) => this.populateMessagesTab(container) },
-                { name: 'Diagnostics', populateFunc: (container) => { window.conversations.utils.createReadOnlyText(container, 'Diagnostics content not implemented yet'); } }
-            ];
+            const tabs = [ { name: 'Feedback', populateFunc: async (container) => this.populateFeedbackTab(container) } ];
+            if (this.groupInstructions[this.conversation.context.type].info.conversation_type === window.conversations.CONVERSATION_TYPES.AI_CONVERSATION) {
+                tabs.push({ name: 'Messages', populateFunc: async (container) => this.populateMessagesTab(container) });
+                tabs.push({ name: 'Diagnostics', populateFunc: async (container) => this.populateFeedbackProgressTab(container) });                        
+            } else {
+                tabs.push({ name: 'Response', populateFunc: async (container) => this.populateResponseTab(container) });
+            }
+
+            tabs.push({ name: 'State', populateFunc: async (container) => this.populateStateTab(container) });
+
             const storageKey = this.member ? `conversations-member-tabset` : '';
             new window.TabsetComponent(this.tabsDiv, tabs, storageKey);
 
         }
 
-        async populateMessagesTab(container) {
-            const messages = await window.conversations.api.fetchConversationMessages(container, this.conversation.conversation_id);
+        async populateStateTab(container) {
+            // Queue info container
+            const statusDiv = window.conversations.utils.createDivContainer(container, 'conversation-container-horizontal');
 
-            new window.ListComponent(container, messages, (message) => {
+            //total duration
+            window.conversations.utils.createField(statusDiv, 'Total duration:', Utils.durationSecondsToHMS(this.conversation.status?.duration_seconds));
+
+            //message count
+            window.conversations.utils.createField(statusDiv, 'Message count:', this.conversation.status?.message_count?.toString() || '0');
+
+            // Queue info container
+            const queueInfoDiv = window.conversations.utils.createDivContainer(container, 'conversation-container-horizontal');
+
+            // Queue status
+            window.conversations.utils.createBadge(queueInfoDiv, 'Queue status:', this.conversation.queue_info.status, 'state-' + this.conversation.queue_info.status);
+
+            // Queued at
+            if (this.conversation.queue_info.queued_at) {
+                window.conversations.utils.createField(queueInfoDiv, 'Queued at:', Utils.formatDateTime(this.conversation.queue_info.queued_at));
+            }
+
+            if (this.conversation.queue_info.position) {
+                // Position in queue
+                window.conversations.utils.createField(queueInfoDiv, 'Position in queue:', this.conversation.queue_info.position.toString());
+            }
+
+            if (this.conversation.queue_info.started_at) {
+                // Started at
+                window.conversations.utils.createField(queueInfoDiv, 'Started at:', Utils.formatDateTime(this.conversation.queue_info.started_at));
+            }
+
+            if (this.conversation.queue_info.completed_at) {
+                // Completed at
+                window.conversations.utils.createField(queueInfoDiv, 'Completed at:', Utils.formatDateTime(this.conversation.queue_info.completed_at));
+            }
+
+            if (this.conversation.queue_info.error_message) {
+                // Error message
+                window.conversations.utils.createField(queueInfoDiv, 'Error message:', this.conversation.queue_info.error_message);
+            }
+
+
+        }
+
+        async populateMessagesTab(container) {
+            // Fetch messages from API if not already fetched
+            if(!this.messages) {
+                this.messages = await window.conversations.api.fetchConversationMessages(container, this.conversation.info.conversation_type, this.conversation.conversation_id);
+            }
+            
+            new window.ListComponent(container, this.messages, (message) => {
                 const messageDiv = window.conversations.utils.createDivContainer();
                 new window.conversations.CardConversationMessageComponent(messageDiv, message, this.groupInstructions[this.conversation.context.type]);
                 return messageDiv;
@@ -136,18 +129,31 @@
 
         }
 
-        populateFeedbackTab(container) {
-
-            // Feedback info
-            new window.conversations.ConversationFeedbackInfoComponent(container, this.conversation.feedback, this.groupInstructions[this.conversation.context.type], false, true);
-
-            // Decision response for AI_DECISION conversations
-            if (this.conversation.info.conversation_type === window.conversations.CONVERSATION_TYPES.AI_DECISION) {
-                const decisionResponseDiv = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
-                window.conversations.utils.createLabel(decisionResponseDiv, 'Decision Response:');
-                window.conversations.utils.createReadOnlyText(decisionResponseDiv, this.conversation.response);
-            }
+        async populateResponseTab(container) {
+            window.conversations.utils.createField(container, 'Decision Response:', this.conversation.response, true);
         }
+
+        async populateFeedbackTab(container) {
+            // Feedback info
+            new window.conversations.ConversationFeedbackInfoComponent(container, this.conversation.feedback, this.groupInstructions[this.conversation.context.type]);
+        }
+
+        async populateFeedbackProgressTab(container) {
+            // Fetch messages from API if not already fetched
+            if(!this.messages) {
+                this.messages = await window.conversations.api.fetchConversationMessages(container, this.conversation.info.conversation_type, this.conversation.conversation_id);
+            }
+
+            new window.conversations.charts.ChartConversationFeedbackProgressComponent(container, this.feedbackDefMap, this.messages);
+        }
+
+        destroy() {
+            if (this.chartInstance && typeof this.chartInstance.destroy === 'function') {
+                try { this.chartInstance.destroy(); } catch (e) { }
+            }
+            this.chartInstance = null;
+        }
+
     }
 
     window.conversations = window.conversations || {};
