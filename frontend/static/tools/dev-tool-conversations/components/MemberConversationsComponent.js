@@ -3,12 +3,10 @@
         MemberConversationsComponent: displays conversations for a member in dev-tool-conversations
     */
     class MemberConversationsComponent {
-        constructor(container, groupName, memberId, membersMap, groupInstructions, conversation_type) {
+        constructor(container, groupId, member, groupInstructions, conversation_type) {
             this.container = container;
-            this.memberId = memberId;
-            this.membersMap = membersMap;
-            this.groupName = groupName;
-            this.member = membersMap[memberId];
+            this.groupId = groupId;
+            this.member = member
             this.conversation_type = conversation_type;
             this.groupInstructions = {};
             for (const [key, instructions] of Object.entries(groupInstructions)) {
@@ -16,7 +14,7 @@
                     this.groupInstructions[key] = instructions;
                 }
             }
-            this.onlyLastCheckbox = null;
+            this.showOnlyLast = true;
             this.contentDiv = null;
             this.page = null;
             this.render();
@@ -27,20 +25,36 @@
             
             // Page control
             const controlDiv = window.conversations.utils.createDivContainer(null, '-');
-            this.onlyLastCheckbox = new window.CheckboxComponent(controlDiv, false, (checked) => {
-                this.loadContent();
-            }, 'Only show latest ' + window.conversations.CONVERSATION_TYPES_STRING(this.conversation_type, false, true, false, false), false, `If checked, only the latest ${window.conversations.CONVERSATION_TYPES_STRING(this.conversation_type, false, true, false, false)} will be shown for each ${window.conversations.CONVERSATION_TYPES_STRING(this.conversation_type, false, true, false, false)} type.`);
+            new ToggleButtonComponent(
+                controlDiv,
+                this.showOnlyLast,
+                async (v) => {
+                    if (v) {
+                        this.showOnlyLast = true;
+                    } else {
+                        this.showOnlyLast = false;
+                    }
+                    this.loadContent();
+                },
+                'Last per type',
+                'All',
+                '140px',
+                '34px'
+            );
             this.page.updateControlArea(controlDiv);
 
             // Page buttons
-            const buttonsDiv = window.conversations.utils.createDivContainer(null, '-');
+            const buttonsDiv = window.conversations.utils.createDivContainer(null, 'conversation-container-horizontal');
             
             // Create "Start new ..." button text
             let startNewConversationButtonText = window.conversations.CONVERSATION_TYPES_ICONS[this.conversation_type];
             startNewConversationButtonText += ' Start new ';
             startNewConversationButtonText += window.conversations.CONVERSATION_TYPES_STRING(this.conversation_type, false, true, false, false);
 
+            
+
             new window.ButtonComponent(buttonsDiv, startNewConversationButtonText, this.showConversationStartPopup.bind(this), window.ButtonComponent.TYPE_GHOST, startNewConversationButtonText);
+
             this.page.updateButtonsArea(buttonsDiv);
 
             this.loadContent();
@@ -48,16 +62,16 @@
 
         async loadContent() {
             // Fetch conversations for the member
-            const conversations = await window.conversations.api.fetchMemberConversations('', this.memberId, this.conversation_type, this.onlyLastCheckbox.isChecked());
+            const conversations = await window.conversations.apiConversations.conversationsList('', this.groupId, this.member.name, this.conversation_type, this.showOnlyLast);
             for (const conversation of conversations) {
-                conversation['names'] = conversation.members.map(m => m.member_nick_name).filter(name => name !== this.membersMap[this.memberId].name).join(', ');
+                conversation['names'] = conversation.members.map(m => m.member_nick_name).filter(name => name !== this.member.name).join(', ');
             }
             
             // Page content
             const contentDiv = window.conversations.utils.createDivContainer();
             new window.ListComponent(contentDiv, conversations, (conversation) => {
                     const conversationDiv = window.conversations.utils.createDivContainer();
-                    new window.conversations.CardMemberConversationComponent(conversationDiv, conversation, this.memberId, this.membersMap, this.groupInstructions);
+                    new window.conversations.CardMemberConversationComponent(conversationDiv, conversation, this.member, this.groupInstructions);
                     return conversationDiv;
                 },
                 window.ListComponent.SELECTION_MODE_SINGLE, null, 
@@ -79,7 +93,7 @@
                 icon: window.conversations.CONVERSATION_TYPES_ICONS[this.conversation_type],
                 title: 'Start new ' + window.conversations.CONVERSATION_TYPES_STRING(this.conversation_type, false, true, false, false),
                 content: (container) => {
-                    new window.conversations.MemberConversationStartComponent(container, this.groupName, this.memberId, this.membersMap, this.groupInstructions, this.conversation_type, popup);
+                    new window.conversations.MemberConversationStartComponent(container, this.groupId, this.member, this.groupInstructions, this.conversation_type, popup);
                 },
                 closable: true,
                 width: '910px',

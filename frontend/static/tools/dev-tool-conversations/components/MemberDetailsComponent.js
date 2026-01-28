@@ -3,12 +3,10 @@
         MemberDetails: right side tabset for member details in dev-tool-conversations
     */
     class MemberDetailsComponent {
-        constructor(container, groupName, memberId, membersMap) {
+        constructor(container, groupId, member) {
             this.container = container;
-            this.groupName = groupName;
-            this.memberId = memberId;
-            this.membersMap = membersMap;
-            this.member = membersMap[memberId];
+            this.groupId = groupId;
+            this.member = member;
             this.page = null;
             this.render();
         }
@@ -38,7 +36,7 @@
 
         async loadContent() {
             // Fetch group instructions for AI decision types
-            const groupInstructionsResults = await window.conversations.api.fetchGroupInstructions(this.container, this.groupName);   
+            const groupInstructionsResults = await window.conversations.apiInstructions.instructionsList(this.container, this.groupId);   
             const groupInstructions = {}
             for (const entry in groupInstructionsResults) {
                 groupInstructions[groupInstructionsResults[entry].info.type] = groupInstructionsResults[entry];
@@ -48,10 +46,10 @@
             const contentDiv = window.conversations.utils.createDivContainer();
             const tabs = [
                 { name: '🧑 Profile', populateFunc: (container) => { window.conversations.utils.createJsonDiv(container, this.member) } },
-                { name: window.conversations.CONVERSATION_TYPES_STRING(window.conversations.CONVERSATION_TYPES.AI_DECISION), populateFunc: (container) => { new window.conversations.MemberConversationsComponent(container, this.groupName, this.memberId, this.membersMap, groupInstructions, window.conversations.CONVERSATION_TYPES.AI_DECISION); } },
-                { name: window.conversations.CONVERSATION_TYPES_STRING(window.conversations.CONVERSATION_TYPES.AI_CONVERSATION), populateFunc: (container) => { new window.conversations.MemberConversationsComponent(container, this.groupName, this.memberId, this.membersMap, groupInstructions, window.conversations.CONVERSATION_TYPES.AI_CONVERSATION); } }
+                { name: window.conversations.CONVERSATION_TYPES_STRING(window.conversations.CONVERSATION_TYPES.AI_DECISION), populateFunc: (container) => { new window.conversations.MemberConversationsComponent(container, this.groupId, this.member, groupInstructions, window.conversations.CONVERSATION_TYPES.AI_DECISION); } },
+                { name: window.conversations.CONVERSATION_TYPES_STRING(window.conversations.CONVERSATION_TYPES.AI_CONVERSATION), populateFunc: (container) => { new window.conversations.MemberConversationsComponent(container, this.groupId, this.member, groupInstructions, window.conversations.CONVERSATION_TYPES.AI_CONVERSATION); } }
             ];
-            const storageKey = this.member ? `conversations-member-tabset` : '';
+            const storageKey = `conversations-member-tabset-${this.member.name}`;
             new window.TabsetComponent(contentDiv, tabs, storageKey);
             this.page.updateContentArea(contentDiv);
         }

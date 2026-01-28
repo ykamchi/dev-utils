@@ -7,7 +7,7 @@
         constructor(container, onChange) {
             this.container = container;
             this.onChange = onChange;
-            this.selectedGroup = null;
+            this.selectedGroupId = null;
             this.selectedMode = 'view';
             this.render();
         }
@@ -37,23 +37,23 @@
 
         async load() {
             // Fetch groups
-            this.groups = await window.conversations.api.fetchGroups(this.contentContainer);
+            this.groups = await window.conversations.apiGroups.groupsList(this.contentContainer);
             if (!this.groups || this.groups.length === 0) {
                 this.contentContainer.innerHTML = '<div class="conversations-message-empty">No groups available. Please add a group.</div>';
                 return;
             }
 
             // Determine selected group
-            if (this.selectedGroup === null) {
+            if (this.selectedGroupId === null) {
                 const storedGroup = window.StorageService.getLocalStorageItem('last-selected-group', null);
                 if (storedGroup) {
                     if (this.groups.find(g => g.group_name === storedGroup)) {
-                        this.selectedGroup = storedGroup;
+                        this.selectedGroupId = storedGroup;
                     } else {
-                        this.selectedGroup = this.groups[0].group_name;
+                        this.selectedGroupId = this.groups[0].group_id;
                     }
                 } else {
-                    this.selectedGroup = this.groups[0].group_name;
+                    this.selectedGroupId = this.groups[0].group_id;
                 }
             }
 
@@ -66,16 +66,16 @@
             // Select group dropdown 
             new window.SelectComponent(
                 controlsContainer,
-                this.groups.map(g => ({ label: g.group_name, value: g.group_name })),
+                this.groups.map(g => ({ label: g.group_name, value: g.group_id })),
                 (selectedGroup) => {
-                    this.selectedGroup = selectedGroup;
+                    this.selectedGroupId = selectedGroup;
                     this.onChange();
 
                     // Persist selection
                     window.StorageService.setLocalStorageItem('last-selected-group', selectedGroup);
                 },
                 'Select Group ...',
-                this.selectedGroup
+                this.selectedGroupId
             );
 
             // Option buttons (View/Manage)
@@ -116,9 +116,9 @@
 
         // Populate Seed Groups tab
         async populateSeedGroupsTab(container, popup) {
-            const editorDiv = window.conversations.utils.createDivContainer(container);
+            const editorDiv = window.conversations.utils.createDivContainer(container, 'conversation-container-vertical');
 
-            const seeds = await window.conversations.api.fetchGroupSeeds(null);
+            const seeds = await window.conversations.apiSeeds.fetchGroupSeeds(null);
 
             // Seed group button
             const buttonContainer = window.conversations.utils.createDivContainer(editorDiv, 'conversations-buttons-container');
@@ -128,8 +128,8 @@
                 // Call API to add group for each selected seed
                 for (const seedEntry of seeds) {
                     if (seedEntry.include && seedEntry.valid) {
-                        const result = await window.conversations.api.addGroup(null, seedEntry.group_name, seedEntry.fileContent.group_description);
-                        this.selectedGroup = result.group.group_name;
+                        const result = await window.conversations.apiGroups.groupsAdd(null, seedEntry.group_name, seedEntry.fileContent.group_description);
+                        this.selectedGroupId = result.group_id;
                         this.render();
                     }
                 }
@@ -174,8 +174,8 @@
                 popup.hide();
 
                 // Call API to add group
-                const result = await window.conversations.api.addGroup(null, updatedData.groupName, updatedData.groupDescription);
-                this.selectedGroup = result.group.group_name;
+                const result = await window.conversations.apiGroups.groupsAdd(null, updatedData.groupName, updatedData.groupDescription);
+                this.selectedGroupId = result.group_id;
                 this.render();
             }, window.ButtonComponent.TYPE_GHOST, '💾 Add group');
 
@@ -188,8 +188,8 @@
                 ['Confirm Delete', async () => {
 
                     // Call API to delete group
-                    await window.conversations.api.deleteGroup(null, this.selectedGroup);
-                    this.selectedGroup = null;
+                    await window.conversations.apiGroups.groupsDelete(null, this.selectedGroupId);
+                    this.selectedGroupId = null;
                     this.load();
                     // this.render();
                     this.onChange();

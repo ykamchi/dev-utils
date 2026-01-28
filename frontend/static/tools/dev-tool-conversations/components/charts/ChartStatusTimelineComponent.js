@@ -161,7 +161,7 @@
 
         async renderGroupNameSelect(groupNameSelectDiv) {
             // Group name select
-            const groups = await window.conversations.api.fetchGroups(groupNameSelectDiv);
+            const groups = await window.conversations.apiGroups.groupsList(groupNameSelectDiv);
             const groupOptions = groups.map(g => ({ label: g.group_name, value: g.group_name }));
             new window.SelectComponent(
                 groupNameSelectDiv,
@@ -206,7 +206,7 @@
                 // Fetch instructions for the selected group (with caching)
                 let instructionsResp = this.cacheInstructionsByGroup[this.state.group_name];
                 if (!instructionsResp) {
-                    instructionsResp = await window.conversations.api.fetchGroupInstructions(this.instructionTypeControlDiv, this.state.group_name);
+                    instructionsResp = await window.conversations.apiInstructions.instructionsList(this.instructionTypeControlDiv, this.state.group_name);
                     this.cacheInstructionsByGroup[this.state.group_name] = instructionsResp;
                 }
 
@@ -238,7 +238,6 @@
                 this.state.states,
                 (v) => {
                     this.state.states = v;
-                    console.log('Selected states:', v);
                     this.renderChart();
                     window.StorageService.setStorageJSON('conversations_chart_status_timeline_states', v);
                 },
@@ -255,7 +254,6 @@
                 1,
                 this.state.hours_back,
                 (v) => {
-                    console.log('Hours back selected:', v.max);
                     this.state.hours_back = v.max;
                     this.renderChart();
                     window.StorageService.setLocalStorageItem('conversations_chart_status_timeline_hours_back', v.max);

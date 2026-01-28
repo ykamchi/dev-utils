@@ -30,11 +30,14 @@ window.tool_script = {
             });
         }
         // Initialize group selection component
-        // MenuGroupSelectionComponent expose the selectedGroup and selectedMode properties
-        // the initial values of selectedGroup and selectedMode will be available and triggered 
+        // MenuGroupSelectionComponent expose the selectedGroupId and selectedMode properties
+        // the initial values of selectedGroupId and selectedMode will be available and triggered 
         // from the callback onChange when component is loaded
         this.MenuGroupSelectionComponent = new window.conversations.MenuGroupSelectionComponent(
-            this.groupSelectionContainer, () => { this.updateContent(); }
+            this.groupSelectionContainer, () => { 
+                console.log('[Conversations Tool] Group selection changed to:', this.MenuGroupSelectionComponent.selectedGroupId, 'Mode:', this.MenuGroupSelectionComponent.selectedMode);
+                this.updateContent(); 
+            }
         );
     },
 
@@ -42,8 +45,9 @@ window.tool_script = {
     updateContent() {
         // Clear content container
         this.contentContainer.innerHTML = '';
-
-        if (!this.MenuGroupSelectionComponent.selectedGroup) {
+        console.log('[Conversations Tool] Loading manage component for group:', this.MenuGroupSelectionComponent.selectedGroupId);
+        
+        if (!this.MenuGroupSelectionComponent.selectedGroupId) {
             // No group selected
             this.right.innerHTML = '<div class="conversations-message-empty">Please select a group.</div>';
             return;
@@ -56,17 +60,17 @@ window.tool_script = {
                 this.contentContainer,
                 this.onMemberSelect.bind(this, this.right)
             );
-            this.MenuListMembersComponent.load(this.MenuGroupSelectionComponent.selectedGroup);
+            this.MenuListMembersComponent.load(this.MenuGroupSelectionComponent.selectedGroupId);
 
         } else if (this.MenuGroupSelectionComponent.selectedMode === 'manage') {
             // Show manage component - Manage mode
             this.right.innerHTML = '<div class="conversations-message-empty">Select a management option.</div>';
-            this.ListMenuListManageComponent = new window.conversations.ListMenuListManageComponent(
+            this.MenuListManageComponent = new window.conversations.MenuListManageComponent(
                 this.contentContainer,
                 this.onManageOptionSelect.bind(this, this.right),
                 this.onGroupNameChange.bind(this, this.MenuGroupSelectionComponent)
             );
-            this.ListMenuListManageComponent.load(this.MenuGroupSelectionComponent.selectedGroup);
+            this.MenuListManageComponent.load(this.MenuGroupSelectionComponent.selectedGroupId);
         }
     },
 
@@ -75,14 +79,14 @@ window.tool_script = {
     onMemberSelect(right, memberId, membersMap) {
         right.innerHTML = '';
         if (memberId) {
-            new window.conversations.MemberDetailsComponent(right, this.MenuGroupSelectionComponent.selectedGroup, memberId, membersMap);
+            new window.conversations.MemberDetailsComponent(right, this.MenuGroupSelectionComponent.selectedGroupId, memberId, membersMap);
         } else {
             right.innerHTML = '<div class="conversations-message-empty">No member selected.</div>';
         }
     },
 
     // Show manage option details in right pane after 
-    // selection invoked by ListMenuListManageComponent
+    // selection invoked by MenuListManageComponent
     onManageOptionSelect(right, optionId, manageOptions) {
         right.innerHTML = '';
         if (optionId) {
@@ -90,7 +94,7 @@ window.tool_script = {
             if (selectedOption && selectedOption.component) {
                 const ComponentClass = window.conversations[selectedOption.component];
                 if (ComponentClass) {
-                    new ComponentClass(right, this.MenuGroupSelectionComponent.selectedGroup, optionId, manageOptions);
+                    new ComponentClass(right, this.MenuGroupSelectionComponent.selectedGroupId, optionId, manageOptions);
                 } else {
                     console.error(`Component ${selectedOption.component} not found`);
                     right.innerHTML = '<div class="conversations-message-empty">Component not found.</div>';
@@ -103,10 +107,10 @@ window.tool_script = {
         }
     },
 
-    // Handle group name change from ListMenuListManageComponent
+    // Handle group name change from MenuListManageComponent
     // Update the selected group and reload the group selection component
-    async onGroupNameChange(MenuGroupSelectionComponent, newGroupName) {
-        MenuGroupSelectionComponent.selectedGroup = newGroupName;
+    async onGroupNameChange(MenuGroupSelectionComponent, groupId) {
+        MenuGroupSelectionComponent.selectedGroupId = groupId;
         await MenuGroupSelectionComponent.load();
     },
 

@@ -1,8 +1,8 @@
 (function () {
     /*
-        ListMenuListManageComponent: Manage mode for group management in dev-tool-conversations
+        MenuListManageComponent: Manage mode for group management in dev-tool-conversations
     */
-    class ListMenuListManageComponent {
+    class MenuListManageComponent {
         constructor(container, onManageOptionSelect, onGroupNameChange) {
             this.container = container;
             this.onManageOptionSelect = onManageOptionSelect;
@@ -61,8 +61,8 @@
                     component: 'ManageGroupSettingsComponent',
                     info: {
                         groupName: selectedGroup,
-                        onGroupNameChange: async (newGroupName) => {
-                            this.onGroupNameChange(newGroupName);
+                        onGroupNameChange: async (group_id) => {
+                            this.onGroupNameChange(group_id);
                         }
                     }
                 },
@@ -117,5 +117,5 @@
     }
 
     window.conversations = window.conversations || {};
-    window.conversations.ListMenuListManageComponent = ListMenuListManageComponent;
+    window.conversations.MenuListManageComponent = MenuListManageComponent;
 })();

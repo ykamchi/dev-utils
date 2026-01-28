@@ -52,7 +52,6 @@
                 controlDiv,
                 !this.queueState.paused,
                 async (v) => {
-                    console.log('toggle:', v);
                     if (v) {
                         await window.conversations.system_api.queueResume(this.container);
                     } else {

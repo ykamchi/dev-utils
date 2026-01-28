@@ -4,11 +4,10 @@
         Usage: new window.conversations.MemberConversationDetailsComponent(container, conversation, groupInstructions)
     */
     class MemberConversationDetailsComponent {
-        constructor(container, conversation, memberId, membersMap, groupInstructions) {
+        constructor(container, conversation, member, groupInstructions) {
             this.container = container;
             this.conversation = conversation;
-            this.memberId = memberId;
-            this.membersMap = membersMap;
+            this.member = member;
             this.groupInstructions = groupInstructions;
             this.feedbackDefMap = this.groupInstructions[this.conversation.context.type].feedback_def;
             this.page = null;
@@ -27,7 +26,7 @@
                 this.conversation.info.name +
                 ` (${this.conversation.names})`,
                 {
-                    'Viewing member': this.membersMap[this.memberId].name,
+                    'Viewing member': this.member.name,
                     Date: Utils.formatDateTime(this.conversation.created_at),
                     Type: this.conversation.info.name
                 }
@@ -118,7 +117,7 @@
         async populateMessagesTab(container) {
             // Fetch messages from API if not already fetched
             if(!this.messages) {
-                this.messages = await window.conversations.api.fetchConversationMessages(container, this.conversation.info.conversation_type, this.conversation.conversation_id);
+                this.messages = await window.conversations.apiConversations.fetchConversationMessages(container, this.conversation.info.conversation_type, this.conversation.conversation_id);
             }
             
             new window.ListComponent(container, this.messages, (message) => {
@@ -141,7 +140,7 @@
         async populateFeedbackProgressTab(container) {
             // Fetch messages from API if not already fetched
             if(!this.messages) {
-                this.messages = await window.conversations.api.fetchConversationMessages(container, this.conversation.info.conversation_type, this.conversation.conversation_id);
+                this.messages = await window.conversations.apiConversations.fetchConversationMessages(container, this.conversation.info.conversation_type, this.conversation.conversation_id);
             }
 
             new window.conversations.charts.ChartConversationFeedbackProgressComponent(container, this.feedbackDefMap, this.messages);

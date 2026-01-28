@@ -11,11 +11,10 @@
          * @param {Object} groupInstructions - The instructions map
          * 
          */
-        constructor(container, conversation, memberId, membersMap, groupInstructions) {
+        constructor(container, conversation, member, groupInstructions) {
             this.container = container;
             this.conversation = conversation;
-            this.memberId = memberId;
-            this.membersMap = membersMap;
+            this.member = member;
             this.groupInstructions = groupInstructions;
             this.feedbackDefMap = this.groupInstructions[this.conversation.context.type]?.feedback_def;
             this.render();
@@ -68,7 +67,7 @@
                 icon: window.conversations.CONVERSATION_TYPES_ICONS[this.conversation.info.conversation_type],
                 title: 'Conversation Details',
                 content: (container) => {
-                    new window.conversations.MemberConversationDetailsComponent(container, this.conversation, this.memberId, this.membersMap, this.groupInstructions);
+                    new window.conversations.MemberConversationDetailsComponent(container, this.conversation, this.member, this.groupInstructions);
                 },
                 closable: true,
                 width: '1200px',

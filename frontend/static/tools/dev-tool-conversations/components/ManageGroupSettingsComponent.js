@@ -3,21 +3,28 @@
         ManageGroupSettingsComponent: TODO - implement group settings UI and logic
     */
     class ManageGroupSettingsComponent {
-        constructor(container, groupName, optionId, manageOptions) {
+        constructor(container, groupId, optionId, manageOptions) {
             this.container = container;
-            this.groupName = groupName;
+            this.groupId = groupId;
             this.optionId = optionId;
-            this.group = null;
             this.manageOptions = manageOptions;
             this.groupEditor = null;
+            this.group = null;
             this.page = null;
             this.render();
         }
 
         render() {
+
+            this.loadContent();
+        }
+
+        async loadContent() {
+            this.group = await window.conversations.apiGroups.groupsGet(null, this.groupId);
+
             // Create the main page component
             this.page = new window.conversations.PageComponent(this.container, this.manageOptions[this.optionId].icon, this.manageOptions[this.optionId].name,
-                `${this.groupName} Settings`
+                `${this.group.group_name} Settings`
             );
 
             // Page control
@@ -28,46 +35,27 @@
             const buttonsDiv = window.conversations.utils.createDivContainer(null, 'conversations-buttons-container');
             this.page.updateButtonsArea(buttonsDiv);
 
-            this.loadContent();
-        }
-
-        async loadContent() {      
-            // Fetch group details
-            // TODO: Need API to fetch single group details
-            const groups = await window.conversations.api.fetchGroups(null);
-            const groupDescription = groups.find(g => g.group_name === this.groupName).group_description; 
-
             // Page content
             const contentDiv = window.conversations.utils.createDivContainer();
             const tabsetTabs = [
-                {
-                    name: 'Properties',
-                    populateFunc: (container) => {
-                        this.populateEditTab(container, groupDescription);
-                    }
-                },
-                {
-                    name: 'Seed Data',
-                    populateFunc: (container) => {
-                        this.populateSeedDataTab(container);
-                    }
-                }
+                { name: 'Properties', populateFunc: (container) => { this.populateEditTab(container); } },
+                { name: 'Seed Data', populateFunc: (container) => { this.populateSeedDataTab(container); } }
             ];
             new window.TabsetComponent(contentDiv, tabsetTabs, 'manage-group-settings-tabset');
             this.page.updateContentArea(contentDiv);
         }
 
-        populateEditTab(container, groupDescription) {
+        populateEditTab(container) {
             // Edit group section (for Properties tab)
             const buttonContainer = window.conversations.utils.createDivContainer(container, 'conversations-buttons-container');
             new window.ButtonComponent(buttonContainer, '💾', () => this.saveGroupProperties(), window.ButtonComponent.TYPE_GHOST, '💾 Save instruction');
-            this.groupEditor = new window.conversations.ManageGroupEditorComponent(container, this.groupName, groupDescription); 
+            this.groupEditor = new window.conversations.ManageGroupEditorComponent(container, this.group.group_name, this.group.group_description); 
         }
     
         async populateSeedDataTab(container) {
-            const seedGroupDiv = window.conversations.utils.createDivContainer(container);
+            const seedGroupDiv = window.conversations.utils.createDivContainer(container, 'conversation-container-vertical');
 
-            const seedingData = await window.conversations.api.fetchGroupSeedFiles(null, this.groupName);
+            const seedingData = await window.conversations.apiSeeds.fetchGroupSeedFiles(null, this.group.group_name);
             if (seedingData && seedingData.length > 0) {
                 // Pre-load instruction file contents for valid entries
                 for (const seedEntry of seedingData) {
@@ -149,13 +137,10 @@
             for (const entry of seedingData) {
                 if (entry.include) {
                     if (entry.type === 'members') {
-                        console.log("Seeding members from:", entry.file.name);
-                        await window.conversations.api.addGroupMembers(null, this.groupName, entry.fileContent);
+                        await window.conversations.apiMembers.membersAdd(null, this.group.group_id, entry.fileContent);
 
                     } else if (entry.type === 'instruction') {
-                        console.log("Seeding instruction from folder:", entry.folderName);
-                        await window.conversations.api.addGroupInstructions(null, this.groupName, entry.instructionContent, entry.feedbackContent, entry.infoContent);
-
+                        await window.conversations.apiInstructions.instructionsAdd(null, this.group.group_id, entry.instructionContent, entry.feedbackContent, entry.infoContent);
                     }
                 }
             }
@@ -174,14 +159,18 @@
             }
 
             // Call API to save group settings
-            const result = await window.conversations.api.updateGroup(null, this.groupName, newGroupName, newDescription);
+            try {
+                const ret = await window.conversations.apiGroups.groupsUpdate(null, this.group.group_id, newGroupName, newDescription, this.group.group_name);
+                if (ret.group_name !== this.group.group_name) {
+                    this.manageOptions[this.optionId].info.onGroupNameChange(ret.group_id);
+                }
+
+            } catch (e) {
+                console.error('Error saving group settings:', e);
+                new window.AlertComponent('Error', `Failed to save group settings: ${e.message || e.toString()}`);
+                return;
+            }            
             
-            if (result.success) {
-                new window.AlertComponent('Success', 'Group settings saved successfully.');
-                this.manageOptions[this.optionId].info.onGroupNameChange(newGroupName);
-            } else {
-                new window.AlertComponent('Error', `Failed to save group settings: ${result.error || 'Unknown error'}`);
-            }
         }
 
         load

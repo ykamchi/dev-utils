@@ -50,6 +50,10 @@
             // Instructions type field (read-only)
             window.conversations.utils.createField(container, 'Conversation Type:', this.instruction.instructions_type, true);
 
+            // Instructions type field (read-only)
+            window.conversations.utils.createInput(container, 'Conversation Type:', this.instruction.info.type, /^[a-zA-Z0-9 _-]+$/,'e.g., My Instruction Name',(value, isValid) => {
+                this.instruction.info.type = value;
+            });
             // Description field (editable)
             window.conversations.utils.createTextArea(container, 'Description:', this.instruction.info.description, 'My Instruction Description', (value) => {
                 this.instruction.info.description = value;

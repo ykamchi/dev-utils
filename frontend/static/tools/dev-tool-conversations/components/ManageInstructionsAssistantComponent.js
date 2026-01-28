@@ -19,7 +19,7 @@
         }
 
         async load(component) {
-            this.members = await window.conversations.api.fetchGroupMembers(component, this.groupName);
+            this.members = await window.conversations.apiMembers.membersList(component, this.groupName);
            
             // Create ListComponent with filtered members
             const items = Object.entries(this.members).map(([id, m]) => ({ id, member: m }));

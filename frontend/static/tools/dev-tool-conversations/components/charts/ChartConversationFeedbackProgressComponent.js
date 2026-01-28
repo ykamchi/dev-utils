@@ -41,7 +41,7 @@
         async loadContent() {
             // Fetch messages from API if not already given in the constructor
             if (!this.messages) {
-                this.messages = await window.conversations.api.fetchConversationMessages(this.container, this.conversation.info.conversation_type, this.conversation.conversation_id);
+                this.messages = await window.conversations.apiConversations.fetchConversationMessages(this.container, this.conversation.info.conversation_type, this.conversation.conversation_id);
             }
 
             this.chartData = this.parseFeedbackDatasets();
@@ -101,11 +101,9 @@
             // States options
             new window.OptionButtonsComponent(
                 feedbacksControlDiv,
-                Object.entries(this.feedbackDefMap).map(([key, value]) => {
-                    if (value.type === 'integer') {
-                        return { label: key, value: key };
-                    }
-                }),
+                Object.keys(this.feedbackDefMap)
+                .filter(key => this.feedbackDefMap[key].type === 'integer')
+                .map(key => ({ label: key, value: key })),
                 this.state.feedbacks,
                 (v) => {
                     this.state.feedbacks = v;

@@ -35,7 +35,7 @@
         // Get the group available instructions and render them in tabs according to the conversation types
         async load() {
             // Fetch instruction info
-            this.instructions = await window.conversations.api.fetchGroupInstructions(null, this.groupName, this.manageOptions[this.optionId].info.conversationType);
+            this.instructions = await window.conversations.apiInstructions.instructionsList(null, this.groupName, this.manageOptions[this.optionId].info.conversationType);
 
             // Page control
             const controlDiv = window.conversations.utils.createDivContainer(null, '-');
@@ -98,7 +98,7 @@
             }
 
             // Call API to save
-            await window.conversations.api.updateGroupInstructions(null, this.groupName,
+            await window.conversations.apiInstructions.instructionsUpdate(null, this.groupName,
                 selectedInstruction.instructions_type,
                 updatedInstructions.instructions,
                 updatedInstructions.feedback_def,
@@ -113,7 +113,7 @@
             new window.AlertComponent('Delete Instructions', 'Are you sure you want to delete these instructions?', [
                 ['Confirm Delete', async () => {
                     // Call API to delete
-                    await window.conversations.api.deleteGroupInstructions(null, this.groupName, this.selectedInstructionType);
+                    await window.conversations.apiInstructions.instructionsDelete(null, this.groupName, this.selectedInstructionType);
 
                     // Clear selected instruction type
                     this.selectedInstructionType = null;
@@ -139,7 +139,7 @@
                     // Save instructions button
                     new window.ButtonComponent(buttonContainer, '💾', async () => {
                         const updatedData = instructionsEditor.updatedInstructions();
-                        const result = await window.conversations.api.addGroupInstructions(
+                        const result = await window.conversations.apiInstructions.instructionsAdd(
                             null,
                             this.groupName,
                             updatedData.instructions,

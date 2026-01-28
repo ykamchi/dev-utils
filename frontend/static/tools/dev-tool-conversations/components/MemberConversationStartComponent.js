@@ -4,11 +4,10 @@
     */
 
     class MemberConversationStartComponent {
-        constructor(container, groupName, memberId, membersMap, groupInstructions, conversation_type, popupInstance) {
+        constructor(container, groupId, member, groupInstructions, conversation_type, popupInstance) {
             this.container = container;
-            this.groupName = groupName;
-            this.memberId = memberId;
-            this.membersMap = membersMap;
+            this.groupId = groupId;
+            this.member = member;
             this.groupInstructions = groupInstructions;
             this.conversation_type = conversation_type;
             this.popupInstance = popupInstance;
@@ -37,13 +36,14 @@
 
         }
 
-        loadContent() {
+        async loadContent() {
 
             const controlDiv = window.conversations.utils.createDivContainer(null, '-');
             const selectInstructionWrapper = window.conversations.utils.createDivContainer(controlDiv);
             window.conversations.utils.createLabel(selectInstructionWrapper, 'Select Instruction:');
             
-            if (Object.entries(this.groupInstructions).length > 1) {
+            if (Object.entries(this.groupInstructions).length > 0) {
+                this.selectedInstruction = Object.values(this.groupInstructions)[0].info.type;
                 // Instructions chooser
                 const selectOptions = Object.values(this.groupInstructions).map(entry => ({ label: entry.info.name, value: entry.info.type }));
                 new window.SelectComponent(
@@ -52,15 +52,10 @@
                     (selectedValue) => { 
                         this.selectedInstruction = selectedValue 
                     },
-                    'Select an instruction...' 
+                    'Select an instruction...',
+                    this.selectedInstruction
                 );
                 this.page.updateControlArea(controlDiv);
-            } else if (Object.entries(this.groupInstructions).length === 1) {
-
-                this.selectedInstruction = Object.values(this.groupInstructions)[0].info.type;
-                const instructionType =  window.conversations.utils.createReadOnlyText(selectInstructionWrapper, this.selectedInstruction);
-                this.page.updateControlArea(instructionType);
-                
             } else {
                 this.page.updateControlArea(null);
                 const missingInstructionsDiv = window.conversations.utils.createReadOnlyText(controlDiv, 'No instructions available for this conversation type.', 'conversations-message-empty');
@@ -71,13 +66,15 @@
 
             // Members chooser - filter out the current member
             const contentDiv = window.conversations.utils.createDivContainer();
-            const membersList = Object.entries(this.membersMap).filter(([id]) => id !== this.memberId).map(([id, member]) => ({label: id, value: member}));
+            const members = await window.conversations.apiMembers.membersList(this.membersListItems, this.groupId);
+            // const members = window.conversations.apiMembers.membersList(null, this.groupId);
+            // const membersList = Object.entries(this.membersMap).filter(([id]) => id !== this.memberId).map(([id, member]) => ({label: id, value: member}));
             this.MenuListMembersComponent = new window.ListComponent(
                 contentDiv, 
-                membersList, 
+                members, 
                 (member) => {
                     const tempDiv = window.conversations.utils.createDivContainer();
-                    new window.conversations.CardMemberComponent(tempDiv, member.value);
+                    new window.conversations.CardMemberComponent(tempDiv, member);
                     return tempDiv;
                 }, 
                 window.ListComponent.SELECTION_MODE_MULTIPLE,
@@ -101,13 +98,13 @@
                 new window.AlertComponent('Missing Members', 'Please select at least one member to participate in the decision.');
                 return;
             }
-            const participant_members_nick_names = selectedMembers.map(m => m.value.name);
-            if (this.memberId) {
-                participant_members_nick_names.push(this.membersMap[this.memberId].name);
+            const participant_members_nick_names = selectedMembers.map(m => m.name);
+            if (this.member) {
+                participant_members_nick_names.push(this.member.name);
             }
 
             // Start the conversation
-            window.conversations.api.conversationStart(null, this.groupName, this.conversation_type, this.selectedInstruction, participant_members_nick_names, participant_members_nick_names.length * 5);
+            window.conversations.apiConversations.conversationAdd(null, this.groupId, this.conversation_type, this.selectedInstruction, participant_members_nick_names, participant_members_nick_names.length * 5);
         }
     }
 

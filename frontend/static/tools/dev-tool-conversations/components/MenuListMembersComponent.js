@@ -29,25 +29,23 @@
         // Load members for the selected group
         async load(selectedGroup) {
             this.selectedGroup = selectedGroup;
-            this.members = await window.conversations.api.fetchGroupMembers(this.membersListItems, selectedGroup);
-           
+            this.members = await window.conversations.apiMembers.membersList(this.membersListItems, selectedGroup);
             // Create ListComponent with filtered members
-            const items = Object.entries(this.members).map(([id, m]) => ({ id, member: m }));
+            // const items = Object.entries(this.members).map(m => ({ id: m.name, member: m }));
             this.list = new window.ListComponent(
                 this.membersListItems,
-                items,
+                this.members,
                 (item) => {
                     const memberDiv = document.createElement('div');
-                    new window.conversations.CardMemberComponent(memberDiv, item.member);
+                    new window.conversations.CardMemberComponent(memberDiv, item);
                     return memberDiv;
                 },
                 window.ListComponent.SELECTION_MODE_SINGLE,
                 (selectedItems) => {
                     if (selectedItems.length > 0) {
-                        this.onMemberSelect(selectedItems[0].id, this.members);
-                        this.list.storeLastSelected('members-list-last-selection-' + this.selectedGroup, item => item.id);
+                        this.onMemberSelect(selectedItems[0]);
+                        this.list.storeLastSelected('members-list-last-selection-' + this.selectedGroup, item => item.name);
                     } else {
-                        console.log('No member selected');
                         this.onMemberSelect(null, this.members);
                     }
                 },
@@ -56,14 +54,14 @@
                     return name.toLowerCase().includes(query.toLowerCase());
                 },
                 [
-                    { label: 'Name', func: (a, b) => { return a.member.name < b.member.name ? -1 : 1; } , direction: 1 },
-                    { label: 'Location', func: (a, b) => a.member.location < b.member.location ? -1 : 1, direction: 1 },
-                    { label: 'Age', func: (a, b) => a.member.age < b.member.age ? -1 : 1, direction: 1 },
+                    { label: 'Name', func: (a, b) => { return a.name < b.name ? -1 : 1; } , direction: 1 },
+                    { label: 'Location', func: (a, b) => a.location < b.location ? -1 : 1, direction: 1 },
+                    { label: 'Age', func: (a, b) => a.age < b.age ? -1 : 1, direction: 1 },
                 ] 
             );
 
             // Restore last selection, or select first item
-            this.list.setLastSelected('members-list-last-selection-' + this.selectedGroup, item => item.id);
+            this.list.setLastSelected('members-list-last-selection-' + this.selectedGroup, item => item.name);
 
         }
     }

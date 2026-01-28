@@ -18,7 +18,7 @@ def get_tool_info():
             'https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js',
             'constants.js',
             'status_api.js',
-            'api.js',
+            'api*.js',
             'utils.js',
             'components/*.js',
             'components/charts/*.js',
