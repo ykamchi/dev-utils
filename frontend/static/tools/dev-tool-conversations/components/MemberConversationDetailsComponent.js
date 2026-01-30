@@ -4,12 +4,12 @@
         Usage: new window.conversations.MemberConversationDetailsComponent(container, conversation, groupInstructions)
     */
     class MemberConversationDetailsComponent {
-        constructor(container, conversation, member, groupInstructions) {
+        constructor(container, conversation, member, instructions) {
             this.container = container;
             this.conversation = conversation;
             this.member = member;
-            this.groupInstructions = groupInstructions;
-            this.feedbackDefMap = this.groupInstructions[this.conversation.context.type].feedback_def;
+            this.instructions = instructions;
+            // this.feedbackDefMap = this.instructions[this.conversation.context.type].feedback_def;
             this.page = null;
             this.contentDiv = null;
             this.chartInstance = null;
@@ -20,15 +20,15 @@
         render() {
             // Create the main page component
             this.page = new window.conversations.PageComponent(this.container,
-                window.conversations.CONVERSATION_TYPES_ICONS[this.conversation.info.conversation_type],
-                window.conversations.CONVERSATION_TYPES_STRING(this.conversation.info.conversation_type, false, true, true, false) +
+                window.conversations.CONVERSATION_TYPES_ICONS[this.instructions.info.conversation_type],
+                window.conversations.CONVERSATION_TYPES_STRING(this.instructions.info.conversation_type, false, true, true, false) +
                 ' - ' +
-                this.conversation.info.name +
-                ` (${this.conversation.names})`,
+                this.instructions.info.name +
+                ` (${this.conversation.participants})`,
                 {
                     'Viewing member': this.member.name,
                     Date: Utils.formatDateTime(this.conversation.created_at),
-                    Type: this.conversation.info.name
+                    Type: this.instructions.info.name
                 }
             );
 
@@ -47,7 +47,7 @@
             const instructionDescriptionLine = window.conversations.utils.createDivContainer(wrapperDiv, 'conversation-field-container-vertical');
 
             // Instruction description
-            window.conversations.utils.createField(instructionDescriptionLine, 'Instruction description:', this.conversation.info.description);
+            window.conversations.utils.createField(instructionDescriptionLine, 'Instruction description:', this.instructions.info.description);
 
             this.page.updateContentArea(this.contentDiv);
 
@@ -56,7 +56,7 @@
 
             // Tabs container
             const tabs = [ { name: 'Feedback', populateFunc: async (container) => this.populateFeedbackTab(container) } ];
-            if (this.groupInstructions[this.conversation.context.type].info.conversation_type === window.conversations.CONVERSATION_TYPES.AI_CONVERSATION) {
+            if (this.instructions.info.conversation_type === window.conversations.CONVERSATION_TYPES.AI_CONVERSATION) {
                 tabs.push({ name: 'Messages', populateFunc: async (container) => this.populateMessagesTab(container) });
                 tabs.push({ name: 'Diagnostics', populateFunc: async (container) => this.populateFeedbackProgressTab(container) });                        
             } else {
@@ -117,12 +117,12 @@
         async populateMessagesTab(container) {
             // Fetch messages from API if not already fetched
             if(!this.messages) {
-                this.messages = await window.conversations.apiConversations.fetchConversationMessages(container, this.conversation.info.conversation_type, this.conversation.conversation_id);
+                this.messages = await window.conversations.apiConversations.conversationsMessages(container, this.instructions.info.conversation_type, this.conversation.conversation_id);
             }
             
             new window.ListComponent(container, this.messages, (message) => {
                 const messageDiv = window.conversations.utils.createDivContainer();
-                new window.conversations.CardConversationMessageComponent(messageDiv, message, this.groupInstructions[this.conversation.context.type]);
+                new window.conversations.CardConversationMessageComponent(messageDiv, message, this.instructions);
                 return messageDiv;
             });
 
@@ -134,16 +134,16 @@
 
         async populateFeedbackTab(container) {
             // Feedback info
-            new window.conversations.ConversationFeedbackInfoComponent(container, this.conversation.feedback, this.groupInstructions[this.conversation.context.type]);
+            new window.conversations.ConversationFeedbackInfoComponent(container, this.conversation.feedback, this.instructions);
         }
 
         async populateFeedbackProgressTab(container) {
             // Fetch messages from API if not already fetched
             if(!this.messages) {
-                this.messages = await window.conversations.apiConversations.fetchConversationMessages(container, this.conversation.info.conversation_type, this.conversation.conversation_id);
+                this.messages = await window.conversations.apiConversations.conversationsMessages(container, this.instructions.info.conversation_type, this.conversation.conversation_id);
             }
 
-            new window.conversations.charts.ChartConversationFeedbackProgressComponent(container, this.feedbackDefMap, this.messages);
+            new window.conversations.charts.ChartConversationFeedbackProgressComponent(container, this.instructions.feedback_def, this.messages);
         }
 
         destroy() {

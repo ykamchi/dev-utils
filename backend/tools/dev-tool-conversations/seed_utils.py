@@ -35,12 +35,13 @@ def extract_groups_seed_data(seeds: List[Dict[str, str]]) -> List[Dict[str, Any]
     return result
 
 
-def extract_seed_data(files: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def extract_seed_data(files: List[Dict[str, Any]], instruction_type_filter: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     Extract and validate seed data from file list.
     
     Args:
         files: List of file objects with keys: name, webkitRelativePath, content
+        instruction_type_filter: Optional instruction type to filter by (e.g., 'first-date')
         
     Returns:
         List of seeding data entries with validation results
@@ -53,6 +54,10 @@ def extract_seed_data(files: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         
         # 1. Check for root members_seed.json
         if len(path_parts) == 2 and file['name'] == 'members_seed.json':
+            # Skip members file if filtering by instruction type
+            if instruction_type_filter:
+                continue
+                
             try:
                 members_seed_json = json.loads(file['content'])
                 valid = validate_members(members_seed_json)
@@ -90,6 +95,9 @@ def extract_seed_data(files: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         if len(path_parts) == 4 and path_parts[1] == 'instructions':
             folder_name = path_parts[-2]
             
+            if instruction_type_filter and folder_name != instruction_type_filter:
+                continue
+
             # Initialize folder entry if not exists
             if folder_name not in instructions_seeds:
                 instructions_seeds[folder_name] = {
@@ -203,7 +211,7 @@ def extract_seed_data(files: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                 seeding_data.append({
                     'type': 'instruction',
                     'folderName': folder_name,
-                    'instructionType': info_json['type'],
+                    # 'instructionType': info_json['type'],
                     'instruction_file': instructions_seeds[folder_name]['instructions'],
                     'feedback_file': instructions_seeds[folder_name]['feedback'],
                     'info_file': instructions_seeds[folder_name]['info'],
@@ -248,7 +256,7 @@ def validate_info(obj: Any) -> Dict[str, Any]:
     if not isinstance(obj, dict):
         return {'valid': False, 'reason': 'Root is not an object'}
     
-    required_fields = ['type', 'name', 'description', 'conversation_type']
+    required_fields = ['name', 'description', 'conversation_type']
     for field in required_fields:
         if field not in obj:
             return {'valid': False, 'reason': f"Missing '{field}' property"}

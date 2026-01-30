@@ -65,3 +65,41 @@ window.conversations.apiMembers.membersAdd = async function (spinnerContainer, g
         throw e;
     }
 };
+
+
+
+// Fetch group names from backend
+window.conversations.apiConversations.membersConversationsList = async function (spinnerContainer, groupId, memberName, conversationType = null, onlyLast = false) {
+    // Show loading spinner while fetching
+    const spinner = new window.SpinnerComponent(spinnerContainer, { text: 'Loading conversations ...', size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+
+    // Fetch conversations from API
+    try {
+        const resp = await fetch('/api/dev-tool-conversations/members_conversations_list', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                group_id: groupId,
+                member_nick_name: memberName,
+                conversation_type: conversationType,
+                only_last: onlyLast
+            })
+        });
+
+        const result = await resp.json();
+        if (result.success) {
+            spinner.remove();
+            return result.data;
+        } else {
+            spinner.remove();
+            throw new Error('Failed to load conversations for ' + memberName + ': ' + (result.error || 'Unknown error'));
+        }
+
+    } catch (e) {
+        spinner.remove();
+        new window.AlertComponent('API Error', 'Error getting conversations for ' + memberName + '.' + '\nError: ' + (e.message || e.toString()));
+        console.error('Error getting conversations:', e);
+        throw e;
+    }
+};
+

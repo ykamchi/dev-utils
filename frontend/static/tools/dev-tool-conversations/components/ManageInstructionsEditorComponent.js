@@ -3,18 +3,13 @@
         ManageInstructionsEditorComponent: handles editing a single instruction with Info, Instructions, and Feedback tabs
     */
     class ManageInstructionsEditorComponent {
-        constructor(container, groupName, instruction) {
+        constructor(container, groupId, instruction) {
             this.container = container;
             this.feedbackTab = null;
-            this.groupName = groupName;
-
+            this.groupId = groupId;
             // To make the edit easier, convert feedback_def from object to array
             // This allows easier editing of the feedback name
-            this.instruction = JSON.parse(JSON.stringify(instruction));
-            this.instruction.feedback_def = Object.entries(this.instruction.feedback_def).map(([feedbackName, feedbackDef]) => ({
-                feedbackName,
-                ...feedbackDef
-            }));
+            this.instruction = this.getInstructionsForEditing(instruction);
             this.render();
         }
         
@@ -23,7 +18,7 @@
             const tabsetDiv = window.conversations.utils.createDivContainer(this.container);
 
             // Add tabs for instruction details
-            const storageKey = `conversations-instruction-editor-${this.groupName}-${this.instruction.instructions_type}`;
+            const storageKey = `conversations-instruction-editor-${this.groupId}-${this.instruction.instructions_type}`;
             new window.TabsetComponent(tabsetDiv, [
                 { name: 'Info', populateFunc: (c) => this.populateInfoTab(c) },
                 { name: 'Instructions', populateFunc: (c) => this.populateInstructionsEditorTab(c) },
@@ -34,7 +29,7 @@
 
         // Populate Assistant tab
         populateAssistantTab(container) {
-            new window.conversations.ManageInstructionsAssistantComponent(container, this.groupName, this.instruction);
+            new window.conversations.ManageInstructionsAssistantComponent(container, this.groupId, this.instruction);
         }
 
         // Populate Info tab
@@ -44,16 +39,18 @@
                 this.instruction.info.name = value;
             });
             
+            // Max messages (editable)
+            console.log('Max messages:', this.instruction.info.max_messages);
+            window.conversations.utils.createInput(container, 'Max Messages:', this.instruction.info.max_messages, /^[0-9]+$/,'e.g., 10',(value, isValid) => {
+                this.instruction.info.max_messages = value;
+            });
+
             // Conversation Type field (read-only)
             window.conversations.utils.createField(container, 'Conversation Type:', this.instruction.info.conversation_type, true);
 
             // Instructions type field (read-only)
-            window.conversations.utils.createField(container, 'Conversation Type:', this.instruction.instructions_type, true);
+            window.conversations.utils.createField(container, 'Instructions Type:', this.instruction.instructions_type, true);
 
-            // Instructions type field (read-only)
-            window.conversations.utils.createInput(container, 'Conversation Type:', this.instruction.info.type, /^[a-zA-Z0-9 _-]+$/,'e.g., My Instruction Name',(value, isValid) => {
-                this.instruction.info.type = value;
-            });
             // Description field (editable)
             window.conversations.utils.createTextArea(container, 'Description:', this.instruction.info.description, 'My Instruction Description', (value) => {
                 this.instruction.info.description = value;
@@ -191,9 +188,21 @@
 
         // Get the updated instruction object for saving
         updatedInstructions() {
-            // Convert the instruction back to original format where feedback_def is an object
-            const ret = {...this.instruction};
-            ret.feedback_def = this.instruction.feedback_def.reduce((acc, feedbackDef) => {
+            return this.getOrigInstructions(this.instruction);
+        }
+
+        getInstructionsForEditing(origInstruction) {
+            const ret = JSON.parse(JSON.stringify(origInstruction));
+            ret.feedback_def = Object.entries(ret.feedback_def).map(([feedbackName, feedbackDef]) => ({
+                feedbackName,
+                ...feedbackDef
+            }));
+            return ret;
+        }
+
+        getOrigInstructions(instructionForEditing) {
+            const ret = {...instructionForEditing};
+            ret.feedback_def = ret.feedback_def.reduce((acc, feedbackDef) => {
                 const { feedbackName, ...rest } = feedbackDef;
                 acc[feedbackName] = rest;
                 return acc;

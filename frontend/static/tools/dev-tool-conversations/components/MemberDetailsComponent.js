@@ -36,10 +36,10 @@
 
         async loadContent() {
             // Fetch group instructions for AI decision types
-            const groupInstructionsResults = await window.conversations.apiInstructions.instructionsList(this.container, this.groupId);   
+            const groupInstructionsResults = await window.conversations.apiInstructions.instructionsList(this.container, this.groupId);
             const groupInstructions = {}
             for (const entry in groupInstructionsResults) {
-                groupInstructions[groupInstructionsResults[entry].info.type] = groupInstructionsResults[entry];
+                groupInstructions[groupInstructionsResults[entry].instructions_type] = groupInstructionsResults[entry];
             }
 
             // Page content

@@ -62,26 +62,23 @@
 
         async loadContent() {
             // Fetch conversations for the member
-            const conversations = await window.conversations.apiConversations.conversationsList('', this.groupId, this.member.name, this.conversation_type, this.showOnlyLast);
-            for (const conversation of conversations) {
-                conversation['names'] = conversation.members.map(m => m.member_nick_name).filter(name => name !== this.member.name).join(', ');
-            }
+            const conversations = await window.conversations.apiConversations.membersConversationsList('', this.groupId, this.member.name, this.conversation_type, this.showOnlyLast);
             
             // Page content
             const contentDiv = window.conversations.utils.createDivContainer();
             new window.ListComponent(contentDiv, conversations, (conversation) => {
                     const conversationDiv = window.conversations.utils.createDivContainer();
-                    new window.conversations.CardMemberConversationComponent(conversationDiv, conversation, this.member, this.groupInstructions);
+                    new window.conversations.CardMemberConversationComponent(conversationDiv, conversation, this.member, this.groupInstructions[conversation.instructions_type]);
                     return conversationDiv;
                 },
                 window.ListComponent.SELECTION_MODE_SINGLE, null, 
                 (item, query) => {
                     
-                    return item.names.toLowerCase().includes(query.toLowerCase());
+                    return item.participants.toLowerCase().includes(query.toLowerCase());
                 }, 
                 [
                     { label: 'Creation Date', func: (a, b) => new Date(a.created_at) - new Date(b.created_at), direction: -1 },
-                    { label: 'Name', func: (a, b) => { return a.names < b.names ? -1 : 1; } , direction: 1 },
+                    { label: 'Name', func: (a, b) => { return a.participants < b.participants ? -1 : 1; } , direction: 1 },
                     { label: 'Instruction Type', func: (a, b) => a.info.type < b.info.type ? -1 : 1, direction: 1 },
                 ] 
             );

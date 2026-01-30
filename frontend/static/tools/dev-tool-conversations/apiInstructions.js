@@ -39,7 +39,7 @@ window.conversations.apiInstructions.instructionsList = async function (spinnerC
 
 
 // Add group instructions
-window.conversations.apiInstructions.instructionsAdd = async function (spinnerContainer, groupId, instructions, feedbackDef, info) {
+window.conversations.apiInstructions.instructionsAdd = async function (spinnerContainer, instructions_type, groupId, instructions, feedbackDef, info) {
     // Show loading spinner while adding instructions
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Adding instructions ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
     
@@ -51,7 +51,8 @@ window.conversations.apiInstructions.instructionsAdd = async function (spinnerCo
                 group_id: groupId,
                 instructions: instructions,
                 feedback_def: feedbackDef,
-                info: info
+                info: info,
+                instructions_type: instructions_type
             })
         });
 

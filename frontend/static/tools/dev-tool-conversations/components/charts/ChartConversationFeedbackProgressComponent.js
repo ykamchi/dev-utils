@@ -40,9 +40,9 @@
 
         async loadContent() {
             // Fetch messages from API if not already given in the constructor
-            if (!this.messages) {
-                this.messages = await window.conversations.apiConversations.fetchConversationMessages(this.container, this.conversation.info.conversation_type, this.conversation.conversation_id);
-            }
+            // if (!this.messages) {
+            //     this.messages = await window.conversations.apiConversations.conversationsMessages(this.container, this.conversation.info.conversation_type, this.conversation.conversation_id);
+            // }
 
             this.chartData = this.parseFeedbackDatasets();
 

@@ -140,7 +140,7 @@
                         await window.conversations.apiMembers.membersAdd(null, this.group.group_id, entry.fileContent);
 
                     } else if (entry.type === 'instruction') {
-                        await window.conversations.apiInstructions.instructionsAdd(null, this.group.group_id, entry.instructionContent, entry.feedbackContent, entry.infoContent);
+                        await window.conversations.apiInstructions.instructionsAdd(null, entry.folderName, this.group.group_id, entry.instructionContent, entry.feedbackContent, entry.infoContent);
                     }
                 }
             }

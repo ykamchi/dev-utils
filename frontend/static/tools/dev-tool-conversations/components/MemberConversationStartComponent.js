@@ -9,7 +9,7 @@
             this.groupId = groupId;
             this.member = member;
             this.groupInstructions = groupInstructions;
-            this.conversation_type = conversation_type;
+            this.conversationType = conversation_type;
             this.popupInstance = popupInstance;
             this.MenuListMembersComponent = null;
             this.page = null;
@@ -20,15 +20,15 @@
 
             // Create the main page component
             this.page = new window.conversations.PageComponent(this.container, 
-                window.conversations.CONVERSATION_TYPES_ICONS[this.conversation_type], 
-                'Start ' + window.conversations.CONVERSATION_TYPES_NAMES[this.conversation_type],
+                window.conversations.CONVERSATION_TYPES_ICONS[this.conversationType], 
+                'Start ' + window.conversations.CONVERSATION_TYPES_NAMES[this.conversationType],
                 [ this.groupName ]
             );
 
             // Save, Add and Delete instructions button
             const pageButtons = window.conversations.utils.createDivContainer(null, 'conversations-buttons-container');
             new window.ButtonComponent(pageButtons, 'Cancel', () => this.popupInstance.hide(), window.ButtonComponent.TYPE_GHOST_DANGER, 'Cancel');
-            new window.ButtonComponent(pageButtons, 'Start', () => this.handleStartClick(), window.ButtonComponent.TYPE_GHOST, 'Start ' + window.conversations.CONVERSATION_TYPES_NAMES[this.conversation_type]);
+            new window.ButtonComponent(pageButtons, 'Start', () => this.handleStartClick(), window.ButtonComponent.TYPE_GHOST, 'Start ' + window.conversations.CONVERSATION_TYPES_NAMES[this.conversationType]);
             this.page.updateButtonsArea(pageButtons);
 
             // Load and display the content
@@ -43,17 +43,17 @@
             window.conversations.utils.createLabel(selectInstructionWrapper, 'Select Instruction:');
             
             if (Object.entries(this.groupInstructions).length > 0) {
-                this.selectedInstruction = Object.values(this.groupInstructions)[0].info.type;
+                this.selectedInstructionsType = Object.values(this.groupInstructions)[0].instructions_type;
                 // Instructions chooser
-                const selectOptions = Object.values(this.groupInstructions).map(entry => ({ label: entry.info.name, value: entry.info.type }));
+                const selectOptions = Object.values(this.groupInstructions).map(entry => ({ label: entry.info.name, value: entry.instructions_type }));
                 new window.SelectComponent(
                     selectInstructionWrapper, 
                     selectOptions, 
                     (selectedValue) => { 
-                        this.selectedInstruction = selectedValue 
+                        this.selectedInstructionsType = selectedValue 
                     },
                     'Select an instruction...',
-                    this.selectedInstruction
+                    this.selectedInstructionsType
                 );
                 this.page.updateControlArea(controlDiv);
             } else {
@@ -88,7 +88,7 @@
 
         async handleStartClick() {
             // Validate inputs
-            if (!this.selectedInstruction) {
+            if (!this.selectedInstructionsType) {
                 new window.AlertComponent('Missing Instruction', 'Please select an instruction type.');
                 return;
             }
@@ -104,7 +104,7 @@
             }
 
             // Start the conversation
-            window.conversations.apiConversations.conversationAdd(null, this.groupId, this.conversation_type, this.selectedInstruction, participant_members_nick_names, participant_members_nick_names.length * 5);
+            window.conversations.apiConversations.conversationAdd(null, this.groupId, this.conversationType, this.selectedInstructionsType, participant_members_nick_names, participant_members_nick_names.length * 5);
         }
     }
 

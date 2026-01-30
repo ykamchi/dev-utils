@@ -10,6 +10,7 @@ State is ephemeral and lives only in memory or is proxied upstream.
 from time import sleep
 from flask import Blueprint, jsonify, request
 import os
+import json
 import requests
 from requests.exceptions import RequestException
 
@@ -299,7 +300,8 @@ def register_instructions_apis(app, base_path: str):
                 'instructions_type': payload.get('instructions_type'),
                 'instructions': payload.get('instructions'),
                 'feedback_def': payload.get('feedback_def'),
-                'info': payload.get('info')
+                'info': payload.get('info'),
+                'instructions_type': payload.get('instructions_type')
             }
             
             return jsonify(_proxy_post('/api/instructions/add', upstream_payload))
@@ -399,15 +401,10 @@ def register_members_apis(app, base_path: str):
             app.logger.exception('Failed to contact upstream /api/members/add')
             return jsonify({'success': False, 'error': 'Failed to contact upstream members/add'}), 502
 
-
-# Conversations API endpoints
-#         
-#
-def register_conversations_apis(app, base_path: str):
-    @app.route(f"{base_path}/conversations_list", methods=["POST"])
-    def conversations_list():
+    @app.route(f"{base_path}/members_conversations_list", methods=["POST"])
+    def members_conversations_list():
         """
-        Proxy to upstream /api/conversations/list (POST) with group_name and member_name from request body (required).
+        Proxy to upstream /api/members/conversations/list (POST) with group_name and member_name from request body (required).
         """
         try:
             payload = request.get_json(force=True)
@@ -428,45 +425,49 @@ def register_conversations_apis(app, base_path: str):
             if payload.get('only_last'):
                 upstream_payload['only_last'] = payload.get('only_last')
 
-            return jsonify(_proxy_post('/api/conversations/list', upstream_payload))
+            return jsonify(_proxy_post('/api/members/conversations/list', upstream_payload))
         
         except RequestException:
-            app.logger.exception('Failed to contact upstream /api/conversations/list')
-            return jsonify({'success': False, 'error': 'Failed to contact upstream conversations/list'}), 502
-        
-    @app.route(f"{base_path}/conversation_add", methods=["POST"])
+            app.logger.exception('Failed to contact upstream /api/members/conversations/list')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream members/conversations/list'}), 502
+
+# Conversations API endpoints
+#         
+#
+def register_conversations_apis(app, base_path: str):
+    @app.route(f"{base_path}/conversations_add", methods=["POST"])
     def conversation_add():
         """
-        Proxy to upstream /api/conversation_add (POST) to start a conversation.
+        Proxy to upstream /api/conversations/add (POST) to start a conversation.
         """
         payload = request.get_json(force=True)
 
         if not payload.get('group_id'):
             return jsonify({'success': False, 'error': 'missing group_id'}), 400
         
-        if not payload.get('context'):
-            return jsonify({'success': False, 'error': 'missing context'}), 400
+        if not payload.get('instructions_type'):
+            return jsonify({'success': False, 'error': 'missing instructions_type'}), 400
 
         try:
             conversation_req = {
                 'group_id': payload.get('group_id'),
                 'participant_members_nick_names': payload.get('participant_members_nick_names'),
-                'context': payload.get('context'),
+                'instructions_type': payload.get('instructions_type'),
                 'conversation_type': payload.get('conversation_type'),
                 'max_messages': payload.get('max_messages', 10),
                 'debug': payload.get('debug', []),
             }
-            app.logger.debug('Proxying conversation_add with payload: %s', conversation_req)
-            upstream_resp = _proxy_post('/api/conversation/add', conversation_req)
+            
+            upstream_resp = _proxy_post('/api/conversations/add', conversation_req)
             return jsonify(upstream_resp)
         except RequestException:
-            app.logger.exception('Failed to contact upstream /api/conversation_add')
+            app.logger.exception('Failed to contact upstream /api/conversations/add')
             return jsonify({'success': False, 'error': 'Failed to contact upstream conversation service'}), 502
 
-    @app.route(f"{base_path}/conversation_messages", methods=["POST"])
-    def conversation_messages():
+    @app.route(f"{base_path}/conversations_messages_list", methods=["POST"])
+    def conversations_messages_list():
         """
-        Proxy to upstream /api/conversation/messages (POST) to get conversation messages.
+        Proxy to upstream /api/conversations/messages/list (POST) to get conversation messages.
         Expects JSON payload: {"conversation_id": ...}
         """
         payload = request.get_json(force=True)
@@ -478,12 +479,11 @@ def register_conversations_apis(app, base_path: str):
             return jsonify({'success': False, 'error': 'missing conversation_type'}), 400
         
         try:
-            upstream_resp = _proxy_post('/api/conversation/messages', {'conversation_type': conversation_type, 'conversation_id': conversation_id})
+            upstream_resp = _proxy_post('/api/conversations/messages/list', {'conversation_type': conversation_type, 'conversation_id': conversation_id})
             return jsonify(upstream_resp)
         except RequestException:
-            app.logger.exception('Failed to contact upstream /api/conversation/messages')
-            return jsonify({'success': False, 'error': 'Failed to contact upstream conversation/messages service'}), 502
-
+            app.logger.exception('Failed to contact upstream /api/conversations/messages/list')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream conversations/messages/list service'}), 502
 
 
 # Seed Data API endpoints
@@ -522,6 +522,124 @@ def register_seed_data_apis(app, base_path: str):
             processed_seeds = seed_utils.extract_groups_seed_data(result)
             
             return jsonify({'success': True, 'data': processed_seeds})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+    @app.route(f"{base_path}/group_seed", methods=["PUT"])
+    def group_seed():
+        """
+        Returns processed and validated seed data for a specific group and instruction type.
+        Expects JSON payload: {"group_name": ..., "instruction_type": ...}
+        Returns seeding data with validation results.
+        """
+        try:
+            sleep(sleep_time)
+            from . import seed_utils
+            
+            payload = request.get_json(force=True)
+            group_name = payload.get('group_name')
+            instruction_type = payload.get('instruction_type')
+            
+            if not group_name:
+                return jsonify({'success': False, 'error': 'missing group_name'}), 400
+            if not instruction_type:
+                return jsonify({'success': False, 'error': 'missing instruction_type'}), 400
+            
+            seed_root = os.path.expanduser(os.path.join('~/code/conversations-examples', group_name))
+            if not os.path.exists(seed_root):
+                return jsonify({'success': True, 'data': []})
+            
+            # Read all files
+            files = []
+            for dirpath, _, filenames in os.walk(seed_root):
+                for filename in filenames:
+                    file_path = os.path.join(dirpath, filename)
+                    rel_path = os.path.relpath(file_path, os.path.expanduser('~/code/conversations-examples'))
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            content = f.read()
+                    except Exception:
+                        content = ''
+                    files.append({
+                        'name': filename,
+                        'size': len(content),
+                        'type': '',
+                        'webkitRelativePath': rel_path.replace('\\', '/'),
+                        'content': content
+                    })
+            
+            # Process files into seeding data with instruction_type filter
+            seeding_data = seed_utils.extract_seed_data(files, instruction_type_filter=instruction_type)
+            return jsonify({'success': True, 'data': seeding_data[0] if seeding_data else None})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+    @app.route(f"{base_path}/group_seed_save", methods=["PUT"])
+    def group_seed_save():
+        """
+        Saves instruction seed data to filesystem.
+        Expects JSON payload: {
+            "group_name": ..., 
+            "instruction_type": ...,
+            "instruction": {
+                "instructions": "...",
+                "feedback_def": {...},
+                "info": {...}
+            }
+        }
+        Creates directory structure: ~/code/conversations-examples/{group_name}/instructions/{instruction_type}/
+        """
+        try:
+            sleep(sleep_time)
+            
+            payload = request.get_json(force=True)
+            group_name = payload.get('group_name')
+            instruction_type = payload.get('instruction_type')
+            instruction = payload.get('instruction')
+            
+            if not group_name:
+                return jsonify({'success': False, 'error': 'missing group_name'}), 400
+            if not instruction_type:
+                return jsonify({'success': False, 'error': 'missing instruction_type'}), 400
+            if not instruction:
+                return jsonify({'success': False, 'error': 'missing instruction'}), 400
+            
+            # Validate instruction structure
+            if 'instructions' not in instruction:
+                return jsonify({'success': False, 'error': 'missing instruction.instructions'}), 400
+            if 'feedback_def' not in instruction:
+                return jsonify({'success': False, 'error': 'missing instruction.feedback_def'}), 400
+            if 'info' not in instruction:
+                return jsonify({'success': False, 'error': 'missing instruction.info'}), 400
+            
+            # Create directory path
+            instruction_dir = os.path.expanduser(
+                os.path.join('~/code/conversations-examples', group_name, 'instructions', instruction_type)
+            )
+            os.makedirs(instruction_dir, exist_ok=True)
+            
+            # Write instructions.md
+            instructions_file = os.path.join(instruction_dir, 'instructions.md')
+            with open(instructions_file, 'w', encoding='utf-8') as f:
+                f.write(instruction['instructions'])
+            
+            # Write feedback.json
+            feedback_file = os.path.join(instruction_dir, 'feedback.json')
+            with open(feedback_file, 'w', encoding='utf-8') as f:
+                json.dump(instruction['feedback_def'], f, indent=2, ensure_ascii=False)
+            
+            # Write info.json
+            info_file = os.path.join(instruction_dir, 'info.json')
+            with open(info_file, 'w', encoding='utf-8') as f:
+                json.dump(instruction['info'], f, indent=2, ensure_ascii=False)
+            
+            return jsonify({
+                'success': True,
+                'data': {
+                    'directory': instruction_dir,
+                    'files_created': ['instructions.md', 'feedback.json', 'info.json']
+                }
+            })
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
 

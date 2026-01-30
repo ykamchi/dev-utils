@@ -11,12 +11,11 @@
          * @param {Object} groupInstructions - The instructions map
          * 
          */
-        constructor(container, conversation, member, groupInstructions) {
+        constructor(container, conversation, member, instructions) {
             this.container = container;
             this.conversation = conversation;
             this.member = member;
-            this.groupInstructions = groupInstructions;
-            this.feedbackDefMap = this.groupInstructions[this.conversation.context.type]?.feedback_def;
+            this.instructions = instructions;
             this.render();
         }
 
@@ -24,7 +23,7 @@
             const wrapper = window.conversations.utils.createDivContainer(this.container, 'conversations-card-wrapper');
             
             // Icon 
-            window.conversations.utils.createReadOnlyText(wrapper, `${window.conversations.CONVERSATION_TYPES_ICONS[this.conversation?.info?.conversation_type]}`, 'conversations-list-card-icon');
+            window.conversations.utils.createReadOnlyText(wrapper, `${window.conversations.CONVERSATION_TYPES_ICONS[this.instructions.info.conversation_type]}`, 'conversations-list-card-icon');
 
             // Info
             const info = window.conversations.utils.createDivContainer(wrapper, 'conversations-card-info');
@@ -33,7 +32,7 @@
             const firstLine = window.conversations.utils.createDivContainer(info, 'conversation-container-horizontal-space-between');
 
             // Member names
-            window.conversations.utils.createReadOnlyText(firstLine, this.conversation.names, 'conversations-card-name');
+            window.conversations.utils.createReadOnlyText(firstLine, this.conversation.participants, 'conversations-card-name');
 
             // Created at
             window.conversations.utils.createLabel(firstLine, Utils.formatDateTime(this.conversation.created_at), 'conversations-instructions-item-created-at');    
@@ -45,14 +44,14 @@
             const leftSide = window.conversations.utils.createDivContainer(secondLine, 'conversation-container-horizontal');
             
             // Feedback info
-            new window.conversations.ConversationFeedbackInfoComponent(leftSide, this.conversation.feedback, this.groupInstructions[this.conversation.context.type], true, false);
+            new window.conversations.ConversationFeedbackInfoComponent(leftSide, this.conversation.feedback, this.instructions, true, false);
 
             // Tags and metadata
             const rightSide = window.conversations.utils.createDivContainer(secondLine, 'conversation-field-container-vertical');
 
             const tagsDiv = window.conversations.utils.createDivContainer(rightSide, 'conversations-tags-container');
             // Conversation type
-            window.conversations.utils.createReadOnlyText(tagsDiv, this.groupInstructions[this.conversation.context.type].info.name, 'conversations-badge-generic', this.groupInstructions[this.conversation.context.type].info?.description);
+            window.conversations.utils.createReadOnlyText(tagsDiv, this.instructions.info.name, 'conversations-badge-generic', this.instructions.info.description);
             window.conversations.utils.createReadOnlyText(tagsDiv, Utils.durationSecondsToHMS(this.conversation.status?.duration_seconds), 'conversations-badge-generic', 'Duration');
             window.conversations.utils.createReadOnlyText(tagsDiv, this.conversation.status?.message_count, 'conversations-badge-generic', 'Number of messages');
             window.conversations.utils.createReadOnlyText(tagsDiv, this.conversation.status?.state, 'conversations-badge-state-'+this.conversation.status?.state, 'State');
@@ -64,10 +63,10 @@
 
         async showConversationDetails() {
             new window.PopupComponent({
-                icon: window.conversations.CONVERSATION_TYPES_ICONS[this.conversation.info.conversation_type],
+                icon: window.conversations.CONVERSATION_TYPES_ICONS[this.instructions.info.conversation_type],
                 title: 'Conversation Details',
                 content: (container) => {
-                    new window.conversations.MemberConversationDetailsComponent(container, this.conversation, this.member, this.groupInstructions);
+                    new window.conversations.MemberConversationDetailsComponent(container, this.conversation, this.member, this.instructions);
                 },
                 closable: true,
                 width: '1200px',

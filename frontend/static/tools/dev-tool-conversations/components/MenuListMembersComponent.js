@@ -50,8 +50,7 @@
                     }
                 },
                 (item, query) => {
-                    const name = item.member.name || '';
-                    return name.toLowerCase().includes(query.toLowerCase());
+                    return item.name.toLowerCase().includes(query.toLowerCase());
                 },
                 [
                     { label: 'Name', func: (a, b) => { return a.name < b.name ? -1 : 1; } , direction: 1 },
