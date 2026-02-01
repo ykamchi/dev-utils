@@ -77,11 +77,10 @@ window.conversations.utils.createField = function (container, labelText, value, 
     return fieldDiv;
 }
 
-window.conversations.utils.createInput = function(container, labelText, value, pattern = /.*/, placeholder = '', onChange = null) {
+window.conversations.utils.createInput = function(container, labelText, options = {}) {
     const infoNameGroup = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
     window.conversations.utils.createLabel(infoNameGroup, labelText);
-    new window.TextInputComponent(infoNameGroup, value, pattern, placeholder, onChange);
-
+    new window.TextInputComponent(infoNameGroup, options);
 }
 
 window.conversations.utils.createTextArea = function (container, labelText, value, placeholder = '', onChange = null, rows = -1) {

@@ -117,7 +117,7 @@
         async populateMessagesTab(container) {
             // Fetch messages from API if not already fetched
             if(!this.messages) {
-                this.messages = await window.conversations.apiConversations.conversationsMessages(container, this.instructions.info.conversation_type, this.conversation.conversation_id);
+                this.messages = await window.conversations.apiConversations.conversationsMessages(container, this.conversation.conversation_id);
             }
             
             new window.ListComponent(container, this.messages, (message) => {
@@ -140,7 +140,7 @@
         async populateFeedbackProgressTab(container) {
             // Fetch messages from API if not already fetched
             if(!this.messages) {
-                this.messages = await window.conversations.apiConversations.conversationsMessages(container, this.instructions.info.conversation_type, this.conversation.conversation_id);
+                this.messages = await window.conversations.apiConversations.conversationsMessages(container, this.conversation.conversation_id);
             }
 
             new window.conversations.charts.ChartConversationFeedbackProgressComponent(container, this.instructions.feedback_def, this.messages);

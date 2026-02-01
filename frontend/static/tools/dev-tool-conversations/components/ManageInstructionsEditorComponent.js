@@ -35,14 +35,24 @@
         // Populate Info tab
         populateInfoTab(container) {
             // Name field (editable)
-            window.conversations.utils.createInput(container, 'Name:', this.instruction.info.name, /^[a-zA-Z0-9 _-]+$/,'e.g., My Instruction Name',(value, isValid) => {
-                this.instruction.info.name = value;
+            window.conversations.utils.createInput(container, 'Name:', {
+                initialValue: this.instruction.info.name,
+                pattern: /^[a-zA-Z0-9 _-]+$/,
+                placeholder: 'e.g., My Instruction Name',
+                onChange: (value) => {
+                    this.instruction.info.name = value;
+                }
             });
             
             // Max messages (editable)
-            console.log('Max messages:', this.instruction.info.max_messages);
-            window.conversations.utils.createInput(container, 'Max Messages:', this.instruction.info.max_messages, /^[0-9]+$/,'e.g., 10',(value, isValid) => {
-                this.instruction.info.max_messages = value;
+            window.conversations.utils.createInput(container, 'Max Messages:', {
+                initialValue: this.instruction.info.max_messages || 10,
+                type: 'number',
+                min: 3, max: 50,
+                placeholder: 'e.g., 10',
+                onChange: (value) => {
+                    this.instruction.info.max_messages = value;
+                }
             });
 
             // Conversation Type field (read-only)
@@ -87,8 +97,13 @@
                     const feedbackDiv = document.createElement('div');
                     
                     // Name (editable)
-                    window.conversations.utils.createInput(feedbackDiv, 'Name:', feedback_def.feedbackName,  /^[a-z_]+$/, 'e.g., feedback_name',(value, isValid) => {
-                        feedback_def.feedbackName = value;
+                    window.conversations.utils.createInput(feedbackDiv, 'Name:', {
+                        initialValue: feedback_def.feedbackName,
+                        pattern: /^[a-z_]+$/,
+                        placeholder: 'e.g., feedback_name',
+                        onChange: (value) => {
+                            feedback_def.feedbackName = value;
+                        }
                     });
                     
                     // Description field (editable)

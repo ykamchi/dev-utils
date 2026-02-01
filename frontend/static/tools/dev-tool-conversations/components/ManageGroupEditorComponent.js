@@ -18,8 +18,13 @@
             // Group Name 
             const nameGroup = window.conversations.utils.createDivContainer(editGroupDiv, 'conversation-field-container-vertical');
             window.conversations.utils.createLabel(nameGroup, 'Group Name:');
-            this.groupNameInput = new window.TextInputComponent(nameGroup, this.groupName, /.*/, 'Enter group name', (value) => {
-                this.groupName = value;
+            this.groupNameInput = new window.TextInputComponent(nameGroup, {
+                initialValue: this.groupName,
+                pattern: /.*/,
+                placeholder: 'Enter group name',
+                onChange: (value) => {
+                    this.groupName = value;
+                }
             });
 
             // Group Description

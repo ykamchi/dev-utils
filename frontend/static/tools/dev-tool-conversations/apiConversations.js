@@ -38,7 +38,7 @@ window.conversations.apiConversations.conversationAdd = async function (spinnerC
     }
 };
 
-window.conversations.apiConversations.conversationsMessages = async function (spinnerContainer, conversationType, conversationId) {
+window.conversations.apiConversations.conversationsMessages = async function (spinnerContainer, conversationId) {
     // Show loading spinner while fetching
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Loading conversation messages ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
 
@@ -46,7 +46,7 @@ window.conversations.apiConversations.conversationsMessages = async function (sp
         const resp = await fetch('/api/dev-tool-conversations/conversations_messages_list', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ conversation_type: conversationType, conversation_id: conversationId })
+            body: JSON.stringify({ conversation_id: conversationId })
         });
 
         const result = await resp.json();

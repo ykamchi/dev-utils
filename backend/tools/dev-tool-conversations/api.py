@@ -474,14 +474,12 @@ def register_conversations_apis(app, base_path: str):
         """
         payload = request.get_json(force=True)
         conversation_id = payload.get('conversation_id')
-        conversation_type = payload.get('conversation_type')
+        
         if not conversation_id:
             return jsonify({'success': False, 'error': 'missing conversation_id'}), 400
-        if not conversation_type:
-            return jsonify({'success': False, 'error': 'missing conversation_type'}), 400
         
         try:
-            upstream_resp = _proxy_post('/api/conversations/messages/list', {'conversation_type': conversation_type, 'conversation_id': conversation_id})
+            upstream_resp = _proxy_post('/api/conversations/messages/list', {'conversation_id': conversation_id})
             return jsonify(upstream_resp)
         except RequestException:
             app.logger.exception('Failed to contact upstream /api/conversations/messages/list')
