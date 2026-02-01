@@ -3,23 +3,31 @@
         ManageSystemComponent
     */
     class ManageSystemComponent {
-        constructor(container, groupName, optionId, manageOptions) {
+        constructor(container, groupId, optionId, manageOptions) {
             this.container = container;
-            this.groupName = groupName;
+            this.groupId = groupId;
             this.optionId = optionId;
             this.manageOptions = manageOptions;
             this.page = null;
+            this.group = null;
             this.queueState = null;
             this.render();
         }
 
         render() {
+            // Load and display the content
+            this.load();
+        }
+
+        // Get the group available instructions and render them in tabs according to the conversation types
+        async load() {
+            this.group = await window.conversations.apiGroups.groupsGet(this.container, this.groupId);
             // Create the main page component
             this.page = new window.conversations.PageComponent(
                 this.container,
                 this.manageOptions[this.optionId].icon,
                 this.manageOptions[this.optionId].name,
-                `${this.groupName} Settings Settings Settings Settings Settings `
+                `${this.group.group_name} Settings Settings Settings Settings Settings `
             );
 
             // Page control
@@ -31,10 +39,10 @@
             // new window.ButtonComponent(buttonsDiv, 'Button', null, window.ButtonComponent.TYPE_GHOST, 'Button');
             this.page.updateButtonsArea(buttonsDiv);
 
-            this.load();
-        }
+        //     this.loadContent();
+        // }
 
-        async load() {
+        // async loadContent() {
             // Fetch queue state
             this.queueState = await window.conversations.system_api.fetchQueueState();
             this.loadControl();
@@ -57,7 +65,7 @@
                     } else {
                         await window.conversations.system_api.queuePause(this.container);
                     }
-                    this.load();
+                    this.loadContent();
                 },
                 'Active',
                 'Paused',

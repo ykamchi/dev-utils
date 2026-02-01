@@ -2,6 +2,7 @@
 
     // All option value
     const ALL_VALUE = 'all';
+    const AGGREGATION_LEVEL_NONE = 'none';
 
     // Measures (single mode now)
     const MEASURE_FIELDS = {
@@ -29,14 +30,6 @@
             type: 'summary',
             label: 'Avg participants',
             field: 'avg_participants'
-        },
-        'conversations_by_state': {
-            type: 'conversations_by_state',
-            label: 'Total conversation by state',
-        },
-        'conversation_types_by_state': {
-            type: 'conversation_types_by_state',
-            label: 'Conversation types by state',
         }
     }
 
@@ -61,6 +54,14 @@
         { label: 'All', value: ALL_VALUE }
     ];
 
+    const AGGREGATION_LEVELS = [
+        { label: 'No Grouping', value: AGGREGATION_LEVEL_NONE },
+        { label: 'Group', value: 'group' },
+        { label: 'Type', value: 'conversation_type' },
+        { label: 'Instructions', value: 'instruction_type' },
+        { label: 'State', value: 'state' }
+    ];
+
     class ChartStatusTimelineComponent {
         constructor(container) {
             this.container = container;
@@ -68,18 +69,23 @@
             this.cacheInstructionsByGroup = {};
 
             this.state = {
-                group_name: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_group_name') || ALL_VALUE,
+                group_id: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_group_id') || ALL_VALUE,
                 conversation_type: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_conversation_type') || ALL_VALUE,
                 instruction_type: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_instruction_type') || ALL_VALUE,
                 states: window.StorageService.getStorageJSON('conversations_chart_status_timeline_states') || STATE_VALUES,
                 hours_back: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_hours_back') || 24,
                 interval: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_interval') || 'hour',
-                measure_field: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_measure_field') || 'total_conversations'
+                measure_field: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_measure_field') || 'total_conversations',
+                aggregation_level_0: AGGREGATION_LEVEL_NONE,
+                aggregation_level_1: AGGREGATION_LEVEL_NONE
             };
 
             this.instructionTypeControlDiv = null;
+            this.aggregation_level_1Div = null;
+            
             this.charWrapper = null;
-
+            this.groups = null;
+            
             this.render();
         }
 
@@ -88,6 +94,8 @@
         }
 
         async loadContent() {
+            this.groups = await window.conversations.apiGroups.groupsList(this.container);
+            
             // Timeline container - holds the filters and the chart side by side
             const timelineWrapperDiv = window.conversations.utils.createDivContainer(this.container, 'conversation-container-horizontal');
 
@@ -111,6 +119,9 @@
             const intervalDiv = window.conversations.utils.createFieldDiv(chartBottomAreaDiv, 'Interval:');
             const intervalControlDiv = window.conversations.utils.createDivContainer(intervalDiv);
 
+            // Aggregation area
+            const AggregationAreaDiv = window.conversations.utils.createDivContainer(chartBottomAreaDiv, '-');
+            this.renderAggregationLevels(AggregationAreaDiv);
 
             // Measure select
             this.renderMeasureSelect(measureControlDiv);
@@ -120,6 +131,18 @@
 
             // Initial chart render
             this.renderChart();
+        }
+
+        renderAggregationLevels(container) {
+
+            const aggregation_level_0Div = window.conversations.utils.createFieldDiv(container, 'Aggregation Level 0:');
+            const aggregation_level_0ControlDiv = window.conversations.utils.createDivContainer(aggregation_level_0Div);
+
+            const aggregation_level_1Div = window.conversations.utils.createFieldDiv(container, 'Aggregation Level 1:');
+            this.aggregation_level_1Div = window.conversations.utils.createDivContainer(aggregation_level_1Div);
+
+            this.renderAggregationLevel0Select(aggregation_level_0ControlDiv);
+            
         }
 
         async renderFilters(container) {
@@ -161,20 +184,19 @@
 
         async renderGroupNameSelect(groupNameSelectDiv) {
             // Group name select
-            const groups = await window.conversations.apiGroups.groupsList(groupNameSelectDiv);
-            const groupOptions = groups.map(g => ({ label: g.group_name, value: g.group_name }));
+            const groupOptions = this.groups.map(g => ({ label: g.group_name, value: String(g.group_id) }));
             new window.SelectComponent(
                 groupNameSelectDiv,
                 [{ label: 'All Groups', value: ALL_VALUE }].concat(groupOptions),
                 async (v) => {
-                    this.state.group_name = v;
+                    this.state.group_id = v;
                     this.state.instruction_type = ALL_VALUE;
                     await this.renderInstructionSelect();
                     this.renderChart();
-                    window.StorageService.setLocalStorageItem('conversations_chart_status_timeline_group_name', v);
+                    window.StorageService.setLocalStorageItem('conversations_chart_status_timeline_group_id', v);
                 },
                 'Select Group ...',
-                this.state.group_name
+                this.state.group_id
             );
         }
 
@@ -199,21 +221,21 @@
             // Instruction type select - called when group or conversation type changes
             this.instructionTypeControlDiv.innerHTML = '';
 
-            if (this.state.group_name === ALL_VALUE) {
+            if (this.state.group_id === ALL_VALUE) {
                 new window.SelectComponent(this.instructionTypeControlDiv, [{ label: 'Select a group first', value: ALL_VALUE }], null, 'Select Instruction ...', ALL_VALUE, true);
 
             } else {
                 // Fetch instructions for the selected group (with caching)
-                let instructionsResp = this.cacheInstructionsByGroup[this.state.group_name];
+                let instructionsResp = this.cacheInstructionsByGroup[this.state.group_id];
                 if (!instructionsResp) {
-                    instructionsResp = await window.conversations.apiInstructions.instructionsList(this.instructionTypeControlDiv, this.state.group_name);
-                    this.cacheInstructionsByGroup[this.state.group_name] = instructionsResp;
+                    instructionsResp = await window.conversations.apiInstructions.instructionsList(this.instructionTypeControlDiv, this.state.group_id);
+                    this.cacheInstructionsByGroup[this.state.group_id] = instructionsResp;
                 }
 
                 const options = [{ label: 'All instructions', value: ALL_VALUE }].
                     concat(instructionsResp.
                         filter(instruction => instruction.info.conversation_type === this.state.conversation_type).
-                        map(instruction => ({ label: instruction.info.name, value: instruction.info.type }))
+                        map(instruction => ({ label: instruction.info.name, value: instruction.instructions_type }))
                     );
 
                 new window.SelectComponent(
@@ -293,6 +315,47 @@
 
         }
 
+        renderAggregationLevel0Select(container) {
+            // Aggregation level 0 select
+            new window.SelectComponent(
+                container,
+                AGGREGATION_LEVELS,
+                (v) => {
+                    this.state.aggregation_level_0 = v;
+                    if (this.state.aggregation_level_0 === AGGREGATION_LEVEL_NONE) {
+                        this.state.aggregation_level_1 = AGGREGATION_LEVEL_NONE;
+                    }
+                    this.renderAggregationLevel1Select();
+                    this.renderChart();
+                },
+                'Aggregation Level 0 ...',
+                this.state.aggregation_level_0
+            );
+            this.renderAggregationLevel1Select();
+        }
+
+        renderAggregationLevel1Select() {
+            this.aggregation_level_1Div.innerHTML = '';
+
+            if (this.state.aggregation_level_0 === AGGREGATION_LEVEL_NONE) {
+                new window.SelectComponent(this.aggregation_level_1Div, [{ label: 'Select aggregation level 0 first', value: AGGREGATION_LEVEL_NONE }], AGGREGATION_LEVEL_NONE, 'Select Aggregation Level 0 first ...', null, true);
+
+            } else {
+
+                // Aggregation level 1 select
+                new window.SelectComponent(
+                    this.aggregation_level_1Div,
+                    AGGREGATION_LEVELS.filter(al => al.value !== this.state.aggregation_level_0),
+                    (v) => {
+                        this.state.aggregation_level_1 = v;
+                        this.renderChart();
+                    },
+                    'Aggregation Level 1 ...',
+                    this.state.aggregation_level_1
+                );
+            }
+        }
+
         async renderChart() {
             // Fetch data from API
             const allStatesSelected = STATE_VALUES.every(v => this.state.states.includes(v));
@@ -301,10 +364,12 @@
                 this.charWrapper,
                 this.state.hours_back,
                 this.state.interval,
-                this.state.group_name !== ALL_VALUE ? this.state.group_name : null,
+                this.state.group_id !== ALL_VALUE ? this.state.group_id : null,
                 this.state.conversation_type !== ALL_VALUE ? this.state.conversation_type : null,
                 this.state.instruction_type !== ALL_VALUE ? this.state.instruction_type : null,
-                !allStatesSelected ? this.state.states : null
+                !allStatesSelected ? this.state.states : null,
+                this.state.aggregation_level_0 !== AGGREGATION_LEVEL_NONE ? this.state.aggregation_level_0 : null,
+                this.state.aggregation_level_1 !== AGGREGATION_LEVEL_NONE ? this.state.aggregation_level_1 : null,
             );
 
             // Build chart data and options
@@ -317,69 +382,116 @@
         }
 
         buildBarData(timelineResponseData) {
-            // Build chart data based on the measure field type and the response data according to the selected group
-            const groupKey = (this.state.group_name === ALL_VALUE) ? 'all' : this.state.group_name;
-            const timelineData = timelineResponseData[groupKey];
-            
             // X-Axis Labels (Interval timestamps)
-            const labels = timelineData.map(bucket => new Date(bucket.interval_start).toLocaleString());
-
-            // Build datasets according to measure field type
+            const labels = timelineResponseData.map(bucket => new Date(bucket.interval_start).toLocaleString());
             const datasetCommon = { borderColor: getCssVar('--color-border-light'), backgroundColor: getCssVar('--color-secondary-accent'), borderWidth: 2 };
             let datasets = [];
-            if (MEASURE_FIELDS[this.state.measure_field].type === 'summary') {
+
+            // Case 1: No aggregation - simple summary data
+            if (this.state.aggregation_level_0 === AGGREGATION_LEVEL_NONE) {
                 datasets = [{
                     ...datasetCommon,
                     label: MEASURE_FIELDS[this.state.measure_field].label,
-                    data: timelineData.map((bucket) => bucket.summary[MEASURE_FIELDS[this.state.measure_field].field] || 0),
+                    data: timelineResponseData.map((bucket) => bucket.summary[MEASURE_FIELDS[this.state.measure_field].field] || 0),
                 }];
-
-            } else if (MEASURE_FIELDS[this.state.measure_field].type === 'conversations_by_state') {
-                // Simple stacked bars by interval (states summed up across all types)
-                const allStates = [...new Set(timelineData.flatMap(d => Object.keys(d.summary.by_state)))];
-
-                datasets = allStates.map(state => ({
-                    ...datasetCommon,
-                    label: state,
-                    data: timelineData.map(entry => entry.summary.by_state[state] || 0),
-                    backgroundColor: stateColor(state),
-                }));
-
-            } else if (MEASURE_FIELDS[this.state.measure_field].type === 'conversation_types_by_state') {
-                datasets = [];
-                const rawData = timelineResponseData[groupKey];
-
-                const allStates = [...new Set(rawData.flatMap(entry =>
-                    Object.values(entry.by_type).flatMap(typeObj => Object.keys(typeObj.summary.by_state))
-                ))];
-                const allTypes = [...new Set(rawData.flatMap(entry => Object.keys(entry.by_type)))];
-
-                // Create unique labels by combining type and state
-                allTypes.forEach(type => {
-                    allStates.forEach(state => {
-                        datasets.push({
-                            ...datasetCommon,
-                            label: `${type} - ${state}`,
-                            data: rawData.map(entry => entry.by_type[type]?.summary?.by_state?.[state] || 0),
-                            stack: type,
-                            backgroundColor: stateColor(state),
-                            borderColor: type === 'ai_decision' ? 'magenta' : 'black',
-                        });
+            }
+            // Case 2: Aggregation level 0 only - create dataset per level 0 key
+            else if (this.state.aggregation_level_1 === AGGREGATION_LEVEL_NONE) {
+                // Get all unique keys from aggregation level 0 (excluding 'interval_start', 'interval_end', 'summary')
+                const level0Keys = new Set();
+                timelineResponseData.forEach(bucket => {
+                    Object.keys(bucket).forEach(key => {
+                        if (key !== 'interval_start' && key !== 'interval_end' && key !== 'summary') {
+                            level0Keys.add(key);
+                        }
                     });
                 });
 
-            } else {
-                new window.AlertComponent("Chart error", 'Unknown measure field type: ' + MEASURE_FIELDS[this.state.measure_field].type, null, window.AlertComponent.TYPE_DANGER);
-                datasets = [];
+                // Create a dataset for each level 0 key
+                Array.from(level0Keys).forEach((key, index) => {
+                    datasets.push({
+                        ...datasetCommon,
+                        label: key,
+                        data: timelineResponseData.map(bucket => 
+                            bucket[key]?.summary?.[MEASURE_FIELDS[this.state.measure_field].field] || 0
+                        ),
+                        backgroundColor: this.getColorForIndex(index),
+                    });
+                });
             }
+            // Case 3: Both aggregation levels - stacked bars
+            else {
+                // Get all unique level 0 and level 1 keys
+                const level0Keys = new Set();
+                const level1KeysByLevel0 = {};
 
-            return {
-                labels,
-                datasets
-            };
-        };
+                timelineResponseData.forEach(bucket => {
+                    Object.keys(bucket).forEach(level0Key => {
+                        if (level0Key !== 'interval_start' && level0Key !== 'interval_end' && level0Key !== 'summary') {
+                            level0Keys.add(level0Key);
+                            
+                            if (!level1KeysByLevel0[level0Key]) {
+                                level1KeysByLevel0[level0Key] = new Set();
+                            }
+                            
+                            // Get level 1 keys (excluding 'summary')
+                            Object.keys(bucket[level0Key]).forEach(level1Key => {
+                                if (level1Key !== 'summary') {
+                                    level1KeysByLevel0[level0Key].add(level1Key);
+                                }
+                            });
+                        }
+                    });
+                });
+
+                // Create datasets: for each level0 key, create stacked datasets for each level1 key
+                let colorIndex = 0;
+                Array.from(level0Keys).forEach(level0Key => {
+                    const level1Keys = Array.from(level1KeysByLevel0[level0Key] || []);
+                    
+                    level1Keys.forEach(level1Key => {
+                        datasets.push({
+                            ...datasetCommon,
+                            label: `${level0Key} - ${level1Key}`,
+                            data: timelineResponseData.map(bucket => 
+                                bucket[level0Key]?.[level1Key]?.summary?.[MEASURE_FIELDS[this.state.measure_field].field] || 0
+                            ),
+                            stack: level0Key, // Stack by level 0 key
+                            backgroundColor: this.getColorForIndex(colorIndex++),
+                        });
+                    });
+                });
+            }
+            
+            return { labels, datasets };
+        }
+
+        getColorForIndex(index) {
+            // Generate distinct colors for different datasets
+            const colors = [
+                getCssVar('--color-secondary-accent'),
+                getCssVar('--color-primary-accent'),
+                '#FF6384',
+                '#36A2EB',
+                '#FFCE56',
+                '#4BC0C0',
+                '#9966FF',
+                '#FF9F40',
+                '#FF6384',
+                '#C9CBCF'
+            ];
+            return colors[index % colors.length];
+        }
 
         buildBarOptions() {
+            // Enable stacking when we have aggregation level 1 (nested stacking)
+            if (this.state.aggregation_level_1 !== AGGREGATION_LEVEL_NONE) {
+                return {
+                    scales: { x: { stacked: true }, y: { stacked: true } }
+                };
+            }
+            
+            // Legacy support for old measure field types
             if (MEASURE_FIELDS[this.state.measure_field].type === 'conversations_by_state' || 
                 MEASURE_FIELDS[this.state.measure_field].type === 'conversation_types_by_state') {
                 return {

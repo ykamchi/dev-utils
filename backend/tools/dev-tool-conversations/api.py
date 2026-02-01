@@ -91,8 +91,8 @@ def register_system_apis(app, base_path: str):
         payload = request.get_json(force=True)
         try:
             request_payload = {}
-            if payload.get('group_name') is not None:
-                request_payload["group_name"] = payload.get('group_name')
+            if payload.get('group_id') is not None:
+                request_payload["group_id"] = payload.get('group_id')
             if payload.get('conversation_type') is not None:
                 request_payload["conversation_type"] = payload.get('conversation_type') 
             if (payload.get('instruction_type') is not None):
@@ -103,6 +103,8 @@ def register_system_apis(app, base_path: str):
                 request_payload["hours_back"] = payload.get('hours_back')
             if payload.get('interval') is not None:
                 request_payload["interval"] = payload.get('interval')
+            if payload.get('aggregation_levels') is not None:
+                request_payload["aggregation_levels"] = payload.get('aggregation_levels')
 
             upstream_resp = _proxy_post('/api/status_conversation_timeline', request_payload)
             return jsonify(upstream_resp)
@@ -227,7 +229,7 @@ def register_instructions_apis(app, base_path: str):
     @app.route(f"{base_path}/instructions_list", methods=["POST"])
     def instructions_list():
         """
-        Proxy to upstream /api/instructions/list with group_name from payload (no defaults).
+        Proxy to upstream /api/instructions_list with group_name from payload (no defaults).
         """
         try:
             payload = request.get_json(force=True)
