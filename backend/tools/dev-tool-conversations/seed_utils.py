@@ -55,7 +55,7 @@ def extract_seed_data(files: List[Dict[str, Any]], instruction_type_filter: Opti
         # 1. Check for root members_seed.json
         if len(path_parts) == 2 and file['name'] == 'members_seed.json':
             # Skip members file if filtering by instruction type
-            if instruction_type_filter:
+            if instruction_type_filter and 'members_seed' != instruction_type_filter:
                 continue
                 
             try:
@@ -90,7 +90,47 @@ def extract_seed_data(files: List[Dict[str, Any]], instruction_type_filter: Opti
                     'error': str(err)
                 })
                 continue
-        
+
+        # 1-1. Check for root members_seed.json
+        if len(path_parts) == 2 and file['name'] == 'group_seed.json':
+            # Skip members file if filtering by instruction type
+            if instruction_type_filter and 'group_seed' != instruction_type_filter:
+                continue
+                
+            try:
+                group_seed_json = json.loads(file['content'])
+                valid = validate_members(group_seed_json)
+                seeding_data.insert(0, {
+                    'type': 'group',
+                    'folderName': 'root',
+                    'file': file,
+                    'include': valid['valid'],
+                    'valid': valid['valid'],
+                    'error': None if valid['valid'] else f"group_seed.json validation error: {valid['reason']}"
+                })
+                continue
+            except json.JSONDecodeError as err:
+                seeding_data.insert(0, {
+                    'type': 'group',
+                    'folderName': 'root',
+                    'file': file,
+                    'include': False,
+                    'valid': False,
+                    'error': 'Invalid JSON format in group_seed.json.'
+                })
+                continue
+            except Exception as err:
+                seeding_data.insert(0, {
+                    'type': 'group',
+                    'folderName': 'root',
+                    'file': file,
+                    'include': False,
+                    'valid': False,
+                    'error': str(err)
+                })
+                continue
+
+
         # 2. Check for files inside instructions/ folder
         if len(path_parts) == 4 and path_parts[1] == 'instructions':
             folder_name = path_parts[-2]

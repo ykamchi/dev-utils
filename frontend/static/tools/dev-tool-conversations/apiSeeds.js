@@ -38,7 +38,7 @@ window.conversations.apiSeeds.fetchGroupSeeds = async function (spinnerContainer
 // Fetch group seed from backend for a specific group and instruction type (returns processed seeding data)
 window.conversations.apiSeeds.fetchGroupSeed = async function (spinnerContainer, groupName, instructionType) {
     // Show loading spinner while fetching
-    const spinner = spinnerContainer ? new window.SpinnerComponent(spinnerContainer, { text: `Loading ${groupName}/${instructionType} seed ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT }) : null;
+    const spinner = spinnerContainer ? new window.SpinnerComponent(spinnerContainer, { text: `Loading ${instructionType} seed ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT }) : null;
 
     try {
         const resp = await fetch('/api/dev-tool-conversations/group_seed', {

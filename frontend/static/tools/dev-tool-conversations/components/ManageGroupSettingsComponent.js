@@ -11,6 +11,7 @@
             this.groupEditor = null;
             this.group = null;
             this.page = null;
+            this.groupSeed = null;
             this.render();
         }
 
@@ -21,6 +22,9 @@
 
         async loadContent() {
             this.group = await window.conversations.apiGroups.groupsGet(null, this.groupId);
+
+            // Load group seed data
+            await this.loadGroupSeed();
 
             // Create the main page component
             this.page = new window.conversations.PageComponent(this.container, this.manageOptions[this.optionId].icon, this.manageOptions[this.optionId].name,
@@ -45,9 +49,61 @@
             this.page.updateContentArea(contentDiv);
         }
 
+        async loadGroupSeed() {
+            const seedEntry = await window.conversations.apiSeeds.fetchGroupSeed(null, this.group.group_name, 'group_seed');
+            console.log(seedEntry)
+            if (seedEntry && seedEntry.file) {
+                this.groupSeed = JSON.parse(await seedEntry.file.content);
+            } else {
+                this.groupSeed = null;
+            }
+        }
+
+
+
+        compareSeedToCurrent() {
+            if (!this.groupSeed) {
+                return false;
+            }
+            const normalizeForComparison = (text) => {
+                return text
+                    .replace(/\r\n/g, '\n')  // Convert Windows line endings
+                    .replace(/\r/g, '\n')    // Convert old Mac line endings
+                    .trim();                  // Remove leading/trailing whitespace
+            }
+            
+            console.log('Comparing seed to current:', this.groupSeed, this.group);
+            if (normalizeForComparison(this.groupSeed.group_name) !== normalizeForComparison(this.group.group_name) ||
+                normalizeForComparison(this.groupSeed.group_description || '') !== normalizeForComparison(this.group.group_description || '')) {
+                return false;
+            }
+            return true;
+        }
+
+
+
+
+
+
         populateEditTab(container) {
             // Edit group section (for Properties tab)
             const buttonContainer = window.conversations.utils.createDivContainer(container, 'conversations-buttons-container');
+
+            // Seed group button
+            if (!this.compareSeedToCurrent()) {
+                new window.ButtonComponent(buttonContainer, '💡 Seed Group', async () => {
+                    // const updatedData = groupEditor.updatedGroup();
+
+                    // popup.hide();
+
+                    // // Call API to add group
+                    // const result = await window.conversations.apiGroups.groupsAdd(null, updatedData.groupName, updatedData.groupDescription);
+                    // this.selectedGroupId = result.group_id;
+                    this.render();
+                }, window.ButtonComponent.TYPE_GHOST, '💡 Seed Group');
+            }
+
+            // Save group button
             new window.ButtonComponent(buttonContainer, '💾', () => this.saveGroupProperties(), window.ButtonComponent.TYPE_GHOST, '💾 Save instruction');
             this.groupEditor = new window.conversations.ManageGroupEditorComponent(container, this.group.group_name, this.group.group_description); 
         }
