@@ -65,7 +65,8 @@ window.conversations.DEFAULT_FEEDBACK_DEF = {
         description: 'rate how much would you like the other members (value 1-10)',
         type: 'integer',
         min: 1,
-        max: 10
+        max: 10,
+        required: true,
     },
 };
 

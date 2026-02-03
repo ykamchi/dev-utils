@@ -9,6 +9,7 @@
             this.onChange = onChange;
             this.selectedGroupId = null;
             this.selectedMode = 'view';
+            this.groups = null;
             this.render();
         }
 
@@ -45,9 +46,9 @@
 
             // Determine selected group
             if (this.selectedGroupId === null) {
-                const storedGroup = window.StorageService.getLocalStorageItem('last-selected-group', null);
+                const storedGroup = window.StorageService.getStorageJSON('last-selected-group', null);
                 if (storedGroup) {
-                    if (this.groups.find(g => g.group_name === storedGroup)) {
+                    if (this.groups.find(g => g.group_id === storedGroup)) {
                         this.selectedGroupId = storedGroup;
                     } else {
                         this.selectedGroupId = this.groups[0].group_id;
@@ -68,11 +69,11 @@
                 controlsContainer,
                 this.groups.map(g => ({ label: g.group_name, value: g.group_id })),
                 (selectedGroup) => {
-                    this.selectedGroupId = selectedGroup;
+                    this.selectedGroupId = parseInt(selectedGroup);
                     this.onChange();
 
                     // Persist selection
-                    window.StorageService.setLocalStorageItem('last-selected-group', selectedGroup);
+                    window.StorageService.setStorageJSON('last-selected-group', this.selectedGroupId);
                 },
                 'Select Group ...',
                 this.selectedGroupId
@@ -118,8 +119,8 @@
         async populateSeedGroupsTab(container, popup) {
             const editorDiv = window.conversations.utils.createDivContainer(container, 'conversation-container-vertical');
 
-            const seeds = await window.conversations.apiSeeds.fetchGroupSeeds(null);
-
+            const seeds = await window.conversations.apiSeeds.seedsGroupsGet(null);
+            
             // Seed group button
             const buttonContainer = window.conversations.utils.createDivContainer(editorDiv, 'conversations-buttons-container');
             new window.ButtonComponent(buttonContainer, '📤 Group seeding', async () => {
@@ -128,7 +129,7 @@
                 // Call API to add group for each selected seed
                 for (const seedEntry of seeds) {
                     if (seedEntry.include && seedEntry.valid) {
-                        const result = await window.conversations.apiGroups.groupsAdd(null, seedEntry.group_name, seedEntry.fileContent.group_description);
+                        const result = await window.conversations.apiGroups.groupsAdd(null, seedEntry.group_key, seedEntry.json.group_name, seedEntry.json.group_description);
                         this.selectedGroupId = result.group_id;
                         this.render();
                     }
@@ -136,19 +137,20 @@
             }, window.ButtonComponent.TYPE_GHOST, '📤 Group seeding');
 
             if (seeds && seeds.length > 0) {
+
                 new window.ListComponent(editorDiv, seeds, (seedEntry) => {
                     // Create header content
                     const headerContent = window.conversations.utils.createDivContainer();
                     new window.CheckboxComponent(headerContent, seedEntry.include, (checked) => {
                         seedEntry.include = checked;
-                    }, seedEntry.group_name + (!seedEntry.valid ? ' <b style="color: var(--color-warning-error)">(Invalid)</b>' : ''), !seedEntry.valid);
+                    }, seedEntry.json.group_name + (!seedEntry.valid ? ' <b style="color: var(--color-warning-error)">(Invalid)</b>' : ''), !seedEntry.valid);
 
                     // Create body content
                     const bodyContent = window.conversations.utils.createDivContainer();
                     if (!seedEntry.valid) {
                         window.conversations.utils.createReadOnlyText(bodyContent, seedEntry.error, 'conversations-message-error');
                     } else {
-                        window.conversations.utils.createJsonDiv(bodyContent, seedEntry.fileContent);
+                        window.conversations.utils.createJsonDiv(bodyContent, seedEntry.json);
                     }
                     // Create ExpandDivComponent
                     const seedDiv = window.conversations.utils.createDivContainer();
@@ -174,7 +176,7 @@
                 popup.hide();
 
                 // Call API to add group
-                const result = await window.conversations.apiGroups.groupsAdd(null, updatedData.groupName, updatedData.groupDescription);
+                const result = await window.conversations.apiGroups.groupsAdd(null, null, updatedData.groupName, updatedData.groupDescription);
                 this.selectedGroupId = result.group_id;
                 this.render();
             }, window.ButtonComponent.TYPE_GHOST, '💾 Add group');

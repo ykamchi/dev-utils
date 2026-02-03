@@ -12,6 +12,7 @@
             this.conversationType = conversation_type;
             this.popupInstance = popupInstance;
             this.MenuListMembersComponent = null;
+            this.selectedInstructionsKey = null;
             this.page = null;
             this.render();
         }
@@ -43,17 +44,17 @@
             window.conversations.utils.createLabel(selectInstructionWrapper, 'Select Instruction:');
             
             if (Object.entries(this.groupInstructions).length > 0) {
-                this.selectedInstructionsType = Object.values(this.groupInstructions)[0].instructions_type;
+                this.selectedInstructionsKey = Object.values(this.groupInstructions)[0].instructions_key;
                 // Instructions chooser
-                const selectOptions = Object.values(this.groupInstructions).map(entry => ({ label: entry.info.name, value: entry.instructions_type }));
+                const selectOptions = Object.values(this.groupInstructions).map(entry => ({ label: entry.info.name, value: entry.instructions_key }));
                 new window.SelectComponent(
                     selectInstructionWrapper, 
                     selectOptions, 
                     (selectedValue) => { 
-                        this.selectedInstructionsType = selectedValue 
+                        this.selectedInstructionsKey = selectedValue 
                     },
                     'Select an instruction...',
-                    this.selectedInstructionsType
+                    this.selectedInstructionsKey
                 );
                 this.page.updateControlArea(controlDiv);
             } else {
@@ -88,7 +89,7 @@
 
         async handleStartClick() {
             // Validate inputs
-            if (!this.selectedInstructionsType) {
+            if (!this.selectedInstructionsKey) {
                 new window.AlertComponent('Missing Instruction', 'Please select an instruction type.');
                 return;
             }
@@ -104,7 +105,7 @@
             }
 
             // Start the conversation
-            window.conversations.apiConversations.conversationAdd(null, this.groupId, this.conversationType, this.selectedInstructionsType, participant_members_nick_names, participant_members_nick_names.length * 5);
+            window.conversations.apiConversations.conversationAdd(null, this.groupId, this.conversationType, this.selectedInstructionsKey, participant_members_nick_names, participant_members_nick_names.length * 5);
         }
     }
 

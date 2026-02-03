@@ -39,7 +39,7 @@ window.conversations.apiInstructions.instructionsList = async function (spinnerC
 
 
 // Add group instructions
-window.conversations.apiInstructions.instructionsAdd = async function (spinnerContainer, instructions_type, groupId, instructions, feedbackDef, info) {
+window.conversations.apiInstructions.instructionsAdd = async function (spinnerContainer, instructions_key, groupId, instructions, feedbackDef, info) {
     // Show loading spinner while adding instructions
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Adding instructions ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
     
@@ -52,7 +52,7 @@ window.conversations.apiInstructions.instructionsAdd = async function (spinnerCo
                 instructions: instructions,
                 feedback_def: feedbackDef,
                 info: info,
-                instructions_type: instructions_type
+                instructions_key: instructions_key
             })
         });
 
@@ -74,7 +74,7 @@ window.conversations.apiInstructions.instructionsAdd = async function (spinnerCo
 
 
 // Delete group instructions
-window.conversations.apiInstructions.instructionsDelete = async function (spinnerContainer, groupId, instructionsType) {
+window.conversations.apiInstructions.instructionsDelete = async function (spinnerContainer, groupId, instructionsKey) {
     // Show loading spinner while deleting instructions
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Deleting instructions for ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
     try {
@@ -83,7 +83,7 @@ window.conversations.apiInstructions.instructionsDelete = async function (spinne
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 group_id: groupId,
-                instructions_type: instructionsType
+                instructions_key: instructionsKey
             })
         });
 
@@ -104,7 +104,7 @@ window.conversations.apiInstructions.instructionsDelete = async function (spinne
 };
 
 // Update group instructions
-window.conversations.apiInstructions.instructionsUpdate = async function (spinnerContainer, groupId, instructionsType, instructions, feedbackDef, info) {
+window.conversations.apiInstructions.instructionsUpdate = async function (spinnerContainer, groupId, instructionsKey, instructions, feedbackDef, info) {
     // Show loading spinner while updating instructions
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Updating instructions for ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
     
@@ -114,7 +114,7 @@ window.conversations.apiInstructions.instructionsUpdate = async function (spinne
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 group_id: groupId,
-                instructions_type: instructionsType,
+                instructions_key: instructionsKey,
                 instructions: instructions,
                 feedback_def: feedbackDef,
                 info: info

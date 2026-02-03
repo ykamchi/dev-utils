@@ -18,7 +18,7 @@
             const tabsetDiv = window.conversations.utils.createDivContainer(this.container);
 
             // Add tabs for instruction details
-            const storageKey = `conversations-instruction-editor-${this.groupId}-${this.instruction.instructions_type}`;
+            const storageKey = `conversations-instruction-editor-${this.groupId}-${this.instruction.instructions_key}`;
             new window.TabsetComponent(tabsetDiv, [
                 { name: 'Info', populateFunc: (c) => this.populateInfoTab(c) },
                 { name: 'Instructions', populateFunc: (c) => this.populateInstructionsEditorTab(c) },
@@ -59,7 +59,7 @@
             window.conversations.utils.createField(container, 'Conversation Type:', this.instruction.info.conversation_type, true);
 
             // Instructions type field (read-only)
-            window.conversations.utils.createField(container, 'Instructions Type:', this.instruction.instructions_type, true);
+            window.conversations.utils.createField(container, 'Instructions Type:', this.instruction.instructions_key, true);
 
             // Description field (editable)
             window.conversations.utils.createTextArea(container, 'Description:', this.instruction.info.description, 'My Instruction Description', (value) => {

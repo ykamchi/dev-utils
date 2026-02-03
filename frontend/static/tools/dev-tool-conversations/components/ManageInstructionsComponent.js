@@ -8,7 +8,7 @@
             this.groupId = groupId;
             this.optionId = optionId;
             this.manageOptions = manageOptions;
-            this.selectedInstructionType = null;
+            this.selectedInstructionsKey = null;
             this.instructions = [];
             this.instructionsEditor = null;
             this.selectedInstructionsSeed = null;
@@ -50,9 +50,9 @@
 
             } else {
                 // Set the selected instruction as the first one if not already selected
-                if (!this.selectedInstructionType) {
+                if (!this.selectedInstructionsKey) {
                     // Set to first instruction type by default
-                    this.selectedInstructionType = this.instructions[0].instructions_type;
+                    this.selectedInstructionsKey = this.instructions[0].instructions_key;
 
                 } else {
                     // Continue using the existing selected instruction type
@@ -63,13 +63,13 @@
                 window.conversations.utils.createLabel(selectInstructionDiv, 'Select Instruction:');
                 new window.SelectComponent(
                     selectInstructionDiv,
-                    this.instructions.map(entry => ({ label: entry.info.name, value: entry.instructions_type })).sort((a, b) => a.label.localeCompare(b.label)),
+                    this.instructions.map(entry => ({ label: entry.info.name, value: entry.instructions_key })).sort((a, b) => a.label.localeCompare(b.label)),
                     async (selectedType) => {
-                        this.selectedInstructionType = selectedType;
+                        this.selectedInstructionsKey = selectedType;
                         this.loadSelectedInstructions();
                     },
                     'Select an instruction...',
-                    this.selectedInstructionType
+                    this.selectedInstructionsKey
                 );
 
                 // Load the selected instruction details
@@ -82,8 +82,8 @@
             // Load the seed data for the selected instruction
             await this.loadSelectedInstructionsSeed();
 
-            // Find the selected instruction using the instructionType
-            this.selectedInstruction = this.instructions.find(entry => entry.instructions_type === this.selectedInstructionType);
+            // Find the selected instruction using the selectedInstructionsKey
+            this.selectedInstruction = this.instructions.find(entry => entry.instructions_key === this.selectedInstructionsKey);
 
             // Update the page content with the instructions editor
             const contentDiv = window.conversations.utils.createDivContainer();
@@ -96,8 +96,8 @@
             new window.ButtonComponent(pageButtons, '+', () => this.addInstruction(), window.ButtonComponent.TYPE_GHOST, '+ Add instruction');
             new window.ButtonComponent(pageButtons, '🗙', () => this.deleteInstruction(), window.ButtonComponent.TYPE_GHOST_DANGER, '🗙 Delete instruction');
 
-            if (!this.compareSeedInstructionsToCurrent()) {
-                new window.ButtonComponent(pageButtons, '💡 Seed data', () => this.showSeedData(), window.ButtonComponent.TYPE_GHOST_DANGER, '🗙 Delete instruction');
+            if (!this.compareSeedToCurrent()) {
+                new window.ButtonComponent(pageButtons, '💡 Seed data', () => this.showSeedData(), window.ButtonComponent.TYPE_GHOST_DANGER, '💡 Seed data');
             }
             this.page.updateButtonsArea(pageButtons);
         }
@@ -106,79 +106,51 @@
             const popup = new window.PopupComponent({
                 icon: '💡',
                 title: 'Instruction Seed Data - ' + this.selectedInstruction.info.name,
-                width: 720,
+                width: 1200,
                 height: 720,
                 content: (container) => {
-                    const wrapper = window.conversations.utils.createDivContainer(container, 'conversations-page-wrapper');
-
-                    const pageButtons = window.conversations.utils.createDivContainer(wrapper, 'conversations-buttons-container');
-
-                    if (this.selectedInstructionsSeed) {
-                        // Seed exists - save to override
-                        new window.ButtonComponent(pageButtons, '💾 Override seed', async () => {
-                            await window.conversations.apiSeeds.saveGroupSeed(container, this.group.group_name, this.selectedInstruction.instructions_type, this.selectedInstruction);
+                    new window.conversations.ManageInstructionsSeedCompareComponent(
+                        container,
+                        this.groupId,
+                        this.group.group_name,
+                        this.selectedInstruction,
+                        this.selectedInstructionsSeed,
+                        () => {
+                            // onReloadFromSeed callback
                             popup.hide();
                             this.loadContent();
-                        }, window.ButtonComponent.TYPE_GHOST, '💾 Override seed');
-
-                        // Seed exists - reload from seed
-                        new window.ButtonComponent(pageButtons, '💡 Reload from seed', async () => {
-                            // Reload the selected instruction from seed
-                            popup.hide();
-                            // Call API to save
-                            await window.conversations.apiInstructions.instructionsUpdate(container, this.groupId,
-                                this.selectedInstruction.instructions_type,
-                                this.selectedInstructionsSeed.instructions,
-                                this.selectedInstructionsSeed.feedback_def,
-                                this.selectedInstructionsSeed.info
-                            );
-                            this.loadContent();
-                        }, window.ButtonComponent.TYPE_GHOST, '💡 Reload from seed');
-
-                    } else {
-                        // Seed does not exist - create new seed
-                        new window.ButtonComponent(pageButtons, '💾 Create seed', async () => {
-                            await window.conversations.apiSeeds.saveGroupSeed(container, this.group.group_name, this.selectedInstruction.instructions_type, this.selectedInstruction);
+                        },
+                        () => {
+                            // onOverrideSeed callback
                             popup.hide();
                             this.loadContent();
                         }
-                        , window.ButtonComponent.TYPE_GHOST, '💾 Create seed');
-                    }
-
-                    window.conversations.utils.createReadOnlyText(wrapper, 'Instruction Seed comparison is not yet implemented.');
-                    window.conversations.utils.createJsonDiv(wrapper, this.selectedInstruction);
-                    window.conversations.utils.createJsonDiv(wrapper, this.selectedInstructionsSeed);
+                    );
                 },
             });
             popup.show();
         }
 
-        compareSeedInstructionsToCurrent() {
+        compareSeedToCurrent() {
             if (!this.selectedInstructionsSeed) {
                 return false;
             }
-            const normalizeForComparison = (text) => {
-                return text
-                    .replace(/\r\n/g, '\n')  // Convert Windows line endings
-                    .replace(/\r/g, '\n')    // Convert old Mac line endings
-                    .trim();                  // Remove leading/trailing whitespace
-            }
             if (!_.isEqual(this.selectedInstruction.info, this.selectedInstructionsSeed.info) ||
                 !_.isEqual(this.selectedInstruction.feedback_def, this.selectedInstructionsSeed.feedback_def) ||
-                normalizeForComparison(this.selectedInstruction.instructions) !== normalizeForComparison(this.selectedInstructionsSeed.instructions)) {
+                this.selectedInstruction.instructions !== this.selectedInstructionsSeed.instructions) {
                 return false;
             }
             return true;
         }
 
         async loadSelectedInstructionsSeed() {
-            const seedEntry = await window.conversations.apiSeeds.fetchGroupSeed(null, this.group.group_name, this.selectedInstructionType);
-            console.log(seedEntry)
-            if (seedEntry) {
+            const seedsInstructions = await window.conversations.apiSeeds.seedsInstructionsGet(null, this.group.group_key, this.selectedInstructionsKey);
+            console.log('Loaded seedsInstructions:', seedsInstructions);
+            if (seedsInstructions.length > 0) {
                 this.selectedInstructionsSeed = {
-                    instructions: await seedEntry.instruction_file.content,
-                    feedback_def: JSON.parse(await seedEntry.feedback_file.content),
-                    info: JSON.parse(await seedEntry.info_file.content),
+                    instructions: seedsInstructions[0].instructions,
+                    feedback_def: seedsInstructions[0].json_feedback,
+                    info: seedsInstructions[0].json_info,
                 };
             } else {
                 this.selectedInstructionsSeed = null;
@@ -188,7 +160,7 @@
         // Save the selected instruction
         async saveInstruction() {
             const updatedInstructions = this.instructionsEditor.updatedInstructions();
-            const selectedInstruction = this.instructions.find(entry => entry.instructions_type === this.selectedInstructionType);
+            const selectedInstruction = this.instructions.find(entry => entry.instructions_key === this.selectedInstructionsKey);
             // Check if data has changed
             if (_.isEqual(selectedInstruction.feedback_def, updatedInstructions.feedback_def) &&
                 selectedInstruction.instructions === updatedInstructions.instructions &&
@@ -199,7 +171,7 @@
 
             // Call API to save
             await window.conversations.apiInstructions.instructionsUpdate(null, this.groupId,
-                selectedInstruction.instructions_type,
+                selectedInstruction.instructions_key,
                 updatedInstructions.instructions,
                 updatedInstructions.feedback_def,
                 updatedInstructions.info
@@ -213,10 +185,10 @@
             new window.AlertComponent('Delete Instructions', 'Are you sure you want to delete these instructions?', [
                 ['Confirm Delete', async () => {
                     // Call API to delete
-                    await window.conversations.apiInstructions.instructionsDelete(null, this.groupId, this.selectedInstructionType);
+                    await window.conversations.apiInstructions.instructionsDelete(null, this.groupId, this.selectedInstructionsKey);
 
                     // Clear selected instruction type
-                    this.selectedInstructionType = null;
+                    this.selectedInstructionsKey = null;
 
                     // Reload content
                     this.loadContent();
@@ -248,7 +220,7 @@
                             updatedData.info
                         );
                         popup.hide();
-                        this.selectedInstructionType = result.data.instructions_type;
+                        this.selectedInstructionsKey = result.data.instructions_key;
                         this.loadContent();
 
                     }, window.ButtonComponent.TYPE_GHOST, '💾 Save instruction');

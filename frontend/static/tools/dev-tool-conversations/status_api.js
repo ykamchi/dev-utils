@@ -90,7 +90,7 @@ window.conversations.system_api.queueResume = async function (spinnerContainer) 
     }
 };
 
-window.conversations.system_api.fetchStatusConversationTimeline = async function (container, hours_back, interval, groupId, conversation_type, instruction_type, states, aggregation_level_0, aggregation_level_1) {
+window.conversations.system_api.fetchStatusConversationTimeline = async function (container, hours_back, interval, groupId, conversation_type, instructions_key, states, aggregation_level_0, aggregation_level_1) {
     // Show loading spinner while fetching
     const spinner = new window.SpinnerComponent(container, { text: 'Getting conversation timeline ...', size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
 
@@ -103,7 +103,7 @@ window.conversations.system_api.fetchStatusConversationTimeline = async function
         // Add optional parameters if provided
         if (groupId) body['group_id'] = groupId;
         if (conversation_type) body['conversation_type'] = conversation_type;
-        if (instruction_type) body['instruction_type'] = instruction_type;
+        if (instructions_key) body['instructions_key'] = instructions_key;
         if (states && Array.isArray(states) && states.length > 0) body['states'] = states;
         if (aggregation_level_0) {
             body['aggregation_levels'] = [aggregation_level_0];

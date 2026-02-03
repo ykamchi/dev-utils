@@ -67,7 +67,7 @@ window.conversations.apiGroups.groupsGet = async function (spinnerContainer, gro
 
 
 // Add new group
-window.conversations.apiGroups.groupsAdd = async function (spinnerContainer, groupName, groupDescription) {
+window.conversations.apiGroups.groupsAdd = async function (spinnerContainer, groupKey, groupName, groupDescription) {
     // Show loading spinner while adding group
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Adding group ${groupName}...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
     
@@ -76,6 +76,7 @@ window.conversations.apiGroups.groupsAdd = async function (spinnerContainer, gro
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+                group_key: groupKey,
                 group_name: groupName,
                 group_description: groupDescription
             })

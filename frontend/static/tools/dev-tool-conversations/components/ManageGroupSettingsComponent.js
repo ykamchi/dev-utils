@@ -21,6 +21,9 @@
         }
 
         async loadContent() {
+            // Clear container - loadContent can be called multiple times
+            this.container.innerHTML = '';
+
             this.group = await window.conversations.apiGroups.groupsGet(null, this.groupId);
 
             // Load group seed data
@@ -50,90 +53,63 @@
         }
 
         async loadGroupSeed() {
-            const seedEntry = await window.conversations.apiSeeds.fetchGroupSeed(null, this.group.group_name, 'group_seed');
-            console.log(seedEntry)
-            if (seedEntry && seedEntry.file) {
-                this.groupSeed = JSON.parse(await seedEntry.file.content);
+            const seedsGroups = await window.conversations.apiSeeds.seedsGroupsGet(null, this.group.group_key);
+            if (seedsGroups.length > 0) {
+                this.groupSeed = seedsGroups[0].json;
             } else {
                 this.groupSeed = null;
             }
         }
 
-
-
         compareSeedToCurrent() {
             if (!this.groupSeed) {
                 return false;
             }
-            const normalizeForComparison = (text) => {
-                return text
-                    .replace(/\r\n/g, '\n')  // Convert Windows line endings
-                    .replace(/\r/g, '\n')    // Convert old Mac line endings
-                    .trim();                  // Remove leading/trailing whitespace
-            }
-            
             console.log('Comparing seed to current:', this.groupSeed, this.group);
-            if (normalizeForComparison(this.groupSeed.group_name) !== normalizeForComparison(this.group.group_name) ||
-                normalizeForComparison(this.groupSeed.group_description || '') !== normalizeForComparison(this.group.group_description || '')) {
+            if (this.groupSeed.group_name !== this.group.group_name ||
+                this.groupSeed.group_description !== this.group.group_description) {
                 return false;
             }
             return true;
         }
 
-
-
-
-
-
         populateEditTab(container) {
             // Edit group section (for Properties tab)
             const buttonContainer = window.conversations.utils.createDivContainer(container, 'conversations-buttons-container');
 
-            // Seed group button
-            if (!this.compareSeedToCurrent()) {
-                new window.ButtonComponent(buttonContainer, '💡 Seed Group', async () => {
-                    // const updatedData = groupEditor.updatedGroup();
-
-                    // popup.hide();
-
-                    // // Call API to add group
-                    // const result = await window.conversations.apiGroups.groupsAdd(null, updatedData.groupName, updatedData.groupDescription);
-                    // this.selectedGroupId = result.group_id;
-                    this.render();
-                }, window.ButtonComponent.TYPE_GHOST, '💡 Seed Group');
-            }
-
             // Save group button
             new window.ButtonComponent(buttonContainer, '💾', () => this.saveGroupProperties(), window.ButtonComponent.TYPE_GHOST, '💾 Save instruction');
             this.groupEditor = new window.conversations.ManageGroupEditorComponent(container, this.group.group_name, this.group.group_description); 
+
+            // Seed group button
+            if (!this.compareSeedToCurrent()) {
+                new window.ButtonComponent(buttonContainer, '💡 Seed data', () => this.showSeedData(), window.ButtonComponent.TYPE_GHOST_DANGER, '💡 Seed data');
+            }
         }
     
         async populateSeedDataTab(container) {
             const seedGroupDiv = window.conversations.utils.createDivContainer(container, 'conversation-container-vertical');
 
-            const seedingData = await window.conversations.apiSeeds.fetchGroupSeedFiles(null, this.group.group_name);
-            if (seedingData && seedingData.length > 0) {
-                // Pre-load instruction file contents for valid entries
-                for (const seedEntry of seedingData) {
-                    if (seedEntry.valid) {
-                        if (seedEntry.type === 'instruction') {
-                            seedEntry.instructionContent = await seedEntry.instruction_file.content;
-                            seedEntry.feedbackContent = JSON.parse(await seedEntry.feedback_file.content);
-                            seedEntry.infoContent = JSON.parse(await seedEntry.info_file.content);
-                        } else if (seedEntry.type === 'members') {
-                            seedEntry.fileContent = JSON.parse(await seedEntry.file.content);
-                        }
-                    }
-                }
-
+            const membersSeed = await window.conversations.apiSeeds.seedsMembersGet(null, this.group.group_key);
+            const instructionsSeeds = await window.conversations.apiSeeds.seedsInstructionsGet(null, this.group.group_key);
+            const allSeeds = [...(membersSeed || []), ...(instructionsSeeds || [])];
+            if (allSeeds.length > 0) {
                 // Buttons container
                 const buttonContainer = window.conversations.utils.createDivContainer(seedGroupDiv, 'conversations-buttons-container');
-                new window.ButtonComponent(buttonContainer, '📤 Start seeding selected items', () => this.startSeedingData(seedingData), window.ButtonComponent.TYPE_GHOST, '💾 Save instruction');
+                new window.ButtonComponent(buttonContainer, '📤 Start seeding selected items', () => this.startSeedingData(allSeeds), window.ButtonComponent.TYPE_GHOST, '💾 Save instruction');
 
                 // Seed data list
-                new window.ListComponent(seedGroupDiv, seedingData, (seedEntry) => {
+                new window.ListComponent(seedGroupDiv, allSeeds, (seedEntry) => {
                     // Create header content
-                    const icon = seedEntry.type === 'members' ? '👥 ' : seedEntry?.infoContent?.conversation_type ? window.conversations.CONVERSATION_TYPES_ICONS[seedEntry?.infoContent?.conversation_type] + ' ' : '✘ ';
+                    let icon = '☰ ';
+                    let name = 'Unknown Seed';
+                    if (seedEntry.type === 'members') {
+                        icon = seedEntry.valid ? '👥 ' : '✘ ';
+                        name = 'Members Seed';
+                    } else if (seedEntry.type === 'instruction'   ) {
+                        icon = seedEntry.valid ? window.conversations.CONVERSATION_TYPES_ICONS[seedEntry.json_info.conversation_type] + ' ' : '✘ ';
+                        name = 'Instructions - ' + seedEntry.json_info.name;
+                    } 
                      
                     // const headerContent = window.conversations.utils.createDivContainer(); 
 
@@ -151,7 +127,7 @@
                         seedEntry.include = checked;
                     }, null, !seedEntry.valid);
 
-                    window.conversations.utils.createReadOnlyText(nameWrapper, seedEntry.type + ' - ' + seedEntry.folderName, 'conversations-card-name');
+                    window.conversations.utils.createReadOnlyText(nameWrapper, name, 'conversations-card-name');
 
                     // Description
                     const description = `${seedEntry.type} • ${seedEntry.folderName} ${!seedEntry.valid ? ' • Invalid' : ''}`
@@ -164,17 +140,17 @@
                     } else {
 
                         if (seedEntry.type === 'members') {
-                            window.conversations.utils.createJsonDiv(bodyContent, seedEntry.fileContent);
+                            window.conversations.utils.createJsonDiv(bodyContent, seedEntry.json);
                         } else if (seedEntry.type === 'instruction') {
-                            const infoGroup = window.conversations.utils.createDivContainer(bodyContent);
-                            window.conversations.utils.createLabel(infoGroup, 'Info Content:');
-                            window.conversations.utils.createJsonDiv(infoGroup, seedEntry.infoContent);
-                            const instructionsGroup = window.conversations.utils.createDivContainer(bodyContent);
-                            window.conversations.utils.createLabel(instructionsGroup, 'Instruction Content:');
-                            window.conversations.utils.createReadOnlyText(instructionsGroup, seedEntry.instructionContent || 'No content');
-                            const feedbackGroup = window.conversations.utils.createDivContainer(bodyContent, 'conversation-field-container-vertical');
-                            window.conversations.utils.createLabel(feedbackGroup, 'Feedback Content:');
-                            window.conversations.utils.createJsonDiv(feedbackGroup, seedEntry.feedbackContent);
+                            const infoField = window.conversations.utils.createFieldDiv(bodyContent, 'Info Content:');
+                            window.conversations.utils.createJsonDiv(infoField, seedEntry.json_info);
+                            
+
+                            const instructionField = window.conversations.utils.createFieldDiv(bodyContent, 'Info Content:');
+                            window.conversations.utils.createField(instructionField, 'instructions:', seedEntry.instruction_file.content, true);
+                                                        
+                            const feedbackField = window.conversations.utils.createFieldDiv(bodyContent, 'Feedback Content:');
+                            window.conversations.utils.createJsonDiv(feedbackField, seedEntry.json_feedback);
                         }
                     }
                     // Create ExpandDivComponent
@@ -193,10 +169,10 @@
             for (const entry of seedingData) {
                 if (entry.include) {
                     if (entry.type === 'members') {
-                        await window.conversations.apiMembers.membersAdd(null, this.group.group_id, entry.fileContent);
+                        await window.conversations.apiMembers.membersAdd(null, this.group.group_id, entry.json);
 
                     } else if (entry.type === 'instruction') {
-                        await window.conversations.apiInstructions.instructionsAdd(null, entry.folderName, this.group.group_id, entry.instructionContent, entry.feedbackContent, entry.infoContent);
+                        await window.conversations.apiInstructions.instructionsAdd(null, entry.folderName, this.group.group_id, entry.instructions, entry.json_feedback, entry.json_info);
                     }
                 }
             }
@@ -220,7 +196,7 @@
                 if (ret.group_name !== this.group.group_name) {
                     this.manageOptions[this.optionId].info.onGroupNameChange(ret.group_id);
                 }
-
+                this.loadContent();
             } catch (e) {
                 console.error('Error saving group settings:', e);
                 new window.AlertComponent('Error', `Failed to save group settings: ${e.message || e.toString()}`);
@@ -229,7 +205,104 @@
             
         }
 
-        load
+        showSeedData() {
+            const popup = new window.PopupComponent({
+                icon: '💡',
+                title: 'Instruction Seed Data - ' + this.group.group_name,
+                width: 1200,
+                height: 720,
+                content: (container) => {
+                    const wrapper = window.conversations.utils.createDivContainer(container, 'conversations-page-wrapper');
+
+                    const pageButtons = window.conversations.utils.createDivContainer(wrapper, 'conversations-buttons-container');
+
+                    if (this.groupSeed) {
+                        // Seed exists - save to override
+                        new window.ButtonComponent(pageButtons, '💾 Override seed', async () => {
+                            // Call API to save group settings
+                            try {
+                                await window.conversations.apiSeeds.seedsGroupsSet(
+                                    this.container, 
+                                    this.group.group_key, 
+                                    {
+                                        group_name: this.group.group_name,
+                                        group_description: this.group.group_description
+                                    }
+                                );
+                                this.loadContent();
+                                popup.hide();
+                                
+                            } catch (e) {
+                                console.error('Error saving group settings:', e);
+                                new window.AlertComponent('Error', `Failed to save group settings: ${e.message || e.toString()}`);
+                                return;
+                            }
+                        }, window.ButtonComponent.TYPE_GHOST, '💾 Override seed');
+
+                        // Seed exists - reload from seed
+                        new window.ButtonComponent(pageButtons, '💡 Reload from seed', async () => {
+                            // Call API to save group settings
+                            try {
+                                const ret = await window.conversations.apiGroups.groupsUpdate(null, this.group.group_id, this.groupSeed.group_name, this.groupSeed.group_description, this.group.group_name);
+                                if (ret.group_name !== this.group.group_name) {
+                                    this.manageOptions[this.optionId].info.onGroupNameChange(ret.group_id);
+                                }
+                                this.loadContent();
+                                popup.hide();
+
+                            } catch (e) {
+                                console.error('Error saving group settings:', e);
+                                new window.AlertComponent('Error', `Failed to save group settings: ${e.message || e.toString()}`);
+                                return;
+                            }            
+                        }, window.ButtonComponent.TYPE_GHOST, '💡 Reload from seed');
+
+                    } else {
+                        // Seed does not exist - create new seed
+                        new window.ButtonComponent(pageButtons, '💾 Create seed', async () => {
+                            // Call API to save group settings
+                            try {
+                                await window.conversations.apiSeeds.seedsGroupsSet(
+                                    this.container, 
+                                    this.group.group_key, 
+                                    {
+                                        group_name: this.group.group_name,
+                                        group_description: this.group.group_description
+                                    }
+                                );
+                                this.loadContent();
+                                popup.hide();
+                                
+                            } catch (e) {
+                                console.error('Error saving group settings:', e);
+                                new window.AlertComponent('Error', `Failed to save group settings: ${e.message || e.toString()}`);
+                                return;
+                            }
+                        }, window.ButtonComponent.TYPE_GHOST, '💾 Create seed');
+                    }
+
+                    // Filter group to only show relevant fields for comparison
+                    const filteredGroup = {
+                        group_name: this.group.group_name,
+                        group_description: this.group.group_description
+                    };
+
+                    new window.DiffComponent(
+                        wrapper,
+                        window.Utils.sortJsonKeys(this.groupSeed),
+                        window.Utils.sortJsonKeys(filteredGroup),
+                        {
+                            leftLabel: 'Seed Data - Info',
+                            rightLabel: 'Current Data - Info',
+                            height: 500
+                        }
+                    );
+
+                },
+            });
+            popup.show();
+        }
+
     }
 
     window.conversations = window.conversations || {};

@@ -4,122 +4,171 @@
 window.conversations = window.conversations || {};
 window.conversations.apiSeeds = window.conversations.apiSeeds || {}
 
-
-
-window.conversations.apiSeeds.fetchGroupSeeds = async function (spinnerContainer) {
+// Fetch groups seed data from backend (returns list of group seed entries with validation)
+window.conversations.apiSeeds.seedsGroupsGet = async function (spinnerContainer, groupKey = null) {
     // Show loading spinner while fetching
-    const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Loading group seeds ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+    const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Loading groups seed data${groupKey ? ' for ' + groupKey : ''} ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
 
     try {
-        const resp = await fetch('/api/dev-tool-conversations/group_seeds', {
+        const resp = await fetch('/api/dev-tool-conversations/seeds_groups_get', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
+            body: JSON.stringify({ group_key: groupKey })
         });
 
         const result = await resp.json();
-        if (result.success) {
-            spinner.remove();
-            // Return processed seeds directly from server
-            return result.data;
-        } else {
-            spinner.remove();
-            throw new Error('Failed to fetch group seeds: ' + (result.error || 'Unknown error'));
-        }
-    }
-    catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error fetching group seeds.\nError: ' + (e.message || e.toString()));
-        console.error('Error fetching group seeds:', e);
-        throw e;
-    }
-};
-
-// Fetch group seed from backend for a specific group and instruction type (returns processed seeding data)
-window.conversations.apiSeeds.fetchGroupSeed = async function (spinnerContainer, groupName, instructionType) {
-    // Show loading spinner while fetching
-    const spinner = spinnerContainer ? new window.SpinnerComponent(spinnerContainer, { text: `Loading ${instructionType} seed ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT }) : null;
-
-    try {
-        const resp = await fetch('/api/dev-tool-conversations/group_seed', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ group_name: groupName, instruction_type: instructionType })
-        });
-
-        const result = await resp.json();
         if (result.success) {
-            if (spinner) spinner.remove();
             return result.data;
         } else {
-            if (spinner) spinner.remove();
-            throw new Error('Failed to fetch group seed for ' + groupName + '/' + instructionType + ': ' + (result.error || 'Unknown error'));
+            throw new Error('Failed to fetch groups seed data' + (groupKey ? ' for ' + groupKey : '') + ': ' + (result.error || 'Unknown error'));
         }
     } catch (e) {
-        if (spinner) spinner.remove();
-        new window.AlertComponent('API Error', 'Error fetching group seed for ' + groupName + '/' + instructionType + '\nError: ' + (e.message || e.toString()));
-        console.error('Error fetching group seed for ' + groupName + '/' + instructionType + ':', e);
+        spinner.remove();
+        new window.AlertComponent('API Error', 'Error fetching groups seed data' + (groupKey ? ' for ' + groupKey : '') + '\nError: ' + (e.message || e.toString()));
+        console.error('Error fetching groups seed data' + (groupKey ? ' for ' + groupKey : '') + ':', e);
         throw e;
     }
 };
 
-// Save group seed to backend (creates directory and files)
-window.conversations.apiSeeds.saveGroupSeed = async function (spinnerContainer, groupName, instructionType, instruction) {
-    // Show loading spinner while saving
-    const spinner = spinnerContainer ? new window.SpinnerComponent(spinnerContainer, { text: `Saving ${groupName}/${instructionType} seed ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT }) : null;
+// Fetch members seed data from backend (requires group_key, returns list with single member seed entry)
+window.conversations.apiSeeds.seedsMembersGet = async function (spinnerContainer, groupKey) {
+    // Show loading spinner while fetching
+    const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Loading members seed data for ${groupKey} ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
 
     try {
-        const resp = await fetch('/api/dev-tool-conversations/group_seed_save', {
+        const resp = await fetch('/api/dev-tool-conversations/seeds_members_get', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ group_key: groupKey })
+        });
+
+        const result = await resp.json();
+        spinner.remove();
+        if (result.success) {
+            return result.data;
+        } else {
+            throw new Error('Failed to fetch members seed data for ' + groupKey + ': ' + (result.error || 'Unknown error'));
+        }
+    } catch (e) {
+        spinner.remove();
+        new window.AlertComponent('API Error', 'Error fetching members seed data for ' + groupKey + '\nError: ' + (e.message || e.toString()));
+        console.error('Error fetching members seed data for ' + groupKey + ':', e);
+        throw e;
+    }
+};
+
+// Fetch instructions seed data from backend (requires group_key, optional instructions_key)
+window.conversations.apiSeeds.seedsInstructionsGet = async function (spinnerContainer, groupKey, instructionsKey = null) {
+    // Show loading spinner while fetching
+    const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Loading instructions seed data for ${groupKey}${instructionsKey ? '/' + instructionsKey : ''} ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+
+    try {
+        const resp = await fetch('/api/dev-tool-conversations/seeds_instructions_get', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ group_key: groupKey, instructions_key: instructionsKey })
+        });
+
+        const result = await resp.json();
+        spinner.remove();
+        if (result.success) {
+            return result.data;
+        } else {
+            throw new Error('Failed to fetch instructions seed data for ' + groupKey + (instructionsKey ? '/' + instructionsKey : '') + ': ' + (result.error || 'Unknown error'));
+        }
+    } catch (e) {
+        spinner.remove();
+        new window.AlertComponent('API Error', 'Error fetching instructions seed data for ' + groupKey + (instructionsKey ? '/' + instructionsKey : '') + '\nError: ' + (e.message || e.toString()));
+        console.error('Error fetching instructions seed data for ' + groupKey + (instructionsKey ? '/' + instructionsKey : '') + ':', e);
+        throw e;
+    }
+};
+
+// Save/update group seed data to backend (requires group_key and group JSON, creates/updates group_seed.json)
+window.conversations.apiSeeds.seedsGroupsSet = async function (spinnerContainer, groupKey, groupData) {
+    // Show loading spinner while saving
+    const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Saving group seed data for ${groupKey} ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+
+    try {
+        const resp = await fetch('/api/dev-tool-conversations/seeds_groups_set', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ group_key: groupKey, group_data: groupData })
+        });
+
+        const result = await resp.json();
+        spinner.remove();
+        if (result.success) {
+            return result.data;
+        } else {
+            throw new Error('Failed to save group seed data for ' + groupKey + ': ' + (result.error || 'Unknown error'));
+        }
+    } catch (e) {
+        spinner.remove();
+        new window.AlertComponent('API Error', 'Error saving group seed data for ' + groupKey + '\nError: ' + (e.message || e.toString()));
+        console.error('Error saving group seed data for ' + groupKey + ':', e);
+        throw e;
+    }
+};
+
+// Save/update instruction seed data to backend (requires group_key, instructions_key, and instruction object with 3 fields)
+window.conversations.apiSeeds.seedsInstructionsSet = async function (spinnerContainer, groupKey, instructionsKey, instructionData) {
+    // Show loading spinner while saving
+    const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Saving instruction seed data for ${groupKey}/${instructionsKey} ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+
+    try {
+        const resp = await fetch('/api/dev-tool-conversations/seeds_instructions_set', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                group_name: groupName, 
-                instruction_type: instructionType,
-                instruction: instruction
+                group_key: groupKey, 
+                instructions_key: instructionsKey,
+                instruction_data: instructionData
             })
         });
 
         const result = await resp.json();
+        spinner.remove();
         if (result.success) {
-            if (spinner) spinner.remove();
             return result.data;
         } else {
-            if (spinner) spinner.remove();
-            throw new Error('Failed to save group seed for ' + groupName + '/' + instructionType + ': ' + (result.error || 'Unknown error'));
-        }
-    } catch (e) {
-        if (spinner) spinner.remove();
-        new window.AlertComponent('API Error', 'Error saving group seed for ' + groupName + '/' + instructionType + '\nError: ' + (e.message || e.toString()));
-        console.error('Error saving group seed for ' + groupName + '/' + instructionType + ':', e);
-        throw e;
-    }
-};
-
-// Fetch group seed files from backend (returns processed seeding data)
-window.conversations.apiSeeds.fetchGroupSeedFiles = async function (spinnerContainer, groupName) {
-    // Show loading spinner while fetching
-    const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Loading group ${groupName} seed files ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
-
-    try {
-        const resp = await fetch('/api/dev-tool-conversations/group_seed_files', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ group_name: groupName })
-        });
-
-        const result = await resp.json();
-        if (result.success) {
-            spinner.remove();
-            return result.data;
-        } else {
-            spinner.remove();
-            throw new Error('Failed to fetch group seed files for group ' + groupName + ': ' + (result.error || 'Unknown error'));
+            throw new Error('Failed to save instruction seed data for ' + groupKey + '/' + instructionsKey + ': ' + (result.error || 'Unknown error'));
         }
     } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error fetching group seed files for ' + groupName + '\nError: ' + (e.message || e.toString()));
-        console.error('Error fetching group seed files for ' + groupName + ':', e);
+        new window.AlertComponent('API Error', 'Error saving instruction seed data for ' + groupKey + '/' + instructionsKey + '\nError: ' + (e.message || e.toString()));
+        console.error('Error saving instruction seed data for ' + groupKey + '/' + instructionsKey + ':', e);
         throw e;
     }
 };
 
+// Delete instruction seed data from backend (requires group_key and instructions_key, deletes folder and files)
+window.conversations.apiSeeds.seedsInstructionsDelete = async function (spinnerContainer, groupKey, instructionsKey) {
+    // Show loading spinner while deleting
+    const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Deleting instruction seed data for ${groupKey}/${instructionsKey} ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+
+    try {
+        const resp = await fetch('/api/dev-tool-conversations/seeds_instructions_delete', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                group_key: groupKey, 
+                instructions_key: instructionsKey
+            })
+        });
+
+        const result = await resp.json();
+        spinner.remove();
+        if (result.success) {
+            return result.data;
+        } else {
+            throw new Error('Failed to delete instruction seed data for ' + groupKey + '/' + instructionsKey + ': ' + (result.error || 'Unknown error'));
+        }
+    } catch (e) {
+        spinner.remove();
+        new window.AlertComponent('API Error', 'Error deleting instruction seed data for ' + groupKey + '/' + instructionsKey + '\nError: ' + (e.message || e.toString()));
+        console.error('Error deleting instruction seed data for ' + groupKey + '/' + instructionsKey + ':', e);
+        throw e;
+    }
+};

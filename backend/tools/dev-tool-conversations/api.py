@@ -40,11 +40,9 @@ def register_apis(app, base_path: str):
     register_seed_data_apis(app, base_path)
 
 
-
-########################################################################################################################################################
-# System APIs
-# These APIs are intended to be used by the frontend system components for system management.
-########################################################################################################################################################
+# System API endpoints
+#         
+#
 def register_system_apis(app, base_path: str):
     @app.route(f"{base_path}/status_queue_state", methods=["POST"])
     def status_queue_state():
@@ -58,6 +56,7 @@ def register_system_apis(app, base_path: str):
             app.logger.exception('Failed to contact upstream /api/status_queue_state')
             return jsonify({'success': False, 'error': 'Failed to contact upstream status_queue_state service'}), 502
     
+
     @app.route(f"{base_path}/status_queue_pause", methods=["POST"])
     def queue_pause():
         """
@@ -82,6 +81,7 @@ def register_system_apis(app, base_path: str):
             app.logger.exception('Failed to contact upstream /api/status_queue_resume')
             return jsonify({'success': False, 'error': 'Failed to contact upstream status_queue_resume service'}), 502 
         
+
     @app.route(f"{base_path}/status_conversation_timeline", methods=["POST"])
     def status_conversation_timeline():
         """
@@ -95,8 +95,8 @@ def register_system_apis(app, base_path: str):
                 request_payload["group_id"] = payload.get('group_id')
             if payload.get('conversation_type') is not None:
                 request_payload["conversation_type"] = payload.get('conversation_type') 
-            if (payload.get('instruction_type') is not None):
-                request_payload["instruction_type"] = payload.get('instruction_type')
+            if (payload.get('instructions_key') is not None):
+                request_payload["instructions_key"] = payload.get('instructions_key')
             if payload.get('states') is not None:
                 request_payload["states"] = payload.get('states')
             if payload.get('hours_back') is not None:
@@ -112,8 +112,6 @@ def register_system_apis(app, base_path: str):
             app.logger.exception('Failed to contact upstream /api/status_conversation_timeline')
             return jsonify({'success': False, 'error': 'Failed to contact upstream status_conversation_timeline service'}), 502
         
-
-
 
 
 # Groups API endpoints
@@ -168,6 +166,7 @@ def register_groups_apis(app, base_path: str):
         
             upstream_payload = {
                 'group_name': payload.get('group_name'),
+                'group_key': payload.get('group_key'),
                 'description': payload.get('group_description')
             }
             return jsonify(_proxy_post('/api/groups/add', upstream_payload))
@@ -222,6 +221,7 @@ def register_groups_apis(app, base_path: str):
             return jsonify({'success': False, 'error': 'Failed to contact upstream groups/update'}), 502
 
 
+
 # Instructions API endpoints
 #         
 #
@@ -262,12 +262,12 @@ def register_instructions_apis(app, base_path: str):
             if not payload.get('group_id'):
                 return jsonify({'success': False, 'error': 'missing group_id'}), 400
             
-            if not payload.get('instructions_type'):
-                return jsonify({'success': False, 'error': 'missing instructions_type'}), 400
+            if not payload.get('instructions_key'):
+                return jsonify({'success': False, 'error': 'missing instructions_key'}), 400
             
             upstream_payload = {
                 'group_id': payload.get('group_id'),
-                'instructions_type': payload.get('instructions_type')
+                'instructions_key': payload.get('instructions_key')
             }
             
             return jsonify(_proxy_post('/api/instructions/delete', upstream_payload))
@@ -299,11 +299,11 @@ def register_instructions_apis(app, base_path: str):
         
             upstream_payload = {
                 'group_id': payload.get('group_id'),
-                'instructions_type': payload.get('instructions_type'),
+                'instructions_key': payload.get('instructions_key'),
                 'instructions': payload.get('instructions'),
                 'feedback_def': payload.get('feedback_def'),
                 'info': payload.get('info'),
-                'instructions_type': payload.get('instructions_type')
+                'instructions_key': payload.get('instructions_key')
             }
             
             return jsonify(_proxy_post('/api/instructions/add', upstream_payload))
@@ -324,8 +324,8 @@ def register_instructions_apis(app, base_path: str):
             if not payload.get('group_id'):
                 return jsonify({'success': False, 'error': 'missing group_id'}), 400
             
-            if not payload.get('instructions_type'):
-                return jsonify({'success': False, 'error': 'missing instructions_type'}), 400
+            if not payload.get('instructions_key'):
+                return jsonify({'success': False, 'error': 'missing instructions_key'}), 400
             
             if not payload.get('instructions'):
                 return jsonify({'success': False, 'error': 'missing instructions'}), 400
@@ -338,7 +338,7 @@ def register_instructions_apis(app, base_path: str):
             
             upstream_payload = {
                 'group_id': payload.get('group_id'),
-                'instructions_type': payload.get('instructions_type'),
+                'instructions_key': payload.get('instructions_key'),
                 'instructions': payload.get('instructions'),
                 'feedback_def': payload.get('feedback_def'),
                 'info': payload.get('info')
@@ -350,6 +350,7 @@ def register_instructions_apis(app, base_path: str):
             app.logger.exception('Failed to contact upstream /api/instructions/update')
             return jsonify({'success': False, 'error': 'Failed to contact upstream instructions/update'}), 502
         
+
 
 # Members API endpoints
 #         
@@ -377,6 +378,7 @@ def register_members_apis(app, base_path: str):
             app.logger.exception('Failed to contact upstream /api/members/list')
             return jsonify({'success': False, 'error': 'Failed to contact upstream members/list'}), 502
 
+
     @app.route(f"{base_path}/members_add", methods=["POST"])
     def members_add():
         """
@@ -402,6 +404,7 @@ def register_members_apis(app, base_path: str):
         except RequestException:
             app.logger.exception('Failed to contact upstream /api/members/add')
             return jsonify({'success': False, 'error': 'Failed to contact upstream members/add'}), 502
+
 
     @app.route(f"{base_path}/members_conversations_list", methods=["POST"])
     def members_conversations_list():
@@ -433,6 +436,8 @@ def register_members_apis(app, base_path: str):
             app.logger.exception('Failed to contact upstream /api/members/conversations/list')
             return jsonify({'success': False, 'error': 'Failed to contact upstream members/conversations/list'}), 502
 
+
+
 # Conversations API endpoints
 #         
 #
@@ -447,14 +452,14 @@ def register_conversations_apis(app, base_path: str):
         if not payload.get('group_id'):
             return jsonify({'success': False, 'error': 'missing group_id'}), 400
         
-        if not payload.get('instructions_type'):
-            return jsonify({'success': False, 'error': 'missing instructions_type'}), 400
+        if not payload.get('instructions_key'):
+            return jsonify({'success': False, 'error': 'missing instructions_key'}), 400
 
         try:
             conversation_req = {
                 'group_id': payload.get('group_id'),
                 'participant_members_nick_names': payload.get('participant_members_nick_names'),
-                'instructions_type': payload.get('instructions_type'),
+                'instructions_key': payload.get('instructions_key'),
                 'conversation_type': payload.get('conversation_type'),
                 'max_messages': payload.get('max_messages', 10),
                 'debug': payload.get('debug', []),
@@ -465,6 +470,7 @@ def register_conversations_apis(app, base_path: str):
         except RequestException:
             app.logger.exception('Failed to contact upstream /api/conversations/add')
             return jsonify({'success': False, 'error': 'Failed to contact upstream conversation service'}), 502
+
 
     @app.route(f"{base_path}/conversations_messages_list", methods=["POST"])
     def conversations_messages_list():
@@ -486,204 +492,206 @@ def register_conversations_apis(app, base_path: str):
             return jsonify({'success': False, 'error': 'Failed to contact upstream conversations/messages/list service'}), 502
 
 
+
 # Seed Data API endpoints
 # These APIs read seed data from the local filesystem for development purposes.
 #
 def register_seed_data_apis(app, base_path: str):
-    @app.route(f"{base_path}/group_seeds", methods=["PUT"])
-    def group_seeds():
+    @app.route(f"{base_path}/seeds_groups_get", methods=["PUT"])
+    def seeds_groups_get():
         """
-        Returns a list of seed names (subfolder names) in the conversations-examples folder.
-        Expects JSON payload: {"group_name": ...}
-        """
-        try:
-            sleep(sleep_time)
-            from . import seed_utils
-            
-            seed_root = os.path.expanduser(os.path.join('~/code/conversations-examples'))
-            if not os.path.exists(seed_root):
-                return jsonify({'success': True, 'data': []})
-            
-            result = []
-            for entry in os.scandir(seed_root):
-                if entry.is_dir():
-                    group_name = entry.name
-                    group_folder = os.path.join(seed_root, group_name)
-                    group_seed_file = os.path.join(group_folder, 'group_seed.json')
-                    if os.path.exists(group_seed_file):
-                        try:
-                            with open(group_seed_file, 'r', encoding='utf-8') as f:
-                                content = f.read()
-                        except Exception:
-                            content = ''
-                        result.append({'group_name': group_name, 'content': content})
-            
-            # Process the seeds with validation
-            processed_seeds = seed_utils.extract_groups_seed_data(result)
-            
-            return jsonify({'success': True, 'data': processed_seeds})
-        except Exception as e:
-            return jsonify({'success': False, 'error': str(e)}), 500
-
-    @app.route(f"{base_path}/group_seed", methods=["PUT"])
-    def group_seed():
-        """
-        Returns processed and validated seed data for a specific group and instruction type.
-        Expects JSON payload: {"group_name": ..., "instruction_type": ...}
-        Returns seeding data with validation results.
+        Get group seed data from all directories in ~/code/conversations-examples.
+        Each directory should contain a group_seed.json file.
+        
+        Expects JSON payload: {"group_key": ...} (optional - if provided, filters to specific group)
+        Returns list of group seed entries with validation results.
         """
         try:
             sleep(sleep_time)
             from . import seed_utils
             
             payload = request.get_json(force=True)
-            group_name = payload.get('group_name')
-            instruction_type = payload.get('instruction_type')
+            group_key = payload.get('group_key')
             
-            if not group_name:
-                return jsonify({'success': False, 'error': 'missing group_name'}), 400
-            if not instruction_type:
-                return jsonify({'success': False, 'error': 'missing instruction_type'}), 400
+            # Use utility function for business logic
+            seeding_data = seed_utils.seeds_groups_get(group_key)
             
-            seed_root = os.path.expanduser(os.path.join('~/code/conversations-examples', group_name))
-            if not os.path.exists(seed_root):
-                return jsonify({'success': True, 'data': []})
-            
-            # Read all files
-            files = []
-            for dirpath, _, filenames in os.walk(seed_root):
-                for filename in filenames:
-                    file_path = os.path.join(dirpath, filename)
-                    rel_path = os.path.relpath(file_path, os.path.expanduser('~/code/conversations-examples'))
-                    try:
-                        with open(file_path, 'r', encoding='utf-8') as f:
-                            content = f.read()
-                    except Exception:
-                        content = ''
-                    files.append({
-                        'name': filename,
-                        'size': len(content),
-                        'type': '',
-                        'webkitRelativePath': rel_path.replace('\\', '/'),
-                        'content': content
-                    })
-            
-            # Process files into seeding data with instruction_type filter
-            seeding_data = seed_utils.extract_seed_data(files, instruction_type_filter=instruction_type)
-            return jsonify({'success': True, 'data': seeding_data[0] if seeding_data else None})
+            return jsonify({'success': True, 'data': seeding_data})
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
 
-    @app.route(f"{base_path}/group_seed_save", methods=["PUT"])
-    def group_seed_save():
+
+    @app.route(f"{base_path}/seeds_members_get", methods=["PUT"])
+    def seeds_members_get():
         """
-        Saves instruction seed data to filesystem.
+        Get members seed data from a specific group directory in ~/code/conversations-examples.
+        The directory should contain a members_seed.json file.
+        
+        Expects JSON payload: {"group_key": ...} (required)
+        Returns single members seed entry with validation results.
+        """
+        try:
+            sleep(sleep_time)
+            from . import seed_utils
+            
+            payload = request.get_json(force=True)
+            group_key = payload.get('group_key')
+            
+            if not group_key:
+                return jsonify({'success': False, 'error': 'missing group_key'}), 400
+            
+            # Use utility function for business logic
+            seeding_data = seed_utils.seeds_members_get(group_key)
+            
+            return jsonify({'success': True, 'data': seeding_data})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+
+    @app.route(f"{base_path}/seeds_instructions_get", methods=["PUT"])
+    def seeds_instructions_get():
+        """
+        Get instructions seed data from a specific group directory in ~/code/conversations-examples.
+        Instructions are located in [group_key]/instructions/[instructions_key]/ folders.
+        Each instruction folder contains: instructions.md, feedback.json, info.json
+        
+        Expects JSON payload: {"group_key": ..., "instructions_key": ...} 
+        - group_key is required
+        - instructions_key is optional (if None, returns all instructions for the group)
+        
+        Returns list of instruction seed entries with validation results.
+        """
+        try:
+            sleep(sleep_time)
+            from . import seed_utils
+            
+            payload = request.get_json(force=True)
+            group_key = payload.get('group_key')
+            instructions_key = payload.get('instructions_key')
+            
+            if not group_key:
+                return jsonify({'success': False, 'error': 'missing group_key'}), 400
+            
+            # Use utility function for business logic
+            seeding_data = seed_utils.seeds_instructions_get(group_key, instructions_key)
+            
+            return jsonify({'success': True, 'data': seeding_data})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+    @app.route(f"{base_path}/seeds_groups_set", methods=["PUT"])
+    def seeds_groups_set():
+        """
+        Save/update group seed data to filesystem.
+        Creates or overwrites group_seed.json in ~/code/conversations-examples/{group_key}/
+        
         Expects JSON payload: {
-            "group_name": ..., 
-            "instruction_type": ...,
-            "instruction": {
+            "group_key": "...",
+            "group_data": {...}
+        }
+        
+        Returns success status and file path.
+        """
+        try:
+            sleep(sleep_time)
+            from . import seed_utils
+            
+            payload = request.get_json(force=True)
+            group_key = payload.get('group_key')
+            group_data = payload.get('group_data')
+            
+            if not group_key:
+                return jsonify({'success': False, 'error': 'missing group_key'}), 400
+            if not group_data:
+                return jsonify({'success': False, 'error': 'missing group_data'}), 400
+            
+            # Use utility function for business logic
+            result = seed_utils.seeds_groups_set(group_key, group_data)
+            
+            return jsonify({'success': True, 'data': result})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+
+    @app.route(f"{base_path}/seeds_instructions_set", methods=["PUT"])
+    def seeds_instructions_set():
+        """
+        Save/update instruction seed data to filesystem.
+        Creates or overwrites instructions.md, feedback.json, and info.json files.
+        
+        Expects JSON payload: {
+            "group_key": "...",
+            "instructions_key": "...",
+            "instruction_data": {
                 "instructions": "...",
-                "feedback_def": {...},
+                "feedback": {...},
                 "info": {...}
             }
         }
-        Creates directory structure: ~/code/conversations-examples/{group_name}/instructions/{instruction_type}/
-        """
-        try:
-            sleep(sleep_time)
-            
-            payload = request.get_json(force=True)
-            group_name = payload.get('group_name')
-            instruction_type = payload.get('instruction_type')
-            instruction = payload.get('instruction')
-            
-            if not group_name:
-                return jsonify({'success': False, 'error': 'missing group_name'}), 400
-            if not instruction_type:
-                return jsonify({'success': False, 'error': 'missing instruction_type'}), 400
-            if not instruction:
-                return jsonify({'success': False, 'error': 'missing instruction'}), 400
-            
-            # Validate instruction structure
-            if 'instructions' not in instruction:
-                return jsonify({'success': False, 'error': 'missing instruction.instructions'}), 400
-            if 'feedback_def' not in instruction:
-                return jsonify({'success': False, 'error': 'missing instruction.feedback_def'}), 400
-            if 'info' not in instruction:
-                return jsonify({'success': False, 'error': 'missing instruction.info'}), 400
-            
-            # Create directory path
-            instruction_dir = os.path.expanduser(
-                os.path.join('~/code/conversations-examples', group_name, 'instructions', instruction_type)
-            )
-            os.makedirs(instruction_dir, exist_ok=True)
-            
-            # Write instructions.md
-            instructions_file = os.path.join(instruction_dir, 'instructions.md')
-            with open(instructions_file, 'w', encoding='utf-8') as f:
-                f.write(instruction['instructions'])
-            
-            # Write feedback.json
-            feedback_file = os.path.join(instruction_dir, 'feedback.json')
-            with open(feedback_file, 'w', encoding='utf-8') as f:
-                json.dump(instruction['feedback_def'], f, indent=2, ensure_ascii=False)
-            
-            # Write info.json
-            info_file = os.path.join(instruction_dir, 'info.json')
-            with open(info_file, 'w', encoding='utf-8') as f:
-                json.dump(instruction['info'], f, indent=2, ensure_ascii=False)
-            
-            return jsonify({
-                'success': True,
-                'data': {
-                    'directory': instruction_dir,
-                    'files_created': ['instructions.md', 'feedback.json', 'info.json']
-                }
-            })
-        except Exception as e:
-            return jsonify({'success': False, 'error': str(e)}), 500
-
-    @app.route(f"{base_path}/group_seed_files", methods=["PUT"])
-    def group_seed_files():
-        """
-        Returns processed and validated seed data for a group.
-        Expects JSON payload: {"group_name": ...}
-        Returns seedingData array with validation results.
+        
+        Creates directory: ~/code/conversations-examples/{group_key}/instructions/{instructions_key}/
         """
         try:
             sleep(sleep_time)
             from . import seed_utils
             
             payload = request.get_json(force=True)
-            group_name = payload.get('group_name')
-            if not group_name:
-                return jsonify({'success': False, 'error': 'missing group_name'}), 400
+            group_key = payload.get('group_key')
+            instructions_key = payload.get('instructions_key')
+            instruction_data = payload.get('instruction_data')
             
-            seed_root = os.path.expanduser(os.path.join('~/code/conversations-examples', group_name))
-            if not os.path.exists(seed_root):
-                return jsonify({'success': True, 'data': []})
+            if not group_key:
+                return jsonify({'success': False, 'error': 'missing group_key'}), 400
+            if not instructions_key:
+                return jsonify({'success': False, 'error': 'missing instructions_key'}), 400
+            if not instruction_data:
+                return jsonify({'success': False, 'error': 'missing instruction_data'}), 400
             
-            # Read all files
-            files = []
-            for dirpath, _, filenames in os.walk(seed_root):
-                for filename in filenames:
-                    file_path = os.path.join(dirpath, filename)
-                    rel_path = os.path.relpath(file_path, os.path.expanduser('~/code/conversations-examples'))
-                    try:
-                        with open(file_path, 'r', encoding='utf-8') as f:
-                            content = f.read()
-                    except Exception:
-                        content = ''
-                    files.append({
-                        'name': filename,
-                        'size': len(content),
-                        'type': '',
-                        'webkitRelativePath': rel_path.replace('\\', '/'),
-                        'content': content
-                    })
+            # Validate instruction_data structure
+            if 'instructions' not in instruction_data:
+                return jsonify({'success': False, 'error': 'missing instruction_data.instructions'}), 400
+            if 'feedback_def' not in instruction_data:
+                return jsonify({'success': False, 'error': 'missing instruction_data.feedback_def'}), 400
+            if 'info' not in instruction_data:
+                return jsonify({'success': False, 'error': 'missing instruction_data.info'}), 400
             
-            # Process files into seeding data
-            seeding_data = seed_utils.extract_seed_data(files)
-            return jsonify({'success': True, 'data': seeding_data})
+            # Use utility function for business logic
+            result = seed_utils.seeds_instructions_set(group_key, instructions_key, instruction_data)
+            
+            return jsonify({'success': True, 'data': result})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+
+    @app.route(f"{base_path}/seeds_instructions_delete", methods=["PUT"])
+    def seeds_instructions_delete():
+        """
+        Delete instruction seed data from filesystem.
+        Removes the entire directory and its contents.
+        
+        Expects JSON payload: {
+            "group_key": "...",
+            "instructions_key": "..."
+        }
+        
+        Deletes directory: ~/code/conversations-examples/{group_key}/instructions/{instructions_key}/
+        """
+        try:
+            sleep(sleep_time)
+            from . import seed_utils
+            
+            payload = request.get_json(force=True)
+            group_key = payload.get('group_key')
+            instructions_key = payload.get('instructions_key')
+            
+            if not group_key:
+                return jsonify({'success': False, 'error': 'missing group_key'}), 400
+            if not instructions_key:
+                return jsonify({'success': False, 'error': 'missing instructions_key'}), 400
+            
+            # Use utility function for business logic
+            result = seed_utils.seeds_instructions_delete(group_key, instructions_key)
+            
+            return jsonify({'success': True, 'data': result})
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500

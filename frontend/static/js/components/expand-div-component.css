@@ -58,7 +58,8 @@
 
 /* Expanded States */
 .is-expanded .framework-expand-content {
-    max-height: 1000px; /* Large enough to hold content */
+    max-height: 500px; /* Large enough to hold content */
+    overflow: auto;
     opacity: 1;
 }
 

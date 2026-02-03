@@ -160,6 +160,7 @@
     outline: none;
     transition: border-color 0.2s ease;
     width: 100%;
+    white-space: pre-wrap;
 }
 
 .conversations-instruction-field-label {

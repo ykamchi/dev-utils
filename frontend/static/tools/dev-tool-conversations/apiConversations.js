@@ -6,7 +6,7 @@ window.conversations.apiConversations = window.conversations.apiConversations ||
 
 
 
-window.conversations.apiConversations.conversationAdd = async function (spinnerContainer, groupId, conversationType, instructionsType, participant_members_nick_names, maxMessages) {
+window.conversations.apiConversations.conversationAdd = async function (spinnerContainer, groupId, conversationType, instructionsKey, participant_members_nick_names, maxMessages) {
     // Show loading spinner while starting conversation
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Starting conversation for ${participant_members_nick_names.join(', ')}...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
     try {
@@ -16,7 +16,7 @@ window.conversations.apiConversations.conversationAdd = async function (spinnerC
             body: JSON.stringify({
                 group_id: groupId,
                 conversation_type: conversationType,
-                instructions_type: instructionsType,
+                instructions_key: instructionsKey,
                 participant_members_nick_names: participant_members_nick_names,
                 max_messages: maxMessages,
                 debug: ['instructions_assistance']

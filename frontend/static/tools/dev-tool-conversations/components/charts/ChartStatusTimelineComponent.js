@@ -58,7 +58,7 @@
         { label: 'No Grouping', value: AGGREGATION_LEVEL_NONE },
         { label: 'Group', value: 'group' },
         { label: 'Type', value: 'conversation_type' },
-        { label: 'Instructions', value: 'instruction_type' },
+        { label: 'Instructions', value: 'instructions_key' },
         { label: 'State', value: 'state' }
     ];
 
@@ -71,7 +71,7 @@
             this.state = {
                 group_id: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_group_id') || ALL_VALUE,
                 conversation_type: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_conversation_type') || ALL_VALUE,
-                instruction_type: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_instruction_type') || ALL_VALUE,
+                instructions_key: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_instructions_key') || ALL_VALUE,
                 states: window.StorageService.getStorageJSON('conversations_chart_status_timeline_states') || STATE_VALUES,
                 hours_back: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_hours_back') || 24,
                 interval: window.StorageService.getLocalStorageItem('conversations_chart_status_timeline_interval') || 'hour',
@@ -80,7 +80,7 @@
                 aggregation_level_1: AGGREGATION_LEVEL_NONE
             };
 
-            this.instructionTypeControlDiv = null;
+            this.instructionsKeyControlDiv = null;
             this.aggregation_level_1Div = null;
             
             this.charWrapper = null;
@@ -155,8 +155,8 @@
             const conversationTypeSelectDiv = window.conversations.utils.createDivContainer(conversationTypeDiv);
 
             // Filter area - Instruction div
-            const instructionTypeDiv = window.conversations.utils.createFieldDiv(container, 'Instruction:');
-            this.instructionTypeControlDiv = window.conversations.utils.createDivContainer(instructionTypeDiv);
+            const instructionKeyDiv = window.conversations.utils.createFieldDiv(container, 'Instruction:');
+            this.instructionKeyControlDiv = window.conversations.utils.createDivContainer(instructionKeyDiv);
 
             // Filter area - States div
             const statesDiv = window.conversations.utils.createFieldDiv(container, 'States:');
@@ -190,7 +190,7 @@
                 [{ label: 'All Groups', value: ALL_VALUE }].concat(groupOptions),
                 async (v) => {
                     this.state.group_id = v;
-                    this.state.instruction_type = ALL_VALUE;
+                    this.state.instructions_key = ALL_VALUE;
                     await this.renderInstructionSelect();
                     this.renderChart();
                     window.StorageService.setLocalStorageItem('conversations_chart_status_timeline_group_id', v);
@@ -207,7 +207,7 @@
                 CONVERSATION_TYPES,
                 async (v) => {
                     this.state.conversation_type = v;
-                    this.state.instruction_type = ALL_VALUE;
+                    this.state.instructions_key = ALL_VALUE;
                     await this.renderInstructionSelect();
                     this.renderChart();
                     window.StorageService.setLocalStorageItem('conversations_chart_status_timeline_conversation_type', v);
@@ -219,35 +219,35 @@
 
         async renderInstructionSelect() {
             // Instruction type select - called when group or conversation type changes
-            this.instructionTypeControlDiv.innerHTML = '';
+            this.instructionsKeyControlDiv.innerHTML = '';
 
             if (this.state.group_id === ALL_VALUE) {
-                new window.SelectComponent(this.instructionTypeControlDiv, [{ label: 'Select a group first', value: ALL_VALUE }], null, 'Select Instruction ...', ALL_VALUE, true);
+                new window.SelectComponent(this.instructionsKeyControlDiv, [{ label: 'Select a group first', value: ALL_VALUE }], null, 'Select Instruction ...', ALL_VALUE, true);
 
             } else {
                 // Fetch instructions for the selected group (with caching)
                 let instructionsResp = this.cacheInstructionsByGroup[this.state.group_id];
                 if (!instructionsResp) {
-                    instructionsResp = await window.conversations.apiInstructions.instructionsList(this.instructionTypeControlDiv, this.state.group_id);
+                    instructionsResp = await window.conversations.apiInstructions.instructionsList(this.instructionsKeyControlDiv, this.state.group_id);
                     this.cacheInstructionsByGroup[this.state.group_id] = instructionsResp;
                 }
 
                 const options = [{ label: 'All instructions', value: ALL_VALUE }].
                     concat(instructionsResp.
                         filter(instruction => instruction.info.conversation_type === this.state.conversation_type).
-                        map(instruction => ({ label: instruction.info.name, value: instruction.instructions_type }))
+                        map(instruction => ({ label: instruction.info.name, value: instruction.instructions_key }))
                     );
 
                 new window.SelectComponent(
-                    this.instructionTypeControlDiv,
+                    this.instructionsKeyControlDiv,
                     options,
                     (v) => {
-                        this.state.instruction_type = v;
+                        this.state.instructions_key = v;
                         this.renderChart();
-                        window.StorageService.setLocalStorageItem('conversations_chart_status_timeline_instruction_type', v);
+                        window.StorageService.setLocalStorageItem('conversations_chart_status_timeline_instructions_key', v);
                     },
                     'Select Instruction ...',
-                    this.state.instruction_type
+                    this.state.instructions_key
                 );
             }
         };
@@ -366,7 +366,7 @@
                 this.state.interval,
                 this.state.group_id !== ALL_VALUE ? this.state.group_id : null,
                 this.state.conversation_type !== ALL_VALUE ? this.state.conversation_type : null,
-                this.state.instruction_type !== ALL_VALUE ? this.state.instruction_type : null,
+                this.state.instructions_key !== ALL_VALUE ? this.state.instructions_key : null,
                 !allStatesSelected ? this.state.states : null,
                 this.state.aggregation_level_0 !== AGGREGATION_LEVEL_NONE ? this.state.aggregation_level_0 : null,
                 this.state.aggregation_level_1 !== AGGREGATION_LEVEL_NONE ? this.state.aggregation_level_1 : null,

@@ -64,6 +64,32 @@ const Utils = {
             console.error('Fetch error:', error);
             throw error;
         }
+    },
+
+    /**
+     * Sort JSON object keys recursively for consistent comparison
+     * Useful for normalizing JSON objects before diffing or comparing
+     * @param {any} obj - The object to sort (can be primitive, array, or object)
+     * @returns {any} The sorted object with alphabetically ordered keys
+     */
+    sortJsonKeys(obj) {
+        if (obj === null || obj === undefined) {
+            return obj;
+        }
+        
+        if (Array.isArray(obj)) {
+            return obj.map(item => Utils.sortJsonKeys(item));
+        }
+        
+        if (typeof obj === 'object') {
+            const sorted = {};
+            Object.keys(obj).sort().forEach(key => {
+                sorted[key] = Utils.sortJsonKeys(obj[key]);
+            });
+            return sorted;
+        }
+        
+        return obj;
     }
 };
 

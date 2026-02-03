@@ -8,12 +8,7 @@
             this.groupId = groupId;
             this.member = member
             this.conversation_type = conversation_type;
-            this.groupInstructions = {};
-            for (const [key, instructions] of Object.entries(groupInstructions)) {
-                if (instructions.info.conversation_type === conversation_type) {
-                    this.groupInstructions[key] = instructions;
-                }
-            }
+            this.groupInstructions = Object.fromEntries(Object.entries(groupInstructions).filter(([key, instructions]) => instructions.info.conversation_type === conversation_type));
             this.showOnlyLast = true;
             this.contentDiv = null;
             this.page = null;
@@ -68,7 +63,7 @@
             const contentDiv = window.conversations.utils.createDivContainer();
             new window.ListComponent(contentDiv, conversations, (conversation) => {
                     const conversationDiv = window.conversations.utils.createDivContainer();
-                    new window.conversations.CardMemberConversationComponent(conversationDiv, conversation, this.member, this.groupInstructions[conversation.instructions_type]);
+                    new window.conversations.CardMemberConversationComponent(conversationDiv, conversation, this.member, this.groupInstructions[conversation.instructions_key]);
                     return conversationDiv;
                 },
                 window.ListComponent.SELECTION_MODE_SINGLE, null, 
@@ -79,7 +74,7 @@
                 [
                     { label: 'Creation Date', func: (a, b) => new Date(a.created_at) - new Date(b.created_at), direction: -1 },
                     { label: 'Name', func: (a, b) => { return a.participants < b.participants ? -1 : 1; } , direction: 1 },
-                    { label: 'Instruction Type', func: (a, b) => a.info.type < b.info.type ? -1 : 1, direction: 1 },
+                    { label: 'Instruction Type', func: (a, b) => a.instructions_key < b.instructions_key ? -1 : 1, direction: 1 },
                 ] 
             );
             this.page.updateContentArea(contentDiv);
