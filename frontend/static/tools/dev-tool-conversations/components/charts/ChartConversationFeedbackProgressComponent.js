@@ -4,7 +4,7 @@
      * 
      * A component that displays a bar chart showing the progress of conversation feedback over time.
      */
-
+// Test checkout 1 2 3 4 5 6 
     const BASE_COLORS = [
         { h: 210, s: 80 }, // 1. Electric Blue (Most distinct, cold)
         { h: 350, s: 75 }, // 2. Vivid Red (High contrast to blue, warm)
