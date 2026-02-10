@@ -1,10 +1,10 @@
 (function() {
     
     class CardConversationMessageComponent {
-        constructor(container, message, instructions) {
+        constructor(container, message, conversation) {
             this.container = container;
             this.message = message;
-            this.instructions = instructions;
+            this.conversation = conversation;
             
             this.render();
         }
@@ -38,7 +38,12 @@
 
             // Feedback info
             if (this.message.feedback && typeof this.message.feedback === 'object') {
-                new window.conversations.ConversationFeedbackInfoComponent(bodyContent, this.message.feedback, this.instructions, true, true);
+
+                // Get the participant data including the feedback and the feedback_def from the conversation
+                const participant = this.conversation.participants.find(p => p.member_name === this.message.member_name);
+                const feedback_def = this.conversation.info.roles[participant.instruction_role].feedback_def;
+                
+                new window.conversations.ConversationFeedbackInfoComponent(bodyContent, this.message.feedback, feedback_def, true, true);
             }
 
             // Full message text

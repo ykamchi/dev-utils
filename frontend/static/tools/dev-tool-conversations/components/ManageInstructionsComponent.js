@@ -8,12 +8,23 @@
             this.groupId = groupId;
             this.optionId = optionId;
             this.manageOptions = manageOptions;
-            this.selectedInstructionsKey = null;
-            this.instructions = [];
-            this.instructionsEditor = null;
-            this.selectedInstructionsSeed = null;
+
             this.group = null;
+
+            this.instructions = [];
+            this.selectedInstruction = null;
+            this.selectedInstructionOrig = null;
+
+            this.selectedInstructionsSeed = null;
+
+            this.rolesEditor = null;
+
             this.page = null;
+
+            // Button references for toggling disabled state
+            this.undoButton = null;
+            this.saveButton = null;
+            
             this.render();
         }
 
@@ -46,62 +57,237 @@
                 window.conversations.utils.createReadOnlyText(controlDiv, 'No instructions available for this conversation type.', 'conversations-message-empty');
                 this.page.updateControlArea(controlDiv);
                 this.page.updateContentArea(null);
-                this.page.updateButtonsArea(null);
+
+                // Add instruction button to enable adding the first instruction
+                const pageButtons = window.conversations.utils.createDivContainer(null, 'conversations-buttons-container');
+                new window.ButtonComponent(pageButtons, {
+                    label: '+',
+                    onClick: () => this.addInstruction(),
+                    type: window.ButtonComponent.TYPE_GHOST,
+                    tooltip: '+ Add instruction'
+                });
+                this.page.updateButtonsArea(pageButtons);
 
             } else {
-                // Set the selected instruction as the first one if not already selected
-                if (!this.selectedInstructionsKey) {
-                    // Set to first instruction type by default
-                    this.selectedInstructionsKey = this.instructions[0].instructions_key;
-
-                } else {
-                    // Continue using the existing selected instruction type
+                // Set the selected instruction: use existing, then check storage, then default to first
+                if (!this.selectedInstruction) {
+                    const storageKey = `conversations-last-instruction-${this.groupId}-${this.manageOptions[this.optionId].info.conversationType}`;
+                    const lastSelectedInstructionKey = window.StorageService.getStorageJSON(storageKey);
+                    
+                    if (lastSelectedInstructionKey) {
+                        this.selectedInstruction = this.instructions.find(entry => entry.info.instruction_key === lastSelectedInstructionKey);
+                    }
+                    
+                    // If still not found (storage had invalid key or no storage), use first instruction
+                    if (!this.selectedInstruction) {
+                        this.selectedInstruction = this.instructions[0];
+                    }
                 }
 
-                // Add select component with first instruction as default
+                // Add select instruction to control area
                 const selectInstructionDiv = window.conversations.utils.createDivContainer(controlDiv);
                 window.conversations.utils.createLabel(selectInstructionDiv, 'Select Instruction:');
                 new window.SelectComponent(
                     selectInstructionDiv,
-                    this.instructions.map(entry => ({ label: entry.info.name, value: entry.instructions_key })).sort((a, b) => a.label.localeCompare(b.label)),
-                    async (selectedType) => {
-                        this.selectedInstructionsKey = selectedType;
+                    this.instructions.map(entry => ({ label: entry.info.name, value: entry.info.instruction_key })).sort((a, b) => a.label.localeCompare(b.label)),
+                    async (selectedKey) => {
+                        // Find the selected instruction using the selectedInstructionKey
+                        this.selectedInstruction = this.instructions.find(entry => entry.info.instruction_key === selectedKey);
+                        
+                        // Save the selected instruction to storage
+                        const storageKey = `conversations-last-instruction-${this.groupId}-${this.manageOptions[this.optionId].info.conversationType}`;
+                        window.StorageService.setStorageJSON(storageKey, selectedKey);
+                        
+                        // Load the selected instruction details
                         this.loadSelectedInstructions();
                     },
                     'Select an instruction...',
-                    this.selectedInstructionsKey
+                    this.selectedInstruction.info.instruction_key
                 );
+                this.page.updateControlArea(controlDiv);
 
                 // Load the selected instruction details
                 this.loadSelectedInstructions();
-                this.page.updateControlArea(controlDiv);
             }
         }
 
         async loadSelectedInstructions() {
+            // Keep a copy of the original selected instruction to compare for changes and to use for the roles editor
+            this.selectedInstructionOrig = _.cloneDeep(this.selectedInstruction);
+
             // Load the seed data for the selected instruction
             await this.loadSelectedInstructionsSeed();
 
-            // Find the selected instruction using the selectedInstructionsKey
-            this.selectedInstruction = this.instructions.find(entry => entry.instructions_key === this.selectedInstructionsKey);
+            // Content area
+            const contentDiv = window.conversations.utils.createDivContainer(null, 'conversation-container-vertical');
 
-            // Update the page content with the instructions editor
-            const contentDiv = window.conversations.utils.createDivContainer();
-            this.instructionsEditor = new window.conversations.ManageInstructionsEditorComponent(contentDiv, this.groupId, this.selectedInstruction);
+            const wrapper = window.conversations.utils.createDivContainer(contentDiv, 'conversation-container-horizontal-space-between');
+
+            const instructionPropertiesDiv = window.conversations.utils.createDivContainer(wrapper, 'conversation-container-vertical');
+            instructionPropertiesDiv.style.flex = '0.3';
+
+            // Name field (editable)
+            window.conversations.utils.createInput(instructionPropertiesDiv, 'Name:', {
+                initialValue: this.selectedInstruction.info.name,
+                pattern: /^[a-zA-Z0-9 _-]+$/,
+                placeholder: 'e.g., My Instruction Name',
+                onChange: (value) => {
+                    this.selectedInstruction.info.name = value;
+                    this.updateButtonsArea();
+                }
+            });
+            
+            // Max messages (editable)
+            window.conversations.utils.createInput(instructionPropertiesDiv, 'Max Messages:', {
+                initialValue: this.selectedInstruction.info.max_messages || 10,
+                type: 'number',
+                min: 3, max: 50,
+                placeholder: 'e.g., 10',
+                onChange: (value) => {
+                    this.selectedInstruction.info.max_messages = value;
+                    this.updateButtonsArea();
+                }
+            });
+
+            // Conversation Type field (read-only)
+            window.conversations.utils.createField(instructionPropertiesDiv, 'Conversation Type:', this.selectedInstruction.info.conversation_type, true);
+
+            // Instructions key field (read-only)
+            window.conversations.utils.createField(instructionPropertiesDiv, 'Instructions Key:', this.selectedInstruction.info.instruction_key, true);
+
+            // Description field (editable)
+            window.conversations.utils.createTextArea(instructionPropertiesDiv, 'Description:', {
+                initialValue: this.selectedInstruction.info.description,
+                placeholder: 'My Instruction Description',
+                onChange: (value) => {
+                    this.selectedInstruction.info.description = value;
+                    this.updateButtonsArea();
+                },
+                aiSuggestion: {
+                    fn: window.conversations.apiAi.autocomplete,
+                    context: {
+                        field: 'instruction_description',
+                        operation: 'edit_instruction',
+                        existing_data: {
+                            'instruction_name': this.selectedInstruction.info.name,
+                            'conversation_type': this.selectedInstruction.info.conversation_type,
+                            'mission': 'Create a description for the instruction'
+                        }
+                    }
+                }
+            });
+
+            // Meta div (editable) - JSON object for metadata
+            window.conversations.utils.createTextArea(instructionPropertiesDiv, 'Meta (JSON):', {
+                initialValue: JSON.stringify(this.selectedInstruction.info.meta || {}, null, 2),
+                placeholder: '{}',
+                onChange: (value) => {
+                    try {
+                        this.selectedInstruction.info.meta = JSON.parse(value);
+                        this.updateButtonsArea();
+                    } catch (e) {
+                        console.error('Invalid JSON in meta field:', e);
+                    }
+                },
+                rows: 4
+            });
+
+            // Add the roles area
+            const rolesAreaDiv = window.conversations.utils.createDivContainer(wrapper, 'conversation-container-vertical');
+            const rolesFieldDiv = window.conversations.utils.createDivContainer(rolesAreaDiv, 'conversation-field-container-vertical-full');
+            window.conversations.utils.createLabel(rolesFieldDiv, 'Roles:');
+            this.rolesEditor = new window.conversations.ManageInstructionRolesComponent(rolesFieldDiv, this.group, this.selectedInstruction, (updatedInstruction) => {
+                // Callback to update the selected instruction when roles are changed in the roles editor
+                this.selectedInstruction.info.roles = updatedInstruction.info.roles;
+                this.updateButtonsArea();
+            });
+
+            // Update the page content with the content div
             this.page.updateContentArea(contentDiv);
 
-            // Save, Add and Delete instructions button
-            const pageButtons = window.conversations.utils.createDivContainer(null, 'conversations-buttons-container');
-            new window.ButtonComponent(pageButtons, '💾', () => this.saveInstruction(), window.ButtonComponent.TYPE_GHOST, '💾 Save instruction');
-            new window.ButtonComponent(pageButtons, '+', () => this.addInstruction(), window.ButtonComponent.TYPE_GHOST, '+ Add instruction');
-            new window.ButtonComponent(pageButtons, '🗙', () => this.deleteInstruction(), window.ButtonComponent.TYPE_GHOST_DANGER, '🗙 Delete instruction');
+            // Create page buttons once
+            this.createButtonsArea();
 
-            if (!this.compareSeedToCurrent()) {
-                new window.ButtonComponent(pageButtons, '💡 Seed data', () => this.showSeedData(), window.ButtonComponent.TYPE_GHOST_DANGER, '💡 Seed data');
-            }
-            this.page.updateButtonsArea(pageButtons);
         }
 
+        createButtonsArea() {
+            const pageButtons = window.conversations.utils.createDivContainer(null, 'conversations-buttons-container');
+            
+            // Create buttons and store references
+            this.undoButton = new window.ButtonComponent(pageButtons, {
+                label: '↩️',
+                onClick: () => this.undoChanges(),
+                type: window.ButtonComponent.TYPE_GHOST,
+                tooltip: '↩️ Undo changes',
+                disabled: true
+            });
+            
+            this.saveButton = new window.ButtonComponent(pageButtons, {
+                label: '💾',
+                onClick: () => this.saveInstruction(),
+                type: window.ButtonComponent.TYPE_GHOST,
+                tooltip: '💾 Save instruction',
+                disabled: true
+            });
+            
+            new window.ButtonComponent(pageButtons, {
+                label: '💡',
+                onClick: () => this.showSeedData(),
+                type: window.ButtonComponent.TYPE_GHOST,
+                tooltip: '💡 Seed data'
+            });
+            
+            new window.ButtonComponent(pageButtons, {
+                label: '+',
+                onClick: () => this.addInstruction(),
+                type: window.ButtonComponent.TYPE_GHOST,
+                tooltip: '+ Add instruction'
+            });
+            
+            new window.ButtonComponent(pageButtons, {
+                label: '🗙',
+                onClick: () => this.deleteInstruction(),
+                type: window.ButtonComponent.TYPE_GHOST_DANGER,
+                tooltip: '🗙 Delete instruction'
+            });
+
+            this.page.updateButtonsArea(pageButtons);
+            
+            // Update button states based on current data
+            this.updateButtonsArea();
+        }
+
+        updateButtonsArea() {
+            const hasChanges = !_.isEqual(this.selectedInstruction, this.selectedInstructionOrig);
+            
+            // Toggle disabled state of Save and Undo buttons
+            if (this.saveButton && this.undoButton) {
+                this.saveButton.setDisabled(!hasChanges);
+                this.undoButton.setDisabled(!hasChanges);
+            }
+        }
+
+        // Load the seed data for the selected instruction
+        async loadSelectedInstructionsSeed() {
+            const seedsInstructions = await window.conversations.apiSeeds.seedsInstructionsGet(null, this.group.group_key, this.selectedInstruction.info.instruction_key);
+            if (seedsInstructions.length > 0) {
+                if (seedsInstructions[0].json.instruction_key === this.selectedInstruction.info.instruction_key) {
+                    this.selectedInstructionsSeed = seedsInstructions[0];
+                } else {
+                    // This should not happen since we fetched the seed data using the selected instruction key, 
+                    // but just in case, we check that the instruction key of the fetched seed data matches the selected 
+                    // instruction key. If it doesn't match, we ignore the seed data and set it to null.
+                    console.error('Seed data instruction key does not match the selected instruction key. That should not happen since we fetched the seed data using the selected instruction key. Seed data instruction key: ', seedsInstructions[0].instructions.info.instruction_key, 'Selected instruction key: ', this.selectedInstruction.info.instruction_key);
+                    this.selectedInstructionsSeed = null;
+                }
+            } else {
+                this.selectedInstructionsSeed = null;
+            }
+        }
+
+        // Show seed data differences in a popup with options to 
+        // override seed data with current instruction data or to 
+        // reload current instruction data from seed data
         showSeedData() {
             const popup = new window.PopupComponent({
                 icon: '💡',
@@ -113,6 +299,7 @@
                         container,
                         this.groupId,
                         this.group.group_name,
+                        this.group.group_key,
                         this.selectedInstruction,
                         this.selectedInstructionsSeed,
                         () => {
@@ -131,53 +318,23 @@
             popup.show();
         }
 
-        compareSeedToCurrent() {
-            if (!this.selectedInstructionsSeed) {
-                return false;
-            }
-            if (!_.isEqual(this.selectedInstruction.info, this.selectedInstructionsSeed.info) ||
-                !_.isEqual(this.selectedInstruction.feedback_def, this.selectedInstructionsSeed.feedback_def) ||
-                this.selectedInstruction.instructions !== this.selectedInstructionsSeed.instructions) {
-                return false;
-            }
-            return true;
-        }
-
-        async loadSelectedInstructionsSeed() {
-            const seedsInstructions = await window.conversations.apiSeeds.seedsInstructionsGet(null, this.group.group_key, this.selectedInstructionsKey);
-            console.log('Loaded seedsInstructions:', seedsInstructions);
-            if (seedsInstructions.length > 0) {
-                this.selectedInstructionsSeed = {
-                    instructions: seedsInstructions[0].instructions,
-                    feedback_def: seedsInstructions[0].json_feedback,
-                    info: seedsInstructions[0].json_info,
-                };
-            } else {
-                this.selectedInstructionsSeed = null;
-            }
+        // Undo changes
+        async undoChanges() {
+            this.selectedInstruction = _.cloneDeep(this.selectedInstructionOrig);
+            this.loadContent();
         }
 
         // Save the selected instruction
         async saveInstruction() {
-            const updatedInstructions = this.instructionsEditor.updatedInstructions();
-            const selectedInstruction = this.instructions.find(entry => entry.instructions_key === this.selectedInstructionsKey);
-            // Check if data has changed
-            if (_.isEqual(selectedInstruction.feedback_def, updatedInstructions.feedback_def) &&
-                selectedInstruction.instructions === updatedInstructions.instructions &&
-                _.isEqual(selectedInstruction.info, updatedInstructions.info)) {
-                new window.AlertComponent('Save', 'No changes detected, save skipped.');
-                return;
-            }
-
             // Call API to save
-            await window.conversations.apiInstructions.instructionsUpdate(null, this.groupId,
-                selectedInstruction.instructions_key,
-                updatedInstructions.instructions,
-                updatedInstructions.feedback_def,
-                updatedInstructions.info
-            );
-            new window.AlertComponent('Save instructions', 'Instructions has been saved successfully.');
-            this.loadContent();
+            try {
+                await window.conversations.apiInstructions.instructionsUpdate(null, this.groupId, this.selectedInstruction.info);
+                new window.AlertComponent('Save instructions', 'Instructions has been saved successfully.');
+                this.loadContent();
+            } catch (error) {
+                console.error('Error saving instructions:', error);
+                new window.AlertComponent('Save instructions', 'Failed to save instructions.');
+            }
         }
 
         // Delete the selected instruction
@@ -185,10 +342,10 @@
             new window.AlertComponent('Delete Instructions', 'Are you sure you want to delete these instructions?', [
                 ['Confirm Delete', async () => {
                     // Call API to delete
-                    await window.conversations.apiInstructions.instructionsDelete(null, this.groupId, this.selectedInstructionsKey);
+                    await window.conversations.apiInstructions.instructionsDelete(null, this.groupId, this.selectedInstructionKey);
 
                     // Clear selected instruction type
-                    this.selectedInstructionsKey = null;
+                    this.selectedInstructionKey = null;
 
                     // Reload content
                     this.loadContent();
@@ -201,42 +358,31 @@
         async addInstruction() {
             const popup = new window.PopupComponent({
                 icon: this.manageOptions[this.optionId].icon,
-                title: 'Add new ' + window.conversations.CONVERSATION_TYPES_STRING(this.manageOptions[this.optionId].info.conversationType, false, true, false, false),
-                width: 720,
+                title: 'Import ' + window.conversations.CONVERSATION_TYPES_STRING(this.manageOptions[this.optionId].info.conversationType, false, true, false, false),
+                width: 1200,
                 height: 720,
                 content: (container) => {
                     const wrapperDiv = window.conversations.utils.createDivContainer(container, 'conversations-page-wrapper');
-                    const buttonContainer = window.conversations.utils.createDivContainer(wrapperDiv, 'conversations-buttons-container');
-
-                    // Save instructions button
-                    new window.ButtonComponent(buttonContainer, '💾', async () => {
-                        const updatedData = instructionsEditor.updatedInstructions();
-                        const result = await window.conversations.apiInstructions.instructionsAdd(
-                            null,
-                            null,
-                            this.groupId,
-                            updatedData.instructions,
-                            updatedData.feedback_def,
-                            updatedData.info
-                        );
-                        popup.hide();
-                        this.selectedInstructionsKey = result.data.instructions_key;
-                        this.loadContent();
-
-                    }, window.ButtonComponent.TYPE_GHOST, '💾 Save instruction');
-
-                    // Call API to add
-                    const info = window.conversations.DEFAULT_INFO;
-                    info.conversation_type = this.manageOptions[this.optionId].info.conversationType;
-                    const instructions = {
-                        info: info,
-                        instructions: window.conversations.DEFAULT_INSTRUCTIONS,
-                        feedback_def: window.conversations.DEFAULT_FEEDBACK_DEF
+                    
+                    // Create seed import component - filter by conversation type
+                    const conversationType = this.manageOptions[this.optionId].info.conversationType;
+                    let seedTypes = [];
+                    if (conversationType === window.conversations.CONVERSATION_TYPES.AI_CONVERSATION) {
+                        seedTypes = [window.conversations.SEED_TYPES.INSTRUCTIONS_CONVERSATIONS];
+                    } else if (conversationType === window.conversations.CONVERSATION_TYPES.AI_DECISION) {
+                        seedTypes = [window.conversations.SEED_TYPES.INSTRUCTIONS_DECISIONS];
                     }
-
-                    const editorDiv = window.conversations.utils.createDivContainer(wrapperDiv);
-                    const instructionsEditor = new window.conversations.ManageInstructionsEditorComponent(editorDiv, this.groupId, instructions);
+                    
+                    new window.conversations.ManageGroupSeedsImportComponent(
+                        wrapperDiv,
+                        this.group,
+                        seedTypes
+                    );
                 },
+                onClose: () => {
+                    // Reload the instruction list after popup closes
+                    this.loadContent();
+                }
             });
             popup.show();
 

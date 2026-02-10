@@ -83,10 +83,17 @@ window.conversations.utils.createInput = function(container, labelText, options 
     new window.TextInputComponent(infoNameGroup, options);
 }
 
-window.conversations.utils.createTextArea = function (container, labelText, value, placeholder = '', onChange = null, rows = -1) {
+window.conversations.utils.createRange = function(container, labelText, minValue, maxValue, onChange) {
+    const groupDiv = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
+    window.conversations.utils.createLabel(groupDiv, labelText);
+    new window.RangeComponent(groupDiv, minValue, maxValue, onChange);
+}
+              
+window.conversations.utils.createTextArea = function (container, labelText, options = {}) {
+    const rows = options.rows !== undefined ? options.rows : -1;
     const textAreaGroup = window.conversations.utils.createDivContainer(container, rows === -1 ? 'conversation-field-container-vertical-full' : 'conversation-field-container-vertical');
     window.conversations.utils.createLabel(textAreaGroup, labelText);
-    new window.TextAreaComponent(textAreaGroup, value, placeholder, onChange, rows);
+    new window.TextAreaComponent(textAreaGroup, options);
 }
 
 window.conversations.utils.createBadge = function (container, labelText, value, badgeType = 'generic') {
@@ -112,7 +119,7 @@ window.conversations.utils.updateChartInstance = function (container, chartInsta
     }
 
     const field = window.conversations.utils.createFieldDiv(container, title);
-    chartInstance = new window.ChartComponent(field, type, data, options, '100%', '320px',title);
+    chartInstance = new window.ChartComponent(field, type, data, options, '100%', '100%',title);
 
     if (chartInstance && typeof chartInstance.refresh === 'function') {
         setTimeout(() => chartInstance.refresh(), 0);

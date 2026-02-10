@@ -7,6 +7,7 @@
     - onChange callback is ONLY called when input is valid
     - For number type: passes parsed numeric value; for text type: passes string value
     - Supports min/max attributes for number inputs (enforced - cannot enter values outside range)
+    - Supports AI autocomplete via aiSuggestion option
 */
 class TextInputComponent {
     constructor(container, options = {}) {
@@ -17,6 +18,8 @@ class TextInputComponent {
         this.type = options.type !== undefined ? options.type : 'text';
         this.min = options.min !== undefined ? options.min : null;
         this.max = options.max !== undefined ? options.max : null;
+        this.aiSuggestionConfig = options.aiSuggestion || null;
+        this.aiSuggestionHandler = null;
         
         // Get pattern with default
         const pattern = options.pattern !== undefined ? options.pattern : /.*/;
@@ -75,6 +78,22 @@ class TextInputComponent {
         this.wrapper.appendChild(this.input);
         this.wrapper.appendChild(this.rejectionMessage);
         this.container.appendChild(this.wrapper);
+
+        // Setup AI suggestion if configured
+        if (this.aiSuggestionConfig && this.aiSuggestionConfig.fn) {
+            this.aiSuggestionHandler = new window.AISuggestionHandler({
+                inputElement: this.input,
+                aiSuggestionFn: this.aiSuggestionConfig.fn,
+                context: this.aiSuggestionConfig.context,
+                onValueChange: (newValue, newCursorPos) => {
+                    this.input.value = newValue;
+                    this.input.setSelectionRange(newCursorPos, newCursorPos);
+                    this.handleInput();
+                },
+                debounceMs: this.aiSuggestionConfig.debounceMs,
+                timeoutMs: this.aiSuggestionConfig.timeoutMs
+            });
+        }
     }
 
     handleInput() {
@@ -207,6 +226,12 @@ class TextInputComponent {
         }
         
         this.input.title = this.tooltip;
+    }
+
+    destroy() {
+        if (this.aiSuggestionHandler) {
+            this.aiSuggestionHandler.destroy();
+        }
     }
 }
 

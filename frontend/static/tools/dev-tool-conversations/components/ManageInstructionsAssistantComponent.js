@@ -13,7 +13,12 @@
             const wrapper = window.conversations.utils.createDivContainer(this.component);
             window.conversations.utils.createReadOnlyText(wrapper, 'Use this assistant to help you create effective instructions for your conversations. Follow the prompts and provide the necessary details.', '-');
 
-            new window.ButtonComponent(wrapper, 'Start', async () => this.showConversationStartPopup(), window.ButtonComponent.TYPE_GHOST, 'Start ' + window.conversations.CONVERSATION_TYPES_NAMES[this.conversation_type]);
+            new window.ButtonComponent(wrapper, {
+                label: 'Start',
+                onClick: async () => this.showConversationStartPopup(),
+                type: window.ButtonComponent.TYPE_GHOST,
+                tooltip: 'Start ' + window.conversations.CONVERSATION_TYPES_NAMES[this.conversation_type]
+            });
             
             this.load(wrapper);
         }

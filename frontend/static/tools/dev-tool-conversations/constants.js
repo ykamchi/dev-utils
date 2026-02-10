@@ -37,6 +37,15 @@ window.conversations.CONVERSATION_TYPES_STRING = function(type, icon = true, nam
     return result.trim();
 }
 
+// Seed types for ManageGroupSeedsImportComponent
+window.conversations.SEED_TYPES = {
+    GROUP: 'group',
+    MEMBERS: 'members',
+    INSTRUCTIONS_CONVERSATIONS: 'instructions_conversations',
+    INSTRUCTIONS_DECISIONS: 'instructions_decisions',
+    INSTRUCTIONS_ALL: 'instructions_all'
+}
+
 // Default instructions template for conversations
 window.conversations.DEFAULT_INSTRUCTIONS = `
 This is a test conversation.

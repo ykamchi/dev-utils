@@ -256,15 +256,16 @@
             // States options
             new window.OptionButtonsComponent(
                 statesDiv,
-                STATES,
-                this.state.states,
-                (v) => {
-                    this.state.states = v;
-                    this.renderChart();
-                    window.StorageService.setStorageJSON('conversations_chart_status_timeline_states', v);
-                },
-                null,
-                true
+                {
+                    options: STATES,
+                    selected: this.state.states,
+                    onChange: (v) => {
+                        this.state.states = v;
+                        this.renderChart();
+                        window.StorageService.setStorageJSON('conversations_chart_status_timeline_states', v);
+                    },
+                    multiSelect: true
+                }
             );
         }
 
@@ -304,13 +305,15 @@
             // Interval options
             new window.OptionButtonsComponent(
                 intervalControlDiv,
-                INTERVALS,
-                this.state.interval,
-                (v) => {
-                    this.state.interval = v;
-                    this.renderChart();
-                    window.StorageService.setLocalStorageItem('conversations_chart_status_timeline_interval', this.state.interval);
-                },
+                {
+                    options: INTERVALS,
+                    selected: this.state.interval,
+                    onChange: (v) => {
+                        this.state.interval = v;
+                        this.renderChart();
+                        window.StorageService.setLocalStorageItem('conversations_chart_status_timeline_interval', this.state.interval);
+                    }
+                }
             );
 
         }

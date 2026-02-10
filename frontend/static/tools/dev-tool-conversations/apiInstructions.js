@@ -39,7 +39,7 @@ window.conversations.apiInstructions.instructionsList = async function (spinnerC
 
 
 // Add group instructions
-window.conversations.apiInstructions.instructionsAdd = async function (spinnerContainer, instructions_key, groupId, instructions, feedbackDef, info) {
+window.conversations.apiInstructions.instructionsAdd = async function (spinnerContainer, instruction_key, groupId, info) {
     // Show loading spinner while adding instructions
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Adding instructions ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
     
@@ -49,10 +49,8 @@ window.conversations.apiInstructions.instructionsAdd = async function (spinnerCo
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 group_id: groupId,
-                instructions: instructions,
-                feedback_def: feedbackDef,
                 info: info,
-                instructions_key: instructions_key
+                instruction_key: instruction_key
             })
         });
 
@@ -104,7 +102,7 @@ window.conversations.apiInstructions.instructionsDelete = async function (spinne
 };
 
 // Update group instructions
-window.conversations.apiInstructions.instructionsUpdate = async function (spinnerContainer, groupId, instructionsKey, instructions, feedbackDef, info) {
+window.conversations.apiInstructions.instructionsUpdate = async function (spinnerContainer, groupId, info) {
     // Show loading spinner while updating instructions
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Updating instructions for ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
     
@@ -114,9 +112,6 @@ window.conversations.apiInstructions.instructionsUpdate = async function (spinne
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 group_id: groupId,
-                instructions_key: instructionsKey,
-                instructions: instructions,
-                feedback_def: feedbackDef,
                 info: info
             })
         });

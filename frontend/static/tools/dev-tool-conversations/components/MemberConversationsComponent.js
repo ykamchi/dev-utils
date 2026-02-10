@@ -3,15 +3,17 @@
         MemberConversationsComponent: displays conversations for a member in dev-tool-conversations
     */
     class MemberConversationsComponent {
-        constructor(container, groupId, member, groupInstructions, conversation_type) {
+        constructor(container, groupId, member, conversation_type) {
             this.container = container;
             this.groupId = groupId;
             this.member = member
             this.conversation_type = conversation_type;
-            this.groupInstructions = Object.fromEntries(Object.entries(groupInstructions).filter(([key, instructions]) => instructions.info.conversation_type === conversation_type));
+            this.groupInstructions = null;
             this.showOnlyLast = true;
             this.contentDiv = null;
             this.page = null;
+
+            this.group = null;
             this.render();
         }
 
@@ -48,10 +50,23 @@
 
             
 
-            new window.ButtonComponent(buttonsDiv, startNewConversationButtonText, this.showConversationStartPopup.bind(this), window.ButtonComponent.TYPE_GHOST, startNewConversationButtonText);
+            new window.ButtonComponent(buttonsDiv, {
+                label: startNewConversationButtonText,
+                onClick: this.showConversationStartPopup.bind(this),
+                type: window.ButtonComponent.TYPE_GHOST,
+                tooltip: startNewConversationButtonText
+            });
 
             this.page.updateButtonsArea(buttonsDiv);
 
+            this.load();
+        }
+
+        async load() {
+            this.group = await window.conversations.apiGroups.groupsGet(this.container, this.groupId);
+
+            // Fetch group instructions for the specific conversation type
+            this.groupInstructions = await window.conversations.apiInstructions.instructionsList(this.container, this.groupId, this.conversation_type);
             this.loadContent();
         }
 
@@ -69,7 +84,7 @@
                 window.ListComponent.SELECTION_MODE_SINGLE, null, 
                 (item, query) => {
                     
-                    return item.participants.toLowerCase().includes(query.toLowerCase());
+                    return item.participants.map(p => p.member_name).join(", ").toLowerCase().includes(query.toLowerCase());
                 }, 
                 [
                     { label: 'Creation Date', func: (a, b) => new Date(a.created_at) - new Date(b.created_at), direction: -1 },
@@ -85,7 +100,7 @@
                 icon: window.conversations.CONVERSATION_TYPES_ICONS[this.conversation_type],
                 title: 'Start new ' + window.conversations.CONVERSATION_TYPES_STRING(this.conversation_type, false, true, false, false),
                 content: (container) => {
-                    new window.conversations.MemberConversationStartComponent(container, this.groupId, this.member, this.groupInstructions, this.conversation_type, popup);
+                    new window.conversations.MemberConversationStartComponent(container, this.group, this.member, this.groupInstructions, this.conversation_type, popup);
                 },
                 closable: true,
                 width: '910px',

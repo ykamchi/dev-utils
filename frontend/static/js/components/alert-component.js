@@ -71,15 +71,21 @@ class AlertComponent {
         buttonContainer.className = 'alert-component-buttons-container';
         if (Array.isArray(this.buttons) && this.buttons.length > 0) {
             this.buttons.forEach(([label, callback]) => {
-                new window.ButtonComponent(buttonContainer, label, () => {
-                    callback();
-                    this.close();
+                new window.ButtonComponent(buttonContainer, {
+                    label,
+                    onClick: () => {
+                        callback();
+                        this.close();
+                    }
                 });
             });
         } else {
             // Default Ok button
-            new window.ButtonComponent(buttonContainer, 'Ok', () => {
-                this.close();
+            new window.ButtonComponent(buttonContainer, {
+                label: 'Ok',
+                onClick: () => {
+                    this.close();
+                }
             });
         }
         wrapper.appendChild(buttonContainer);

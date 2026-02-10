@@ -3,14 +3,17 @@
     - Displays a textarea with configurable rows
     - Supports onChange callback for value changes
     - Provides getValue/setValue methods for programmatic access
+    - Supports AI autocomplete via aiSuggestion option
 */
 class TextAreaComponent {
-    constructor(container, initialValue = '', placeholder = '', onChange = null, rows = -1) {
+    constructor(container, options = {}) {
         this.container = container;
-        this.value = initialValue;
-        this.placeholder = placeholder;
-        this.onChange = onChange;
-        this.rows = rows;
+        this.value = options.initialValue !== undefined ? options.initialValue : '';
+        this.placeholder = options.placeholder !== undefined ? options.placeholder : '';
+        this.onChange = options.onChange !== undefined ? options.onChange : null;
+        this.rows = options.rows !== undefined ? options.rows : -1;
+        this.aiSuggestionConfig = options.aiSuggestion || null;
+        this.aiSuggestionHandler = null;
         
         this.render();
     }
@@ -33,6 +36,22 @@ class TextAreaComponent {
         this.textarea.addEventListener('input', () => this.handleInput());
 
         this.container.appendChild(this.textarea);
+
+        // Setup AI suggestion if configured
+        if (this.aiSuggestionConfig && this.aiSuggestionConfig.fn) {
+            this.aiSuggestionHandler = new window.AISuggestionHandler({
+                inputElement: this.textarea,
+                aiSuggestionFn: this.aiSuggestionConfig.fn,
+                context: this.aiSuggestionConfig.context,
+                onValueChange: (newValue, newCursorPos) => {
+                    this.textarea.value = newValue;
+                    this.textarea.setSelectionRange(newCursorPos, newCursorPos);
+                    this.handleInput();
+                },
+                debounceMs: this.aiSuggestionConfig.debounceMs,
+                timeoutMs: this.aiSuggestionConfig.timeoutMs
+            });
+        }
     }
 
     handleInput() {
@@ -78,6 +97,12 @@ class TextAreaComponent {
 
     focus() {
         this.textarea.focus();
+    }
+
+    destroy() {
+        if (this.aiSuggestionHandler) {
+            this.aiSuggestionHandler.destroy();
+        }
     }
 }
 

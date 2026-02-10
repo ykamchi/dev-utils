@@ -27,8 +27,18 @@
 
             // Add and Delete group button
             const buttonContainer = window.conversations.utils.createDivContainer(headerDiv, 'conversations-buttons-container');
-            new window.ButtonComponent(buttonContainer, '+', () => this.addGroup(), window.ButtonComponent.TYPE_GHOST, '+ Add group');
-            new window.ButtonComponent(buttonContainer, '🗙', () => this.deleteGroup(), window.ButtonComponent.TYPE_GHOST_DANGER, '🗙 Delete group');
+            new window.ButtonComponent(buttonContainer, {
+                label: '+',
+                onClick: () => this.addGroup(),
+                type: window.ButtonComponent.TYPE_GHOST,
+                tooltip: '+ Add group'
+            });
+            new window.ButtonComponent(buttonContainer, {
+                label: '🗙',
+                onClick: () => this.deleteGroup(),
+                type: window.ButtonComponent.TYPE_GHOST_DANGER,
+                tooltip: '🗙 Delete group'
+            });
 
             // Content container
             this.contentContainer = window.conversations.utils.createDivContainer(wrapper);
@@ -83,13 +93,15 @@
             const options = [{ label: 'View', value: 'view' }, { label: 'Manage', value: 'manage' }];
             const viewModeButtons = new window.OptionButtonsComponent(
                 controlsContainer,
-                options,
-                'view',
-                (selectedMode) => {
-                    this.selectedMode = selectedMode;
-                    this.onChange();
-                },
-                'conversations-menu-selection-mode'
+                {
+                    options: options,
+                    selected: 'view',
+                    onChange: (selectedMode) => {
+                        this.selectedMode = selectedMode;
+                        this.onChange();
+                    },
+                    storageKey: 'conversations-menu-selection-mode'
+                }
             );
 
             this.selectedMode = viewModeButtons.getSelection();
@@ -123,18 +135,23 @@
             
             // Seed group button
             const buttonContainer = window.conversations.utils.createDivContainer(editorDiv, 'conversations-buttons-container');
-            new window.ButtonComponent(buttonContainer, '📤 Group seeding', async () => {
-                popup.hide();
+            new window.ButtonComponent(buttonContainer, {
+                label: '📤 Group seeding',
+                onClick: async () => {
+                    popup.hide();
 
-                // Call API to add group for each selected seed
-                for (const seedEntry of seeds) {
-                    if (seedEntry.include && seedEntry.valid) {
-                        const result = await window.conversations.apiGroups.groupsAdd(null, seedEntry.group_key, seedEntry.json.group_name, seedEntry.json.group_description);
-                        this.selectedGroupId = result.group_id;
-                        this.render();
+                    // Call API to add group for each selected seed
+                    for (const seedEntry of seeds) {
+                        if (seedEntry.include && seedEntry.valid) {
+                            const result = await window.conversations.apiGroups.groupsAdd(null, seedEntry.seed_key, seedEntry.json.group_name, seedEntry.json.group_description);
+                            this.selectedGroupId = result.group_id;
+                            this.render();
+                        }
                     }
-                }
-            }, window.ButtonComponent.TYPE_GHOST, '📤 Group seeding');
+                },
+                type: window.ButtonComponent.TYPE_GHOST,
+                tooltip: '📤 Group seeding'
+            });
 
             if (seeds && seeds.length > 0) {
 
@@ -170,16 +187,21 @@
 
             // Save group button
             const buttonContainer = window.conversations.utils.createDivContainer(editorDiv, 'conversations-buttons-container');
-            new window.ButtonComponent(buttonContainer, '💾 Add group', async () => {
-                const updatedData = groupEditor.updatedGroup();
+            new window.ButtonComponent(buttonContainer, {
+                label: '💾 Add group',
+                onClick: async () => {
+                    const updatedData = groupEditor.updatedGroup();
 
-                popup.hide();
+                    popup.hide();
 
-                // Call API to add group
-                const result = await window.conversations.apiGroups.groupsAdd(null, null, updatedData.groupName, updatedData.groupDescription);
-                this.selectedGroupId = result.group_id;
-                this.render();
-            }, window.ButtonComponent.TYPE_GHOST, '💾 Add group');
+                    // Call API to add group
+                    const result = await window.conversations.apiGroups.groupsAdd(null, null, updatedData.groupName, updatedData.groupDescription);
+                    this.selectedGroupId = result.group_id;
+                    this.render();
+                },
+                type: window.ButtonComponent.TYPE_GHOST,
+                tooltip: '💾 Add group'
+            });
 
             const groupEditor =new window.conversations.ManageGroupEditorComponent(editorDiv, '', ''); // Empty name and description for new group
             return editorDiv;

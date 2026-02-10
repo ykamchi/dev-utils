@@ -1,572 +1,776 @@
 """
-Seed data extraction and validation utilities for dev-tool-conversations.
-Converts file structure into validated seeding data format.
+Seed data utilities for dev-tool-conversations.
+Handles reading, writing, and validating seed data from the filesystem.
+
+New structure:
+- /home/yohay/code/conversations-examples/{group_key}/group.json
+- /home/yohay/code/conversations-examples/{group_key}/members.json
+- /home/yohay/code/conversations-examples/{group_key}/instructions.json
 """
 
 import json
-from typing import List, Dict, Any
+import os
+from typing import Dict, Any, List, Optional
+from pathlib import Path
 
 
-def extract_groups_seed_data(group_seeds: List[Dict[str, str]]) -> List[Dict[str, Any]]:
-    """
-    Extract and validate group seed data from group_seed.json files.
-    
-    Args:
-        group_seeds: List of objects with keys: group_key, content (raw JSON string from group_seed.json)
-        
-    Returns:
-        List of seed entries with parsed content and validation results
-    """
-    result = []
-    for entry in group_seeds:
-        file = {
-            'name': 'group_seed.json',
-            'content': entry['content']
-        }
-        
-        try:
-            group_seed_json = json.loads(file['content'])
-            valid = validate_group(group_seed_json)
-            result.append({
-                'type': 'group',
-                'group_key': entry['group_key'],
-                'folderName': 'root',
-                'json': group_seed_json,
-                'file': file,
-                'include': valid['valid'],
-                'valid': valid['valid'],
-                'error': None if valid['valid'] else f"group_seed.json validation error: {valid['reason']}"
-            })
-        except json.JSONDecodeError:
-            result.append({
-                'type': 'group',
-                'group_key': entry['group_key'],
-                'folderName': 'root',
-                'json': None,
-                'file': file,
-                'include': False,
-                'valid': False,
-                'error': 'Invalid JSON format in group_seed.json.'
-            })
-        except Exception as err:
-            result.append({
-                'type': 'group',
-                'group_key': entry['group_key'],
-                'folderName': 'root',
-                'json': None,
-                'file': file,
-                'include': False,
-                'valid': False,
-                'error': str(err)
-            })
-    
-    return result
+# Base path for seed data
+SEED_BASE_PATH = Path.home() / 'code' / 'conversations-examples'
 
 
-def extract_members_seed_data(members_seed: Dict[str, str]) -> List[Dict[str, Any]]:
-    """
-    Extract and validate members seed data from members_seed.json file.
-    
-    Args:
-        members_seed: Object with keys: group_key, content (raw JSON string from members_seed.json)
-        
-    Returns:
-        List containing a single seed entry with parsed content and validation results
-    """
-    file = {
-        'name': 'members_seed.json',
-        'content': members_seed['content']
-    }
-    
-    try:
-        members_seed_json = json.loads(file['content'])
-        valid = validate_members(members_seed_json)
-        return [{
-            'type': 'members',
-            'group_key': members_seed['group_key'],
-            'folderName': 'root',
-            'json': members_seed_json,
-            'file': file,
-            'include': valid['valid'],
-            'valid': valid['valid'],
-            'error': None if valid['valid'] else f"members_seed.json validation error: {valid['reason']}"
-        }]
-    except json.JSONDecodeError:
-        return [{
-            'type': 'members',
-            'group_key': members_seed['group_key'],
-            'folderName': 'root',
-            'json': None,
-            'file': file,
-            'include': False,
-            'valid': False,
-            'error': 'Invalid JSON format in members_seed.json.'
-        }]
-    except Exception as err:
-        return [{
-            'type': 'members',
-            'group_key': members_seed['group_key'],
-            'folderName': 'root',
-            'json': None,
-            'file': file,
-            'include': False,
-            'valid': False,
-            'error': str(err)
-        }]
-
-
-def extract_instructions_seed_data(instructions_seeds: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """
-    Extract and validate instructions seed data from instructions folders.
-    Each instruction consists of 3 files: instructions.md, feedback.json, info.json
-    
-    Args:
-        instructions_seeds: List of objects with keys: 
-            - group_key: the group key
-            - instructions_key: the folder name (instruction key)
-            - instructions_content: content from instructions.md
-            - feedback_content: content from feedback.json
-            - info_content: content from info.json
-        
-    Returns:
-        List of instruction seed entries with parsed content and validation results
-    """
-    result = []
-    
-    for entry in instructions_seeds:
-        instruction_file = {
-            'name': 'instructions.md',
-            'content': entry['instructions_content']
-        }
-        feedback_file = {
-            'name': 'feedback.json',
-            'content': entry['feedback_content']
-        }
-        info_file = {
-            'name': 'info.json',
-            'content': entry['info_content']
-        }
-        
-        info_json = None
-        feedback_json = None
-        valid = True
-        error = ''
-        
-        # Validate info.json
-        try:
-            info_json = json.loads(info_file['content'])
-            validation = validate_info(info_json)
-            if not validation['valid']:
-                valid = False
-                error += f"info.json validation error: {validation['reason']}"
-        except json.JSONDecodeError:
-            valid = False
-            error += 'Invalid JSON format in info.json.'
-        except Exception as err:
-            valid = False
-            error += str(err)
-        
-        # Validate feedback.json
-        try:
-            feedback_json = json.loads(feedback_file['content'])
-            validation = validate_feedback(feedback_json)
-            if not validation['valid']:
-                valid = False
-                error += f" feedback.json validation error: {validation['reason']}"
-        except json.JSONDecodeError:
-            valid = False
-            error += ' Invalid JSON format in feedback.json.'
-        except Exception as err:
-            valid = False
-            error += ' ' + str(err)
-        
-        # Build the result entry
-        if not valid:
-            result.append({
-                'type': 'instruction',
-                'group_key': entry['group_key'],
-                'folderName': entry['instructions_key'],
-                'json_info': info_json,
-                'json_feedback': feedback_json,
-                'instructions': instruction_file['content'].replace('\r\n', '\n').replace('\r', '\n'),
-                'instruction_file': instruction_file,
-                'feedback_file': feedback_file,
-                'info_file': info_file,
-                'include': False,
-                'valid': False,
-                'error': error.strip()
-            })
-        else:
-            result.append({
-                'type': 'instruction',
-                'group_key': entry['group_key'],
-                'folderName': entry['instructions_key'],
-                'json_info': info_json,
-                'json_feedback': feedback_json,
-                'instructions': instruction_file['content'].replace('\r\n', '\n').replace('\r', '\n'),
-                'instruction_file': instruction_file,
-                'feedback_file': feedback_file,
-                'info_file': info_file,
-                'include': True,
-                'valid': True
-            })
-    
-    return result
-
+# ============================================================================
+# Validation Functions
+# ============================================================================
 
 def validate_group(group: Any) -> Dict[str, Any]:
-    """Validate group_seed.json structure."""
+    """
+    Validate group seed data structure.
+    
+    Required fields:
+    - group_key: string
+    - group_name: string
+    - group_description: string
+    """
     if not isinstance(group, dict):
-        return {'valid': False, 'reason': 'Group seed is not an object'}
+        return {'valid': False, 'reason': 'Group must be a dictionary'}
     
-    required_props = ['group_name', 'group_description']
-    for prop in required_props:
-        if prop not in group:
-            return {'valid': False, 'reason': f"Missing required property: {prop}"}
-    
-    return {'valid': True}
-
-
-def validate_members(members: Any) -> Dict[str, Any]:
-    """Validate members array structure."""
-    if not isinstance(members, list):
-        return {'valid': False, 'reason': 'Members is not an array'}
-    
-    required_props = ['name', 'age', 'gender', 'location', 'occupation']
-    for member in members:
-        if not isinstance(member, dict):
-            return {'valid': False, 'reason': 'One or more members are not objects'}
-        for prop in required_props:
-            if prop not in member:
-                return {'valid': False, 'reason': f'One or more members are missing required property: {prop}'}
-    
-    return {'valid': True}
-
-
-def validate_info(obj: Any) -> Dict[str, Any]:
-    """Validate info.json structure."""
-    if not isinstance(obj, dict):
-        return {'valid': False, 'reason': 'Root is not an object'}
-    
-    required_fields = ['name', 'description', 'conversation_type']
+    required_fields = ['group_key', 'group_name', 'group_description']
     for field in required_fields:
-        if field not in obj:
-            return {'valid': False, 'reason': f"Missing '{field}' property"}
+        if field not in group:
+            return {'valid': False, 'reason': f'Missing required field: {field}'}
+        if not isinstance(group[field], str):
+            return {'valid': False, 'reason': f'Field {field} must be a string'}
     
-    return {'valid': True}
+    # Check for unexpected fields
+    allowed_fields = set(required_fields)
+    unexpected = set(group.keys()) - allowed_fields
+    if unexpected:
+        return {'valid': False, 'reason': f'Unexpected fields: {", ".join(unexpected)}'}
+    
+    return {'valid': True, 'reason': None}
 
 
-def validate_feedback(obj: Any) -> Dict[str, Any]:
-    """Validate feedback.json structure."""
-    if not isinstance(obj, dict):
-        return {'valid': False, 'reason': 'Root is not an object'}
+def validate_member(member: Any) -> Dict[str, Any]:
+    """
+    Validate member seed data structure.
     
-    for key, entry in obj.items():
-        if not isinstance(entry, dict):
-            return {'valid': False, 'reason': f"Key '{key}' is not an object"}
-        
-        # Check mandatory fields
-        if 'description' not in entry or 'type' not in entry or 'required' not in entry:
-            return {'valid': False, 'reason': f"Key '{key}' missing description, type, or required"}
+    Required fields:
+    - member_key: string
+    - roles: array of strings
+    - profile: object with required first-level fields:
+      - name: string
+      - age: integer
+      - gender: string
+      - location: string
+    """
+    if not isinstance(member, dict):
+        return {'valid': False, 'reason': 'Member must be a dictionary'}
+    
+    required_fields = ['member_key', 'roles', 'profile']
+    for field in required_fields:
+        if field not in member:
+            return {'valid': False, 'reason': f'Missing required field: {field}'}
+    
+    if not isinstance(member['member_key'], str):
+        return {'valid': False, 'reason': 'member_key must be a string'}
+    
+    if not isinstance(member['roles'], list):
+        return {'valid': False, 'reason': 'roles must be an array'}
+    
+    if not all(isinstance(role, str) for role in member['roles']):
+        return {'valid': False, 'reason': 'All roles must be strings'}
+    
+    if not isinstance(member['profile'], dict):
+        return {'valid': False, 'reason': 'profile must be an object'}
+    
+    # Validate required profile fields
+    required_profile_fields = ['name', 'age', 'gender', 'location']
+    for field in required_profile_fields:
+        if field not in member['profile']:
+            return {'valid': False, 'reason': f'profile must contain a "{field}" field'}
+    
+    if not isinstance(member['profile']['name'], str):
+        return {'valid': False, 'reason': 'profile.name must be a string'}
+    
+    if not isinstance(member['profile']['age'], int):
+        return {'valid': False, 'reason': 'profile.age must be an integer'}
+    
+    if not isinstance(member['profile']['gender'], str):
+        return {'valid': False, 'reason': 'profile.gender must be a string'}
+    
+    if not isinstance(member['profile']['location'], str):
+        return {'valid': False, 'reason': 'profile.location must be a string'}
+    
+    # Check for unexpected fields at top level
+    allowed_fields = set(required_fields)
+    unexpected = set(member.keys()) - allowed_fields
+    if unexpected:
+        return {'valid': False, 'reason': f'Unexpected fields: {", ".join(unexpected)}'}
+    
+    return {'valid': True, 'reason': None}
+
+
+def validate_feedback_def(feedback_def: Any) -> Dict[str, Any]:
+    """
+    Validate feedback_def structure.
+    
+    feedback_def is an object where each key is a feedback field name,
+    and each value has:
+    - description: string (required)
+    - type: string (required) - "integer" or "string"
+    - required: boolean (required)
+    - For type="integer": min, max (required)
+    - For type="string": optional-values (optional array of strings)
+    """
+    if not isinstance(feedback_def, dict):
+        return {'valid': False, 'reason': 'feedback_def must be an object'}
+    
+    for field_name, field_def in feedback_def.items():
+        if not isinstance(field_def, dict):
+            return {'valid': False, 'reason': f'feedback_def.{field_name} must be an object'}
         
         # Define allowed fields based on type
-        allowed_fields = {'description', 'type', 'required'}
+        base_fields = ['description', 'type', 'required']
         
-        # Logic for integers
-        if entry['type'] == 'integer':
-            if 'min' not in entry or 'max' not in entry:
-                return {'valid': False, 'reason': f"Integer '{key}' missing min or max"}
-            allowed_fields.update({'min', 'max'})
+        # Check required base fields
+        for base_field in base_fields:
+            if base_field not in field_def:
+                return {'valid': False, 'reason': f'feedback_def.{field_name}: Missing required field: {base_field}'}
         
-        # Logic for strings
-        elif entry['type'] == 'string':
-            if 'optional-values' not in entry or not isinstance(entry['optional-values'], list):
-                return {'valid': False, 'reason': f"'optional-values' in '{key}' must be an array"}
+        if not isinstance(field_def['description'], str):
+            return {'valid': False, 'reason': f'feedback_def.{field_name}: description must be a string'}
+        
+        if field_def['type'] not in ['integer', 'string']:
+            return {'valid': False, 'reason': f'feedback_def.{field_name}: type must be "integer" or "string"'}
+        
+        if not isinstance(field_def['required'], bool):
+            return {'valid': False, 'reason': f'feedback_def.{field_name}: required must be a boolean'}
+        
+        # Validate type-specific fields
+        if field_def['type'] == 'integer':
+            allowed_fields = set(base_fields + ['min', 'max'])
             
-            # Check all values are strings
-            if not all(isinstance(val, str) for val in entry['optional-values']):
-                return {'valid': False, 'reason': f"All 'optional-values' in '{key}' must be strings"}
-            allowed_fields.add('optional-values')
-        else:
-            return {'valid': False, 'reason': f"Key '{key}' has unsupported type '{entry['type']}'"}
+            if 'min' not in field_def:
+                return {'valid': False, 'reason': f'feedback_def.{field_name}: Missing required field: min'}
+            if 'max' not in field_def:
+                return {'valid': False, 'reason': f'feedback_def.{field_name}: Missing required field: max'}
+            
+            if not isinstance(field_def['min'], int):
+                return {'valid': False, 'reason': f'feedback_def.{field_name}: min must be an integer'}
+            if not isinstance(field_def['max'], int):
+                return {'valid': False, 'reason': f'feedback_def.{field_name}: max must be an integer'}
+        
+        elif field_def['type'] == 'string':
+            allowed_fields = set(base_fields + ['optional-values'])
+            
+            if 'optional-values' in field_def:
+                if not isinstance(field_def['optional-values'], list):
+                    return {'valid': False, 'reason': f'feedback_def.{field_name}: optional-values must be an array'}
+                if not all(isinstance(v, str) for v in field_def['optional-values']):
+                    return {'valid': False, 'reason': f'feedback_def.{field_name}: All optional-values must be strings'}
         
         # Check for unexpected fields
-        actual_fields = set(entry.keys())
-        unexpected_fields = actual_fields - allowed_fields
-        if unexpected_fields:
-            return {'valid': False, 'reason': f"Key '{key}' has unexpected fields: {', '.join(sorted(unexpected_fields))}"}
+        unexpected = set(field_def.keys()) - allowed_fields
+        if unexpected:
+            return {'valid': False, 'reason': f'feedback_def.{field_name}: Unexpected fields: {", ".join(unexpected)}'}
     
-    return {'valid': True}
+    return {'valid': True, 'reason': None}
 
 
-# High-level seed API functions
-# These functions encapsulate the complete logic for seed operations
-
-def seeds_groups_get(group_key: str = None) -> List[Dict[str, Any]]:
+def validate_role(role_name: str, role: Any) -> Dict[str, Any]:
     """
-    Get group seed data from all directories in ~/code/conversations-examples.
-    Each directory should contain a group_seed.json file.
+    Validate role structure within an instruction.
+    
+    Required fields:
+    - role_name: string
+    - role_description: string
+    - min: integer
+    - max: integer
+    - system_prompt: string
+    - feedback_def: object (validated separately)
+    """
+    if not isinstance(role, dict):
+        return {'valid': False, 'reason': f'Role {role_name} must be a dictionary'}
+    
+    required_fields = ['role_name', 'role_description', 'min', 'max', 'system_prompt', 'feedback_def']
+    for field in required_fields:
+        if field not in role:
+            return {'valid': False, 'reason': f'Role {role_name}: Missing required field: {field}'}
+    
+    if not isinstance(role['role_name'], str):
+        return {'valid': False, 'reason': f'Role {role_name}: role_name must be a string'}
+    
+    if not isinstance(role['role_description'], str):
+        return {'valid': False, 'reason': f'Role {role_name}: role_description must be a string'}
+    
+    if not isinstance(role['min'], int):
+        return {'valid': False, 'reason': f'Role {role_name}: min must be an integer'}
+    
+    if not isinstance(role['max'], int):
+        return {'valid': False, 'reason': f'Role {role_name}: max must be an integer'}
+    
+    if not isinstance(role['system_prompt'], str):
+        return {'valid': False, 'reason': f'Role {role_name}: system_prompt must be a string'}
+    
+    # Validate feedback_def
+    feedback_validation = validate_feedback_def(role['feedback_def'])
+    if not feedback_validation['valid']:
+        return {'valid': False, 'reason': f'Role {role_name}: {feedback_validation["reason"]}'}
+    
+    # Check for unexpected fields
+    allowed_fields = set(required_fields)
+    unexpected = set(role.keys()) - allowed_fields
+    if unexpected:
+        return {'valid': False, 'reason': f'Role {role_name}: Unexpected fields: {", ".join(unexpected)}'}
+    
+    return {'valid': True, 'reason': None}
+
+
+def validate_instruction(instruction: Any) -> Dict[str, Any]:
+    """
+    Validate instruction seed data structure.
+    
+    Required fields:
+    - instruction_key: string
+    - name: string
+    - description: string
+    - conversation_type: string
+    - max_turns: integer
+    - roles: object (keys are role names, values are role definitions)
+    """
+    if not isinstance(instruction, dict):
+        return {'valid': False, 'reason': 'Instruction must be a dictionary'}
+    
+    required_fields = ['instruction_key', 'name', 'description', 'conversation_type', 'max_turns', 'roles']
+    for field in required_fields:
+        if field not in instruction:
+            return {'valid': False, 'reason': f'Missing required field: {field}'}
+    
+    # if not isinstance(instruction['instruction_key'], str):
+    #     return {'valid': False, 'reason': 'instruction_key must be a string'}
+    
+    if not isinstance(instruction['name'], str):
+        return {'valid': False, 'reason': 'name must be a string'}
+    
+    if not isinstance(instruction['description'], str):
+        return {'valid': False, 'reason': 'description must be a string'}
+    
+    if not isinstance(instruction['conversation_type'], str):
+        return {'valid': False, 'reason': 'conversation_type must be a string'}
+    
+    if not isinstance(instruction['max_turns'], int):
+        return {'valid': False, 'reason': 'max_turns must be an integer'}
+    
+    if not isinstance(instruction['roles'], dict):
+        return {'valid': False, 'reason': 'roles must be an object'}
+    
+    # Validate each role
+    for role_name, role_def in instruction['roles'].items():
+        role_validation = validate_role(role_name, role_def)
+        if not role_validation['valid']:
+            return role_validation
+    
+    # Check for unexpected fields
+    allowed_fields = set(required_fields)
+    unexpected = set(instruction.keys()) - allowed_fields
+    if unexpected:
+        return {'valid': False, 'reason': f'Unexpected fields: {", ".join(unexpected)}'}
+    
+    return {'valid': True, 'reason': None}
+
+
+# ============================================================================
+# GET Functions
+# ============================================================================
+
+def seeds_groups_get(group_key: Optional[str] = None) -> Any:
+    """
+    Get group seed data from filesystem with validation wrapper.
     
     Args:
-        group_key: Optional group key to filter to specific group
+        group_key: Optional group key to filter. If None, returns all groups.
         
     Returns:
-        List of group seed entries with validation results
+        - If group_key is None: List of wrapped group objects with validation metadata
+        - If group_key is provided: Single wrapped group object or None if not found
     """
-    import os
+    if not SEED_BASE_PATH.exists():
+        raise FileNotFoundError(f"Seed base path does not exist: {SEED_BASE_PATH}")
     
-    seed_root = os.path.expanduser('~/code/conversations-examples')
-    if not os.path.exists(seed_root):
-        return []
+    all_groups = []
     
-    # Scan only first level directories
-    group_seeds = []
-    for entry in os.scandir(seed_root):
-        if entry.is_dir() and entry.name != '.git' and (not group_key or entry.name == group_key):
-            # Check for group_seed.json in this directory
-            group_seed_file = os.path.join(entry.path, 'group_seed.json')
-            content = ''
-            if os.path.exists(group_seed_file):
-                try:
-                    with open(group_seed_file, 'r', encoding='utf-8') as f:
-                        content = f.read()
-                except Exception:
-                    content = ''
+    # Scan all directories in base path
+    for item in SEED_BASE_PATH.iterdir():
+        if not item.is_dir():
+            continue
+        
+        group_file = item / 'group.json'
+        if not group_file.exists():
+            continue
+        
+        try:
+            with open(group_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+                group_data = json.loads(content)
             
-            group_seeds.append({
-                'group_key': entry.name,
-                'content': content
+            # Validate structure
+            validation = validate_group(group_data)
+            
+            # Wrap in metadata structure (like old implementation)
+            wrapped_group = {
+                'type': 'group',
+                'seed_key': group_data.get('group_key'),
+                'json': group_data,
+                'include': validation['valid'],
+                'valid': validation['valid'],
+                'error': None if validation['valid'] else f"group.json validation error: {validation['reason']}"
+            }
+            
+            all_groups.append(wrapped_group)
+        except (json.JSONDecodeError, IOError) as e:
+            # Include invalid entries with error information
+            all_groups.append({
+                'type': 'group',
+                'seed_key': item.name,
+                'json': None,
+                'include': False,
+                'valid': False,
+                'error': f'Error reading group.json: {str(e)}'
             })
     
-    # Process and validate the group seeds
-    return extract_groups_seed_data(group_seeds)
+    # Filter by group_key if provided
+    if group_key is not None:
+        matching_groups = [g for g in all_groups if g.get('seed_key') == group_key]
+        if len(matching_groups) == 0:
+            return []
+        if len(matching_groups) > 1:
+            raise ValueError(f"Multiple groups found with group_key '{group_key}' - key is not unique")
+        return [matching_groups[0]]
+    
+    return all_groups
 
 
-def seeds_members_get(group_key: str) -> List[Dict[str, Any]]:
+def seeds_members_get(group_key: str, member_key: Optional[str] = None) -> Any:
     """
-    Get members seed data from a specific group directory in ~/code/conversations-examples.
-    The directory should contain a members_seed.json file.
+    Get members seed data from filesystem with validation wrapper.
     
     Args:
-        group_key: Required group key
+        group_key: Group key (required)
+        member_key: Optional member key to filter. If None, returns all members.
         
     Returns:
-        List with single member seed entry with validation results, or empty list if not found
+        - If member_key is None: List containing single wrapped object with all members array
+        - If member_key is provided: List containing single wrapped object with single member or empty list if not found
     """
-    import os
+    group_dir = SEED_BASE_PATH / group_key
+    if not group_dir.exists():
+        # Create the directory if it doesn't exist
+        group_dir.mkdir(parents=True, exist_ok=True)
     
-    seed_root = os.path.expanduser('~/code/conversations-examples')
-    if not os.path.exists(seed_root):
+    members_file = group_dir / 'members.json'
+    if not members_file.exists():
+        # Return empty array if file doesn't exist
         return []
     
-    # Check for members_seed.json in the group directory
-    group_dir = os.path.join(seed_root, group_key)
-    if not os.path.isdir(group_dir):
-        return []
-    
-    members_seed_file = os.path.join(group_dir, 'members_seed.json')
-    if not os.path.exists(members_seed_file):
-        return []
-    
-    # Read the file content
-    content = ''
     try:
-        with open(members_seed_file, 'r', encoding='utf-8') as f:
+        with open(members_file, 'r', encoding='utf-8') as f:
             content = f.read()
-    except Exception:
-        content = ''
+            members_data = json.loads(content)
+    except (json.JSONDecodeError, IOError) as e:
+        # Return wrapped error structure
+        return [{
+            'type': 'members',
+            'seed_key': group_key,
+            'json': None,
+            'include': False,
+            'valid': False,
+            'error': f'Error reading members.json: {str(e)}'
+        }]
     
-    members_seed = {
-        'group_key': group_key,
-        'content': content
-    }
+    if not isinstance(members_data, list):
+        return [{
+            'type': 'members',
+            'seed_key': group_key,
+            'json': None,
+            'include': False,
+            'valid': False,
+            'error': 'members.json must contain an array'
+        }]
     
-    # Process and validate the members seed
-    return extract_members_seed_data(members_seed)
+    # Validate all members
+    all_valid = True
+    error_msg = None
+    for idx, member in enumerate(members_data):
+        validation = validate_member(member)
+        if not validation['valid']:
+            all_valid = False
+            error_msg = f"Member {idx}: {validation['reason']}"
+            break
+    
+    # Filter by member_key if provided
+    if member_key is not None:
+        matching_members = [m for m in members_data if m.get('member_key') == member_key]
+        if len(matching_members) == 0:
+            return []
+        if len(matching_members) > 1:
+            raise ValueError(f"Multiple members found with member_key '{member_key}' - key is not unique")
+        
+        # Return wrapped structure with single member
+        return [{
+            'type': 'members',
+            'seed_key': group_key,
+            'json': matching_members[0],
+            'include': all_valid,
+            'valid': all_valid,
+            'error': error_msg
+        }]
+    
+    # Return wrapped structure with all members
+    return [{
+        'type': 'members',
+        'seed_key': group_key,
+        'json': members_data,
+        'include': all_valid,
+        'valid': all_valid,
+        'error': error_msg
+    }]
 
 
-def seeds_instructions_get(group_key: str, instructions_key: str = None) -> List[Dict[str, Any]]:
+def seeds_instructions_get(group_key: str, instruction_key: Optional[str] = None) -> Any:
     """
-    Get instructions seed data from a specific group directory in ~/code/conversations-examples.
-    Instructions are located in [group_key]/instructions/[instructions_key]/ folders.
-    Each instruction folder contains: instructions.md, feedback.json, info.json
+    Get instructions seed data from filesystem with validation wrapper.
     
     Args:
-        group_key: Required group key
-        instructions_key: Optional instruction key to filter to specific instruction
+        group_key: Group key (required)
+        instruction_key: Optional instruction key to filter. If None, returns all instructions.
         
     Returns:
-        List of instruction seed entries with validation results
+        - List of wrapped instruction objects with validation metadata
     """
-    import os
+    group_dir = SEED_BASE_PATH / group_key
+    if not group_dir.exists():
+        # Create the directory if it doesn't exist
+        group_dir.mkdir(parents=True, exist_ok=True)
     
-    seed_root = os.path.expanduser('~/code/conversations-examples')
-    if not os.path.exists(seed_root):
+    instructions_file = group_dir / 'instructions.json'
+    if not instructions_file.exists():
+        # Return empty array if file doesn't exist
         return []
     
-    # Check for instructions directory in the group
-    instructions_dir = os.path.join(seed_root, group_key, 'instructions')
-    if not os.path.isdir(instructions_dir):
-        return []
+    try:
+        with open(instructions_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+            instructions_data = json.loads(content)
+    except (json.JSONDecodeError, IOError) as e:
+        return [{
+            'type': 'instruction',
+            'seed_key': group_key,
+            'json': None,
+            'include': False,
+            'valid': False,
+            'error': f'Error reading instructions.json: {str(e)}'
+        }]
     
-    # Scan instruction folders
-    instructions_seeds = []
-    for entry in os.scandir(instructions_dir):
-        if entry.is_dir():
-            # Filter by instructions_key if provided
-            if instructions_key and entry.name != instructions_key:
-                continue
-            
-            # Read the three required files
-            instructions_file = os.path.join(entry.path, 'instructions.md')
-            feedback_file = os.path.join(entry.path, 'feedback.json')
-            info_file = os.path.join(entry.path, 'info.json')
-            
-            # Check if all three files exist
-            if not (os.path.exists(instructions_file) and 
-                    os.path.exists(feedback_file) and 
-                    os.path.exists(info_file)):
-                continue
-            
-            # Read file contents
-            instructions_content = ''
-            feedback_content = ''
-            info_content = ''
-            
-            try:
-                with open(instructions_file, 'r', encoding='utf-8') as f:
-                    instructions_content = f.read()
-            except Exception:
-                instructions_content = ''
-            
-            try:
-                with open(feedback_file, 'r', encoding='utf-8') as f:
-                    feedback_content = f.read()
-            except Exception:
-                feedback_content = ''
-            
-            try:
-                with open(info_file, 'r', encoding='utf-8') as f:
-                    info_content = f.read()
-            except Exception:
-                info_content = ''
-            
-            instructions_seeds.append({
-                'group_key': group_key,
-                'instructions_key': entry.name,
-                'instructions_content': instructions_content,
-                'feedback_content': feedback_content,
-                'info_content': info_content
-            })
+    if not isinstance(instructions_data, list):
+        return [{
+            'type': 'instruction',
+            'seed_key': group_key,
+            'json': None,
+            'include': False,
+            'valid': False,
+            'error': 'instructions.json must contain an array'
+        }]
     
-    # Process and validate the instructions seeds
-    return extract_instructions_seed_data(instructions_seeds)
+    # Wrap each instruction individually with validation metadata
+    wrapped_instructions = []
+    for instruction in instructions_data:
+        validation = validate_instruction(instruction)
+        
+        wrapped_instruction = {
+            'type': 'instruction',
+            'seed_key': group_key,
+            'json': instruction,
+            'include': validation['valid'],
+            'valid': validation['valid'],
+            'error': None if validation['valid'] else f"Instruction validation error: {validation['reason']}"
+        }
+        
+        wrapped_instructions.append(wrapped_instruction)
+    
+    # Filter by instruction_key if provided
+    if instruction_key is not None:
+        matching_instructions = [i for i in wrapped_instructions if i['json'] and i['json'].get('instruction_key') == instruction_key]
+        if len(matching_instructions) == 0:
+            return []
+        if len(matching_instructions) > 1:
+            raise ValueError(f"Multiple instructions found with instruction_key '{instruction_key}' - key is not unique")
+        return matching_instructions
+    
+    return wrapped_instructions
 
+
+# ============================================================================
+# SET Functions (Create or Update)
+# ============================================================================
 
 def seeds_groups_set(group_key: str, group_data: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Save/update group seed data to filesystem.
-    Creates or overwrites group_seed.json in ~/code/conversations-examples/{group_key}/
+    Create or update group seed data on filesystem.
     
     Args:
-        group_key: Required group key
-        group_data: Group data to save
+        group_key: Group key (used for directory name)
+        group_data: Group data to save (must include group_key, group_name, group_description)
         
     Returns:
-        Dictionary with file path and group_key
+        Dict with file_path and operation info
     """
-    import os
+    # Validate group data
+    validation = validate_group(group_data)
+    if not validation['valid']:
+        raise ValueError(f"Invalid group data: {validation['reason']}")
     
-    # Create directory path
-    group_dir = os.path.expanduser(os.path.join('~/code/conversations-examples', group_key))
-    os.makedirs(group_dir, exist_ok=True)
+    # Ensure group_key matches
+    if group_data.get('group_key') != group_key:
+        raise ValueError(f"group_key mismatch: URL has '{group_key}' but data has '{group_data.get('group_key')}'")
     
-    # Write group_seed.json
-    group_seed_file = os.path.join(group_dir, 'group_seed.json')
-    with open(group_seed_file, 'w', encoding='utf-8') as f:
-        json.dump(group_data, f, indent=2, ensure_ascii=False)
+    # Create directory if it doesn't exist
+    group_dir = SEED_BASE_PATH / group_key
+    group_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Write group.json
+    group_file = group_dir / 'group.json'
+    was_existing = group_file.exists()
+    with open(group_file, 'w', encoding='utf-8') as f:
+        json.dump(group_data, f, indent=4, ensure_ascii=False)
     
     return {
-        'file': group_seed_file,
-        'group_key': group_key
+        'file_path': str(group_file),
+        'operation': 'updated' if was_existing else 'created'
     }
 
 
-def seeds_instructions_set(group_key: str, instructions_key: str, instruction_data: Dict[str, Any]) -> Dict[str, Any]:
+def seeds_members_set(group_key: str, member_key: str, member_data: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Save/update instruction seed data to filesystem.
-    Creates or overwrites instructions.md, feedback.json, and info.json files.
+    Create or update member seed data in members.json array.
     
     Args:
-        group_key: Required group key
-        instructions_key: Required instruction key
-        instruction_data: Dictionary with keys: instructions, feedback, info
+        group_key: Group key
+        member_key: Member key (used to find/create entry)
+        member_data: Member data to save
         
     Returns:
-        Dictionary with directory path, files created, group_key, and instructions_key
+        Dict with file_path and operation info
     """
-    import os
+    # Validate member data
+    validation = validate_member(member_data)
+    if not validation['valid']:
+        raise ValueError(f"Invalid member data: {validation['reason']}")
     
-    # Create directory path
-    instruction_dir = os.path.expanduser(
-        os.path.join('~/code/conversations-examples', group_key, 'instructions', instructions_key)
-    )
-    os.makedirs(instruction_dir, exist_ok=True)
+    # Ensure member_key matches
+    if member_data.get('member_key') != member_key:
+        raise ValueError(f"member_key mismatch: URL has '{member_key}' but data has '{member_data.get('member_key')}'")
     
-    # Write instructions.md
-    instructions_file = os.path.join(instruction_dir, 'instructions.md')
-    with open(instructions_file, 'w', encoding='utf-8') as f:
-        f.write(instruction_data['instructions'])
+    group_dir = SEED_BASE_PATH / group_key
+    if not group_dir.exists():
+        raise FileNotFoundError(f"Group directory does not exist: {group_dir}")
     
-    # Write feedback.json
-    feedback_file = os.path.join(instruction_dir, 'feedback.json')
-    with open(feedback_file, 'w', encoding='utf-8') as f:
-        json.dump(instruction_data['feedback_def'], f, indent=2, ensure_ascii=False)
+    members_file = group_dir / 'members.json'
     
-    # Write info.json
-    info_file = os.path.join(instruction_dir, 'info.json')
-    with open(info_file, 'w', encoding='utf-8') as f:
-        json.dump(instruction_data['info'], f, indent=2, ensure_ascii=False)
-    
-    return {
-        'directory': instruction_dir,
-        'files_created': ['instructions.md', 'feedback.json', 'info.json'],
-        'group_key': group_key,
-        'instructions_key': instructions_key
-    }
-
-
-def seeds_instructions_delete(group_key: str, instructions_key: str) -> Dict[str, Any]:
-    """
-    Delete instruction seed data from filesystem.
-    Removes the entire directory: ~/code/conversations-examples/{group_key}/instructions/{instructions_key}/
-    
-    Args:
-        group_key: Required group key
-        instructions_key: Required instruction key
+    # Read existing members or create empty array
+    if members_file.exists():
+        with open(members_file, 'r', encoding='utf-8') as f:
+            members_data = json.load(f)
         
-    Returns:
-        Dictionary with deleted directory path, group_key, and instructions_key
-    """
-    import os
-    import shutil
-    
-    # Build directory path
-    instruction_dir = os.path.expanduser(
-        os.path.join('~/code/conversations-examples', group_key, 'instructions', instructions_key)
-    )
-    
-    # Check if directory exists
-    if os.path.exists(instruction_dir):
-        # Remove the entire directory
-        shutil.rmtree(instruction_dir)
-        deleted = True
+        if not isinstance(members_data, list):
+            raise ValueError("members.json must contain an array")
     else:
-        deleted = False
+        members_data = []
+    
+    # Find existing member by key
+    existing_index = None
+    for i, member in enumerate(members_data):
+        if member.get('member_key') == member_key:
+            if existing_index is not None:
+                raise ValueError(f"Multiple members found with member_key '{member_key}' - key is not unique")
+            existing_index = i
+    
+    # Update or append
+    operation = 'updated' if existing_index is not None else 'created'
+    if existing_index is not None:
+        members_data[existing_index] = member_data
+    else:
+        members_data.append(member_data)
+    
+    # Write back to file
+    with open(members_file, 'w', encoding='utf-8') as f:
+        json.dump(members_data, f, indent=4, ensure_ascii=False)
     
     return {
-        'directory': instruction_dir,
-        'group_key': group_key,
-        'instructions_key': instructions_key,
-        'deleted': deleted
+        'file_path': str(members_file),
+        'operation': operation
     }
+
+
+def seeds_instructions_set(group_key: str, instruction_key: str, instruction_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Create or update instruction seed data in instructions.json array.
+    
+    Args:
+        group_key: Group key
+        instruction_key: Instruction key (used to find/create entry)
+        instruction_data: Instruction data to save
+        
+    Returns:
+        Dict with file_path and operation info
+    """
+    # Validate instruction data
+    validation = validate_instruction(instruction_data)
+    if not validation['valid']:
+        raise ValueError(f"Invalid instruction data: {validation['reason']}")
+    
+    # Ensure instruction_key matches
+    if instruction_data.get('instruction_key') != instruction_key:
+        raise ValueError(f"instruction_key mismatch: URL has '{instruction_key}' but data has '{instruction_data.get('instruction_key')}'")
+    
+    group_dir = SEED_BASE_PATH / group_key
+    if not group_dir.exists():
+        raise FileNotFoundError(f"Group directory does not exist: {group_dir}")
+    
+    instructions_file = group_dir / 'instructions.json'
+    
+    # Read existing instructions or create empty array
+    if instructions_file.exists():
+        with open(instructions_file, 'r', encoding='utf-8') as f:
+            instructions_data = json.load(f)
+        
+        if not isinstance(instructions_data, list):
+            raise ValueError("instructions.json must contain an array")
+    else:
+        instructions_data = []
+    
+    # Find existing instruction by key
+    existing_index = None
+    for i, instruction in enumerate(instructions_data):
+        if instruction.get('instruction_key') == instruction_key:
+            if existing_index is not None:
+                raise ValueError(f"Multiple instructions found with instruction_key '{instruction_key}' - key is not unique")
+            existing_index = i
+    
+    # Update or append
+    operation = 'updated' if existing_index is not None else 'created'
+    if existing_index is not None:
+        instructions_data[existing_index] = instruction_data
+    else:
+        instructions_data.append(instruction_data)
+    
+    # Write back to file
+    with open(instructions_file, 'w', encoding='utf-8') as f:
+        json.dump(instructions_data, f, indent=4, ensure_ascii=False)
+    
+    return {
+        'file_path': str(instructions_file),
+        'operation': operation
+    }
+
+
+# ============================================================================
+# DELETE Functions
+# ============================================================================
+
+def seeds_members_delete(group_key: str, member_key: str) -> Dict[str, Any]:
+    """
+    Delete member from members.json array.
+    
+    Args:
+        group_key: Group key
+        member_key: Member key to delete
+        
+    Returns:
+        Dict with file_path and operation info
+    """
+    group_dir = SEED_BASE_PATH / group_key
+    if not group_dir.exists():
+        raise FileNotFoundError(f"Group directory does not exist: {group_dir}")
+    
+    members_file = group_dir / 'members.json'
+    if not members_file.exists():
+        raise FileNotFoundError(f"members.json does not exist in {group_dir}")
+    
+    with open(members_file, 'r', encoding='utf-8') as f:
+        members_data = json.load(f)
+    
+    if not isinstance(members_data, list):
+        raise ValueError("members.json must contain an array")
+    
+    # Find and remove member by key
+    found_index = None
+    for i, member in enumerate(members_data):
+        if member.get('member_key') == member_key:
+            if found_index is not None:
+                raise ValueError(f"Multiple members found with member_key '{member_key}' - key is not unique")
+            found_index = i
+    
+    if found_index is None:
+        raise ValueError(f"Member with member_key '{member_key}' not found")
+    
+    members_data.pop(found_index)
+    
+    # Write back to file
+    with open(members_file, 'w', encoding='utf-8') as f:
+        json.dump(members_data, f, indent=4, ensure_ascii=False)
+    
+    return {
+        'file_path': str(members_file),
+        'operation': 'deleted',
+        'member_key': member_key
+    }
+
+
+def seeds_instructions_delete(group_key: str, instruction_key: str) -> Dict[str, Any]:
+    """
+    Delete instruction from instructions.json array.
+    
+    Args:
+        group_key: Group key
+        instruction_key: Instruction key to delete
+        
+    Returns:
+        Dict with file_path and operation info
+    """
+    group_dir = SEED_BASE_PATH / group_key
+    if not group_dir.exists():
+        raise FileNotFoundError(f"Group directory does not exist: {group_dir}")
+    
+    instructions_file = group_dir / 'instructions.json'
+    if not instructions_file.exists():
+        raise FileNotFoundError(f"instructions.json does not exist in {group_dir}")
+    
+    with open(instructions_file, 'r', encoding='utf-8') as f:
+        instructions_data = json.load(f)
+    
+    if not isinstance(instructions_data, list):
+        raise ValueError("instructions.json must contain an array")
+    
+    # Find and remove instruction by key
+    found_index = None
+    for i, instruction in enumerate(instructions_data):
+        if instruction.get('instruction_key') == instruction_key:
+            if found_index is not None:
+                raise ValueError(f"Multiple instructions found with instruction_key '{instruction_key}' - key is not unique")
+            found_index = i
+    
+    if found_index is None:
+        raise ValueError(f"Instruction with instruction_key '{instruction_key}' not found")
+    
+    instructions_data.pop(found_index)
+    
+    # Write back to file
+    with open(instructions_file, 'w', encoding='utf-8') as f:
+        json.dump(instructions_data, f, indent=4, ensure_ascii=False)
+    
+    return {
+        'file_path': str(instructions_file),
+        'operation': 'deleted',
+        'instruction_key': instruction_key
+    }
+

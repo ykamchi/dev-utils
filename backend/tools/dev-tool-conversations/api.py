@@ -9,8 +9,6 @@ State is ephemeral and lives only in memory or is proxied upstream.
 
 from time import sleep
 from flask import Blueprint, jsonify, request
-import os
-import json
 import requests
 from requests.exceptions import RequestException
 
@@ -38,48 +36,49 @@ def register_apis(app, base_path: str):
     register_instructions_apis(app, base_path)
     register_conversations_apis(app, base_path)
     register_seed_data_apis(app, base_path)
+    register_ai_apis(app, base_path)
 
 
 # System API endpoints
 #         
 #
 def register_system_apis(app, base_path: str):
-    @app.route(f"{base_path}/status_queue_state", methods=["POST"])
-    def status_queue_state():
+    @app.route(f"{base_path}/queue_state", methods=["POST"])
+    def queue_state():
         """
-        Proxy to upstream /api/status_queue_state (POST) to get the current queue state.
+        Proxy to upstream /api/queue/state (POST) to get the current queue state.
         """
         try:
-            upstream_resp = _proxy_post('/api/status_queue_state', {})
+            upstream_resp = _proxy_post('/api/queue/state', {})
             return jsonify(upstream_resp)
         except RequestException:
-            app.logger.exception('Failed to contact upstream /api/status_queue_state')
-            return jsonify({'success': False, 'error': 'Failed to contact upstream status_queue_state service'}), 502
+            app.logger.exception('Failed to contact upstream /api/queue/state')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream queue/state service'}), 502
     
 
-    @app.route(f"{base_path}/status_queue_pause", methods=["POST"])
+    @app.route(f"{base_path}/queue_pause", methods=["POST"])
     def queue_pause():
         """
-        Proxy to upstream /api/status_queue_pause (POST) to pause the queue.
+        Proxy to upstream /api/queue/pause (POST) to pause the queue.
         """
         try:
-            upstream_resp = _proxy_post('/api/status_queue_pause', {})
+            upstream_resp = _proxy_post('/api/queue/pause', {})
             return jsonify(upstream_resp)
         except RequestException:
-            app.logger.exception('Failed to contact upstream /api/status_queue_pause')
-            return jsonify({'success': False, 'error': 'Failed to contact upstream status_queue_pause service'}), 502      
+            app.logger.exception('Failed to contact upstream /api/queue/pause')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream queue/pause service'}), 502      
     
-    @app.route(f"{base_path}/status_queue_resume", methods=["POST"])
+    @app.route(f"{base_path}/queue_resume", methods=["POST"])
     def queue_resume():
         """
-        Proxy to upstream /api/status_queue_resume (POST) to resume the queue.
+        Proxy to upstream /api/queue/resume (POST) to resume the queue.
         """
         try:
-            upstream_resp = _proxy_post('/api/status_queue_resume', {})
+            upstream_resp = _proxy_post('/api/queue/resume', {})
             return jsonify(upstream_resp)
         except RequestException:
-            app.logger.exception('Failed to contact upstream /api/status_queue_resume')
-            return jsonify({'success': False, 'error': 'Failed to contact upstream status_queue_resume service'}), 502 
+            app.logger.exception('Failed to contact upstream /api/queue/resume')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream queue/resume service'}), 502 
         
 
     @app.route(f"{base_path}/status_conversation_timeline", methods=["POST"])
@@ -287,23 +286,13 @@ def register_instructions_apis(app, base_path: str):
 
             if not payload.get('group_id'):
                 return jsonify({'success': False, 'error': 'missing group_id'}), 400
-            
-            if not payload.get('instructions'):
-                return jsonify({'success': False, 'error': 'missing instructions'}), 400
-            
-            if not payload.get('feedback_def'):
-                return jsonify({'success': False, 'error': 'missing feedback_def'}), 400
-            
+                        
             if not payload.get('info'):
                 return jsonify({'success': False, 'error': 'missing info'}), 400
         
             upstream_payload = {
                 'group_id': payload.get('group_id'),
-                'instructions_key': payload.get('instructions_key'),
-                'instructions': payload.get('instructions'),
-                'feedback_def': payload.get('feedback_def'),
                 'info': payload.get('info'),
-                'instructions_key': payload.get('instructions_key')
             }
             
             return jsonify(_proxy_post('/api/instructions/add', upstream_payload))
@@ -323,24 +312,12 @@ def register_instructions_apis(app, base_path: str):
             
             if not payload.get('group_id'):
                 return jsonify({'success': False, 'error': 'missing group_id'}), 400
-            
-            if not payload.get('instructions_key'):
-                return jsonify({'success': False, 'error': 'missing instructions_key'}), 400
-            
-            if not payload.get('instructions'):
-                return jsonify({'success': False, 'error': 'missing instructions'}), 400
-            
-            if not payload.get('feedback_def'):
-                return jsonify({'success': False, 'error': 'missing feedback_def'}), 400
-            
+                        
             if not payload.get('info'):
                 return jsonify({'success': False, 'error': 'missing info'}), 400
             
             upstream_payload = {
                 'group_id': payload.get('group_id'),
-                'instructions_key': payload.get('instructions_key'),
-                'instructions': payload.get('instructions'),
-                'feedback_def': payload.get('feedback_def'),
                 'info': payload.get('info')
             }
             
@@ -390,12 +367,12 @@ def register_members_apis(app, base_path: str):
             if not payload.get('group_id'):
                 return jsonify({'success': False, 'error': 'missing group_id'}), 400
             
-            if not payload.get('members_profiles'):
+            if not payload.get('members_data'):
                 return jsonify({'success': False, 'error': 'missing members'}), 400
         
             upstream_payload = {
                 'group_id': payload.get('group_id'),
-                'members_profiles': payload.get('members_profiles')
+                'members_data': payload.get('members_data')
             }   
 
             
@@ -416,12 +393,12 @@ def register_members_apis(app, base_path: str):
             if not payload.get('group_id'):
                 return jsonify({'success': False, 'error': 'missing group_id'}), 400
             
-            if not payload.get('member_nick_name'):
-                return jsonify({'success': False, 'error': 'missing member_nick_name'}), 400
+            if not payload.get('member_name'):
+                return jsonify({'success': False, 'error': 'missing member_name'}), 400
                     
             upstream_payload = {
                 'group_id': payload.get('group_id'),
-                'member_nick_name': payload.get('member_nick_name'),
+                'member_name': payload.get('member_name'),
             }   
 
             if payload.get('conversation_type'):
@@ -430,7 +407,7 @@ def register_members_apis(app, base_path: str):
             if payload.get('only_last'):
                 upstream_payload['only_last'] = payload.get('only_last')
 
-            return jsonify(_proxy_post('/api/members/conversations/list', upstream_payload))
+            return jsonify(_proxy_post('/api/conversations/list', upstream_payload))
         
         except RequestException:
             app.logger.exception('Failed to contact upstream /api/members/conversations/list')
@@ -452,17 +429,31 @@ def register_conversations_apis(app, base_path: str):
         if not payload.get('group_id'):
             return jsonify({'success': False, 'error': 'missing group_id'}), 400
         
-        if not payload.get('instructions_key'):
-            return jsonify({'success': False, 'error': 'missing instructions_key'}), 400
+        if not payload.get('info'):
+            return jsonify({'success': False, 'error': 'missing info'}), 400
+        
+        if not payload.get('participants'):
+            return jsonify({'success': False, 'error': 'missing participants'}), 400
+        
+        # Validate participants is an array
+        participants = payload.get('participants')
+        if not isinstance(participants, list):
+            return jsonify({'success': False, 'error': 'participants must be an array'}), 400
+        
+        # Validate each participant has required fields
+        for participant in participants:
+            if not isinstance(participant, dict):
+                return jsonify({'success': False, 'error': 'each participant must be an object'}), 400
+            if 'member_name' not in participant:
+                return jsonify({'success': False, 'error': 'each participant must have member_name'}), 400
+            if 'instruction_role' not in participant:
+                return jsonify({'success': False, 'error': 'each participant must have instruction_role'}), 400
 
         try:
             conversation_req = {
                 'group_id': payload.get('group_id'),
-                'participant_members_nick_names': payload.get('participant_members_nick_names'),
-                'instructions_key': payload.get('instructions_key'),
-                'conversation_type': payload.get('conversation_type'),
-                'max_messages': payload.get('max_messages', 10),
-                'debug': payload.get('debug', []),
+                'info': payload.get('info'),
+                'participants': participants
             }
             
             upstream_resp = _proxy_post('/api/conversations/add', conversation_req)
@@ -495,16 +486,18 @@ def register_conversations_apis(app, base_path: str):
 
 # Seed Data API endpoints
 # These APIs read seed data from the local filesystem for development purposes.
+# New structure uses group.json, members.json, instructions.json files.
 #
 def register_seed_data_apis(app, base_path: str):
     @app.route(f"{base_path}/seeds_groups_get", methods=["PUT"])
     def seeds_groups_get():
         """
-        Get group seed data from all directories in ~/code/conversations-examples.
-        Each directory should contain a group_seed.json file.
+        Get group seed data from ~/code/conversations-examples.
+        Each directory should contain a group.json file.
         
-        Expects JSON payload: {"group_key": ...} (optional - if provided, filters to specific group)
-        Returns list of group seed entries with validation results.
+        Expects JSON payload: {"group_key": ...} (optional)
+        - If group_key is None: returns array of all groups
+        - If group_key is provided: returns single group object or null if not found
         """
         try:
             sleep(sleep_time)
@@ -513,7 +506,6 @@ def register_seed_data_apis(app, base_path: str):
             payload = request.get_json(force=True)
             group_key = payload.get('group_key')
             
-            # Use utility function for business logic
             seeding_data = seed_utils.seeds_groups_get(group_key)
             
             return jsonify({'success': True, 'data': seeding_data})
@@ -524,11 +516,13 @@ def register_seed_data_apis(app, base_path: str):
     @app.route(f"{base_path}/seeds_members_get", methods=["PUT"])
     def seeds_members_get():
         """
-        Get members seed data from a specific group directory in ~/code/conversations-examples.
-        The directory should contain a members_seed.json file.
+        Get members seed data from members.json in group directory.
         
-        Expects JSON payload: {"group_key": ...} (required)
-        Returns single members seed entry with validation results.
+        Expects JSON payload: {"group_key": ..., "member_key": ...} 
+        - group_key is required
+        - member_key is optional
+        - If member_key is None: returns array of all members
+        - If member_key is provided: returns single member object or null if not found
         """
         try:
             sleep(sleep_time)
@@ -536,12 +530,12 @@ def register_seed_data_apis(app, base_path: str):
             
             payload = request.get_json(force=True)
             group_key = payload.get('group_key')
+            member_key = payload.get('member_key')
             
             if not group_key:
                 return jsonify({'success': False, 'error': 'missing group_key'}), 400
             
-            # Use utility function for business logic
-            seeding_data = seed_utils.seeds_members_get(group_key)
+            seeding_data = seed_utils.seeds_members_get(group_key, member_key)
             
             return jsonify({'success': True, 'data': seeding_data})
         except Exception as e:
@@ -551,15 +545,13 @@ def register_seed_data_apis(app, base_path: str):
     @app.route(f"{base_path}/seeds_instructions_get", methods=["PUT"])
     def seeds_instructions_get():
         """
-        Get instructions seed data from a specific group directory in ~/code/conversations-examples.
-        Instructions are located in [group_key]/instructions/[instructions_key]/ folders.
-        Each instruction folder contains: instructions.md, feedback.json, info.json
+        Get instructions seed data from instructions.json in group directory.
         
-        Expects JSON payload: {"group_key": ..., "instructions_key": ...} 
+        Expects JSON payload: {"group_key": ..., "instruction_key": ...} 
         - group_key is required
-        - instructions_key is optional (if None, returns all instructions for the group)
-        
-        Returns list of instruction seed entries with validation results.
+        - instruction_key is optional
+        - If instruction_key is None: returns array of all instructions
+        - If instruction_key is provided: returns single instruction object or null if not found
         """
         try:
             sleep(sleep_time)
@@ -567,30 +559,31 @@ def register_seed_data_apis(app, base_path: str):
             
             payload = request.get_json(force=True)
             group_key = payload.get('group_key')
-            instructions_key = payload.get('instructions_key')
+            instruction_key = payload.get('instruction_key')
             
             if not group_key:
                 return jsonify({'success': False, 'error': 'missing group_key'}), 400
             
-            # Use utility function for business logic
-            seeding_data = seed_utils.seeds_instructions_get(group_key, instructions_key)
+            seeding_data = seed_utils.seeds_instructions_get(group_key, instruction_key)
             
             return jsonify({'success': True, 'data': seeding_data})
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
 
+
     @app.route(f"{base_path}/seeds_groups_set", methods=["PUT"])
     def seeds_groups_set():
         """
-        Save/update group seed data to filesystem.
-        Creates or overwrites group_seed.json in ~/code/conversations-examples/{group_key}/
+        Create or update group seed data in group.json file.
         
         Expects JSON payload: {
             "group_key": "...",
-            "group_data": {...}
+            "group_data": {
+                "group_key": "...",
+                "group_name": "...",
+                "group_description": "..."
+            }
         }
-        
-        Returns success status and file path.
         """
         try:
             sleep(sleep_time)
@@ -605,8 +598,47 @@ def register_seed_data_apis(app, base_path: str):
             if not group_data:
                 return jsonify({'success': False, 'error': 'missing group_data'}), 400
             
-            # Use utility function for business logic
             result = seed_utils.seeds_groups_set(group_key, group_data)
+            
+            return jsonify({'success': True, 'data': result})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+
+    @app.route(f"{base_path}/seeds_members_set", methods=["PUT"])
+    def seeds_members_set():
+        """
+        Create or update member seed data in members.json array.
+        Finds member by member_key and updates, or appends if not found.
+        
+        Expects JSON payload: {
+            "group_key": "...",
+            "member_key": "...",
+            "member_data": {
+                "member_key": "...",
+                "name": "...",
+                "roles": [...],
+                "profile": {...}
+            }
+        }
+        """
+        try:
+            sleep(sleep_time)
+            from . import seed_utils
+            
+            payload = request.get_json(force=True)
+            group_key = payload.get('group_key')
+            member_key = payload.get('member_key')
+            member_data = payload.get('member_data')
+            
+            if not group_key:
+                return jsonify({'success': False, 'error': 'missing group_key'}), 400
+            if not member_key:
+                return jsonify({'success': False, 'error': 'missing member_key'}), 400
+            if not member_data:
+                return jsonify({'success': False, 'error': 'missing member_data'}), 400
+            
+            result = seed_utils.seeds_members_set(group_key, member_key, member_data)
             
             return jsonify({'success': True, 'data': result})
         except Exception as e:
@@ -616,20 +648,20 @@ def register_seed_data_apis(app, base_path: str):
     @app.route(f"{base_path}/seeds_instructions_set", methods=["PUT"])
     def seeds_instructions_set():
         """
-        Save/update instruction seed data to filesystem.
-        Creates or overwrites instructions.md, feedback.json, and info.json files.
+        Create or update instruction seed data in instructions.json array.
+        Finds instruction by instruction_key and updates, or appends if not found.
         
         Expects JSON payload: {
             "group_key": "...",
-            "instructions_key": "...",
+            "instruction_key": "...",
             "instruction_data": {
-                "instructions": "...",
-                "feedback": {...},
-                "info": {...}
+                "instruction_key": "...",
+                "name": "...",
+                "description": "...",
+                "max_turns": ...,
+                "roles": {...}
             }
         }
-        
-        Creates directory: ~/code/conversations-examples/{group_key}/instructions/{instructions_key}/
         """
         try:
             sleep(sleep_time)
@@ -637,26 +669,48 @@ def register_seed_data_apis(app, base_path: str):
             
             payload = request.get_json(force=True)
             group_key = payload.get('group_key')
-            instructions_key = payload.get('instructions_key')
+            instruction_key = payload.get('instruction_key')
             instruction_data = payload.get('instruction_data')
             
             if not group_key:
                 return jsonify({'success': False, 'error': 'missing group_key'}), 400
-            if not instructions_key:
-                return jsonify({'success': False, 'error': 'missing instructions_key'}), 400
+            if not instruction_key:
+                return jsonify({'success': False, 'error': 'missing instruction_key'}), 400
             if not instruction_data:
                 return jsonify({'success': False, 'error': 'missing instruction_data'}), 400
             
-            # Validate instruction_data structure
-            if 'instructions' not in instruction_data:
-                return jsonify({'success': False, 'error': 'missing instruction_data.instructions'}), 400
-            if 'feedback_def' not in instruction_data:
-                return jsonify({'success': False, 'error': 'missing instruction_data.feedback_def'}), 400
-            if 'info' not in instruction_data:
-                return jsonify({'success': False, 'error': 'missing instruction_data.info'}), 400
+            result = seed_utils.seeds_instructions_set(group_key, instruction_key, instruction_data)
             
-            # Use utility function for business logic
-            result = seed_utils.seeds_instructions_set(group_key, instructions_key, instruction_data)
+            return jsonify({'success': True, 'data': result})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+
+    @app.route(f"{base_path}/seeds_members_delete", methods=["PUT"])
+    def seeds_members_delete():
+        """
+        Delete member from members.json array.
+        Finds member by member_key and removes it.
+        
+        Expects JSON payload: {
+            "group_key": "...",
+            "member_key": "..."
+        }
+        """
+        try:
+            sleep(sleep_time)
+            from . import seed_utils
+            
+            payload = request.get_json(force=True)
+            group_key = payload.get('group_key')
+            member_key = payload.get('member_key')
+            
+            if not group_key:
+                return jsonify({'success': False, 'error': 'missing group_key'}), 400
+            if not member_key:
+                return jsonify({'success': False, 'error': 'missing member_key'}), 400
+            
+            result = seed_utils.seeds_members_delete(group_key, member_key)
             
             return jsonify({'success': True, 'data': result})
         except Exception as e:
@@ -666,15 +720,13 @@ def register_seed_data_apis(app, base_path: str):
     @app.route(f"{base_path}/seeds_instructions_delete", methods=["PUT"])
     def seeds_instructions_delete():
         """
-        Delete instruction seed data from filesystem.
-        Removes the entire directory and its contents.
+        Delete instruction from instructions.json array.
+        Finds instruction by instruction_key and removes it.
         
         Expects JSON payload: {
             "group_key": "...",
-            "instructions_key": "..."
+            "instruction_key": "..."
         }
-        
-        Deletes directory: ~/code/conversations-examples/{group_key}/instructions/{instructions_key}/
         """
         try:
             sleep(sleep_time)
@@ -682,16 +734,76 @@ def register_seed_data_apis(app, base_path: str):
             
             payload = request.get_json(force=True)
             group_key = payload.get('group_key')
-            instructions_key = payload.get('instructions_key')
+            instruction_key = payload.get('instruction_key')
             
             if not group_key:
                 return jsonify({'success': False, 'error': 'missing group_key'}), 400
-            if not instructions_key:
-                return jsonify({'success': False, 'error': 'missing instructions_key'}), 400
+            if not instruction_key:
+                return jsonify({'success': False, 'error': 'missing instruction_key'}), 400
             
-            # Use utility function for business logic
-            result = seed_utils.seeds_instructions_delete(group_key, instructions_key)
+            result = seed_utils.seeds_instructions_delete(group_key, instruction_key)
             
             return jsonify({'success': True, 'data': result})
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# AI API endpoints
+#
+#
+def register_ai_apis(app, base_path: str):
+    @app.route(f"{base_path}/ai_autocomplete", methods=["POST"])
+    def ai_autocomplete():
+        """
+        Proxy to upstream /api/ai/autocomplete (POST) for AI-powered autocomplete suggestions.
+        
+        Expects JSON payload: {
+            "full_text": "...",
+            "cursor_position": 123,
+            "left_fragment": "...",
+            "right_fragment": "...",
+            "context": {
+                "field": "group_name",
+                "operation": "create_group",
+                "existing_data": {...}
+            }
+        }
+        
+        Returns: {
+            "suggestion": {
+                "completion": "word"
+            }
+        }
+        """
+        try:
+            payload = request.get_json(force=True)
+            
+            if 'full_text' not in payload:
+                return jsonify({'success': False, 'error': 'missing full_text'}), 400
+            
+            if 'cursor_position' not in payload:
+                return jsonify({'success': False, 'error': 'missing cursor_position'}), 400
+            
+            if 'left_fragment' not in payload:
+                return jsonify({'success': False, 'error': 'missing left_fragment'}), 400
+            
+            if 'right_fragment' not in payload:
+                return jsonify({'success': False, 'error': 'missing right_fragment'}), 400
+                        
+            if 'context' not in payload:
+                return jsonify({'success': False, 'error': 'missing context'}), 400
+            
+            upstream_payload = {
+                'full_text': payload.get('full_text'),
+                'cursor_position': payload.get('cursor_position'),
+                'left_fragment': payload.get('left_fragment'),
+                'right_fragment': payload.get('right_fragment'),
+                'context': payload.get('context')
+            }
+            
+            upstream_resp = _proxy_post('/api/ai/autocomplete', upstream_payload)
+            return jsonify(upstream_resp)
+            
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/ai/autocomplete')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream ai/autocomplete service'}), 502

@@ -37,7 +37,7 @@ window.conversations.apiMembers.membersList = async function (spinnerContainer, 
 
 
 // Add members to group
-window.conversations.apiMembers.membersAdd = async function (spinnerContainer, groupId, membersProfiles) {
+window.conversations.apiMembers.membersAdd = async function (spinnerContainer, groupId, membersData) {
     // Show loading spinner while adding members
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: 'Adding members ...', size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
 
@@ -47,7 +47,7 @@ window.conversations.apiMembers.membersAdd = async function (spinnerContainer, g
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 group_id: groupId,
-                members_profiles: membersProfiles
+                members_data: membersData
             })
         });
 
@@ -80,7 +80,7 @@ window.conversations.apiConversations.membersConversationsList = async function 
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 group_id: groupId,
-                member_nick_name: memberName,
+                member_name: memberName,
                 conversation_type: conversationType,
                 only_last: onlyLast
             })

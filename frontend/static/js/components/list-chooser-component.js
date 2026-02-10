@@ -97,10 +97,10 @@
             };
 
             // Buttons
-            new window.ButtonComponent(buttonCol, '>', moveToTarget);
-            new window.ButtonComponent(buttonCol, '<', moveToSource);
-            new window.ButtonComponent(buttonCol, '>>', moveAllToTarget);
-            new window.ButtonComponent(buttonCol, '<<', moveAllToSource);
+            new window.ButtonComponent(buttonCol, { label: '>', onClick: moveToTarget });
+            new window.ButtonComponent(buttonCol, { label: '<', onClick: moveToSource });
+            new window.ButtonComponent(buttonCol, { label: '>>', onClick: moveAllToTarget });
+            new window.ButtonComponent(buttonCol, { label: '<<', onClick: moveAllToSource });
 
             // chooserWrapperColumn.appendChild(chooserWrapper);
             // this.container.appendChild(chooserWrapperColumn);

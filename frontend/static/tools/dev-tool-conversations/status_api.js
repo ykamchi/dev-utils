@@ -10,7 +10,7 @@ window.conversations.system_api.fetchQueueState = async function (spinnerContain
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: 'Getting queue state ...', size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
 
     try {
-        const resp = await fetch('/api/dev-tool-conversations/status_queue_state', {
+        const resp = await fetch('/api/dev-tool-conversations/queue_state', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({})
@@ -39,7 +39,7 @@ window.conversations.system_api.queuePause = async function (spinnerContainer) {
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: ' Pausing queue ...', size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
 
     try {
-        const resp = await fetch('/api/dev-tool-conversations/status_queue_pause', {
+        const resp = await fetch('/api/dev-tool-conversations/queue_pause', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({})
@@ -67,7 +67,7 @@ window.conversations.system_api.queueResume = async function (spinnerContainer) 
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: ' Resuming queue ...', size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
 
     try {
-        const resp = await fetch('/api/dev-tool-conversations/status_queue_resume', {
+        const resp = await fetch('/api/dev-tool-conversations/queue_resume', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({})

@@ -23,7 +23,7 @@
             const wrapper = window.conversations.utils.createDivContainer(this.container, 'conversations-card-wrapper');
             
             // Icon 
-            window.conversations.utils.createReadOnlyText(wrapper, `${window.conversations.CONVERSATION_TYPES_ICONS[this.instructions.info.conversation_type]}`, 'conversations-list-card-icon');
+            window.conversations.utils.createReadOnlyText(wrapper, `${window.conversations.CONVERSATION_TYPES_ICONS[this.conversation.info.conversation_type]}`, 'conversations-list-card-icon');
 
             // Info
             const info = window.conversations.utils.createDivContainer(wrapper, 'conversations-card-info');
@@ -32,7 +32,7 @@
             const firstLine = window.conversations.utils.createDivContainer(info, 'conversation-container-horizontal-space-between');
 
             // Member names
-            window.conversations.utils.createReadOnlyText(firstLine, this.conversation.participants, 'conversations-card-name');
+            window.conversations.utils.createReadOnlyText(firstLine, this.conversation.participants.map(p => p.member_name).join(", "), 'conversations-card-name');
 
             // Created at
             window.conversations.utils.createLabel(firstLine, Utils.formatDateTime(this.conversation.created_at), 'conversations-instructions-item-created-at');    
@@ -42,16 +42,20 @@
 
             // Feedback fields
             const leftSide = window.conversations.utils.createDivContainer(secondLine, 'conversation-container-horizontal');
+
+            // Get the participant data including the feedback and the feedback_def from the conversation
+            const participant = this.conversation.participants.find(p => p.member_name === this.member.name);
+            const feedback_def = this.conversation.info.roles[participant.instruction_role].feedback_def;
             
             // Feedback info
-            new window.conversations.ConversationFeedbackInfoComponent(leftSide, this.conversation.feedback, this.instructions, true, false);
+            new window.conversations.ConversationFeedbackInfoComponent(leftSide, participant.feedback, feedback_def, true, false);
 
             // Tags and metadata
             const rightSide = window.conversations.utils.createDivContainer(secondLine, 'conversation-field-container-vertical');
 
             const tagsDiv = window.conversations.utils.createDivContainer(rightSide, 'conversations-tags-container');
             // Conversation type
-            window.conversations.utils.createReadOnlyText(tagsDiv, this.instructions.info.name, 'conversations-badge-generic', this.instructions.info.description);
+            window.conversations.utils.createReadOnlyText(tagsDiv, this.conversation.info.name, 'conversations-badge-generic', this.conversation.info.description);
             window.conversations.utils.createReadOnlyText(tagsDiv, Utils.durationSecondsToHMS(this.conversation.status?.duration_seconds), 'conversations-badge-generic', 'Duration');
             window.conversations.utils.createReadOnlyText(tagsDiv, this.conversation.status?.message_count, 'conversations-badge-generic', 'Number of messages');
             window.conversations.utils.createReadOnlyText(tagsDiv, this.conversation.status?.state, 'conversations-badge-state-'+this.conversation.status?.state, 'State');
@@ -63,10 +67,10 @@
 
         async showConversationDetails() {
             new window.PopupComponent({
-                icon: window.conversations.CONVERSATION_TYPES_ICONS[this.instructions.info.conversation_type],
+                icon: window.conversations.CONVERSATION_TYPES_ICONS[this.conversation.info.conversation_type],
                 title: 'Conversation Details',
                 content: (container) => {
-                    new window.conversations.MemberConversationDetailsComponent(container, this.conversation, this.member, this.instructions);
+                    new window.conversations.MemberConversationDetailsComponent(container, this.member, this.conversation);
                 },
                 closable: true,
                 width: '1200px',
