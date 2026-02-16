@@ -606,7 +606,7 @@ def register_seed_data_apis(app, base_path: str):
             if group_id and group_key != 'templates':
                 upstream_resp = _proxy_post('/api/instructions/list', {'group_id': group_id})
                 if upstream_resp.get('success') and upstream_resp.get('data'):
-                    existing_keys = {i['info']['instruction_key'] for i in upstream_resp['data'] if i.get('info') and i['info'].get('instruction_key')}
+                    existing_keys = {i['instruction_key'] for i in upstream_resp['data'] if i.get('instruction_key')}
             
             seeding_data = seed_utils.seeds_instructions_get(group_key, instruction_key, existing_keys)
             

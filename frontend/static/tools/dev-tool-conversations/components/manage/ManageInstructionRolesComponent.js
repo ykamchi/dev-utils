@@ -268,7 +268,6 @@
                     ...feedbackDef
                 }));
             });
-            console.log('getInstructionsForEditing', ret);
             return ret;
         }
 

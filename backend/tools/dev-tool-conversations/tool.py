@@ -18,12 +18,10 @@ def get_tool_info():
             'https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js',
             'https://cdn.jsdelivr.net/npm/diff@5.1.0/dist/diff.min.js',
             'constants.js',
-            'status_api.js',
-            'api*.js',
             'utils.js',
             'popups.js',
-            'components/*.js',
-            'components/charts/*.js',
+            'api/*.js',
+            'components/**/*.js',
         ],
     }
 
