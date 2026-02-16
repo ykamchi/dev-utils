@@ -29,18 +29,17 @@ def validate_group(group: Any) -> Dict[str, Any]:
     Required fields:
     - group_key: string
     - group_name: string
-    - group_description: string
     """
     if not isinstance(group, dict):
         return {'valid': False, 'reason': 'Group must be a dictionary'}
     
-    required_fields = ['group_key', 'group_name', 'group_description']
+    required_fields = ['group_key', 'group_name']
     for field in required_fields:
         if field not in group:
             return {'valid': False, 'reason': f'Missing required field: {field}'}
-        if not isinstance(group[field], str):
-            return {'valid': False, 'reason': f'Field {field} must be a string'}
-    
+        if field == 'group_key' and group['group_key'] is not None and not isinstance(group['group_key'], str):
+            return {'valid': False, 'reason': 'group_key must be a string or null'}
+        
     # Check for unexpected fields
     allowed_fields = set(required_fields)
     unexpected = set(group.keys()) - allowed_fields
@@ -55,51 +54,33 @@ def validate_member(member: Any) -> Dict[str, Any]:
     Validate member seed data structure.
     
     Required fields:
-    - member_key: string
-    - roles: array of strings
-    - profile: object with required first-level fields:
-      - name: string
-      - age: integer
-      - gender: string
-      - location: string
+    - member_name: string (display name)
+    - member_key: string or null (null allowed for templates)
+    - member_roles: array of strings
+    - member_profile: object (any structure inside is valid)
     """
     if not isinstance(member, dict):
         return {'valid': False, 'reason': 'Member must be a dictionary'}
     
-    required_fields = ['member_key', 'roles', 'profile']
+    required_fields = ['member_name', 'member_key', 'member_roles', 'member_profile']
     for field in required_fields:
         if field not in member:
             return {'valid': False, 'reason': f'Missing required field: {field}'}
     
-    if not isinstance(member['member_key'], str):
-        return {'valid': False, 'reason': 'member_key must be a string'}
+    if not isinstance(member['member_name'], str):
+        return {'valid': False, 'reason': 'member_name must be a string'}
     
-    if not isinstance(member['roles'], list):
-        return {'valid': False, 'reason': 'roles must be an array'}
+    if member['member_key'] is not None and not isinstance(member['member_key'], str):
+        return {'valid': False, 'reason': 'member_key must be a string or null'}
     
-    if not all(isinstance(role, str) for role in member['roles']):
-        return {'valid': False, 'reason': 'All roles must be strings'}
+    if not isinstance(member['member_roles'], list):
+        return {'valid': False, 'reason': 'member_roles must be an array'}
     
-    if not isinstance(member['profile'], dict):
-        return {'valid': False, 'reason': 'profile must be an object'}
+    if not all(isinstance(role, str) for role in member['member_roles']):
+        return {'valid': False, 'reason': 'All member_roles must be strings'}
     
-    # Validate required profile fields
-    required_profile_fields = ['name', 'age', 'gender', 'location']
-    for field in required_profile_fields:
-        if field not in member['profile']:
-            return {'valid': False, 'reason': f'profile must contain a "{field}" field'}
-    
-    if not isinstance(member['profile']['name'], str):
-        return {'valid': False, 'reason': 'profile.name must be a string'}
-    
-    if not isinstance(member['profile']['age'], int):
-        return {'valid': False, 'reason': 'profile.age must be an integer'}
-    
-    if not isinstance(member['profile']['gender'], str):
-        return {'valid': False, 'reason': 'profile.gender must be a string'}
-    
-    if not isinstance(member['profile']['location'], str):
-        return {'valid': False, 'reason': 'profile.location must be a string'}
+    if not isinstance(member['member_profile'], dict):
+        return {'valid': False, 'reason': 'member_profile must be an object'}
     
     # Check for unexpected fields at top level
     allowed_fields = set(required_fields)
@@ -230,51 +211,67 @@ def validate_instruction(instruction: Any) -> Dict[str, Any]:
     """
     Validate instruction seed data structure.
     
-    Required fields:
-    - instruction_key: string
-    - name: string
-    - description: string
-    - conversation_type: string
-    - max_turns: integer
-    - roles: object (keys are role names, values are role definitions)
+    Required root fields:
+    - instruction_key: string (can be null for templates)
+    - info: object containing:
+        - name: string
+        - description: string
+        - conversation_type: string
+        - max_turns: integer
+        - roles: object (keys are role names, values are role definitions)
     """
     if not isinstance(instruction, dict):
         return {'valid': False, 'reason': 'Instruction must be a dictionary'}
     
-    required_fields = ['instruction_key', 'name', 'description', 'conversation_type', 'max_turns', 'roles']
-    for field in required_fields:
-        if field not in instruction:
-            return {'valid': False, 'reason': f'Missing required field: {field}'}
+    # Check root level fields
+    if 'instruction_key' not in instruction:
+        return {'valid': False, 'reason': 'Missing required field: instruction_key'}
     
-    # if not isinstance(instruction['instruction_key'], str):
-    #     return {'valid': False, 'reason': 'instruction_key must be a string'}
+    if 'info' not in instruction:
+        return {'valid': False, 'reason': 'Missing required field: info'}
     
-    if not isinstance(instruction['name'], str):
-        return {'valid': False, 'reason': 'name must be a string'}
+    if not isinstance(instruction['info'], dict):
+        return {'valid': False, 'reason': 'info must be an object'}
     
-    if not isinstance(instruction['description'], str):
-        return {'valid': False, 'reason': 'description must be a string'}
+    # Validate info object fields
+    info = instruction['info']
+    required_info_fields = ['name', 'description', 'conversation_type', 'max_turns', 'roles']
+    for field in required_info_fields:
+        if field not in info:
+            return {'valid': False, 'reason': f'Missing required field in info: {field}'}
     
-    if not isinstance(instruction['conversation_type'], str):
-        return {'valid': False, 'reason': 'conversation_type must be a string'}
+    if not isinstance(info['name'], str):
+        return {'valid': False, 'reason': 'info.name must be a string'}
     
-    if not isinstance(instruction['max_turns'], int):
-        return {'valid': False, 'reason': 'max_turns must be an integer'}
+    if not isinstance(info['description'], str):
+        return {'valid': False, 'reason': 'info.description must be a string'}
     
-    if not isinstance(instruction['roles'], dict):
-        return {'valid': False, 'reason': 'roles must be an object'}
+    if not isinstance(info['conversation_type'], str):
+        return {'valid': False, 'reason': 'info.conversation_type must be a string'}
+    
+    if not isinstance(info['max_turns'], int):
+        return {'valid': False, 'reason': 'info.max_turns must be an integer'}
+    
+    if not isinstance(info['roles'], dict):
+        return {'valid': False, 'reason': 'info.roles must be an object'}
     
     # Validate each role
-    for role_name, role_def in instruction['roles'].items():
+    for role_name, role_def in info['roles'].items():
         role_validation = validate_role(role_name, role_def)
         if not role_validation['valid']:
             return role_validation
     
-    # Check for unexpected fields
-    allowed_fields = set(required_fields)
-    unexpected = set(instruction.keys()) - allowed_fields
-    if unexpected:
-        return {'valid': False, 'reason': f'Unexpected fields: {", ".join(unexpected)}'}
+    # Check for unexpected fields at root level
+    allowed_root_fields = {'instruction_key', 'info'}
+    unexpected_root = set(instruction.keys()) - allowed_root_fields
+    if unexpected_root:
+        return {'valid': False, 'reason': f'Unexpected fields at root: {", ".join(unexpected_root)}'}
+    
+    # Check for unexpected fields in info
+    allowed_info_fields = set(required_info_fields)
+    unexpected_info = set(info.keys()) - allowed_info_fields
+    if unexpected_info:
+        return {'valid': False, 'reason': f'Unexpected fields in info: {", ".join(unexpected_info)}'}
     
     return {'valid': True, 'reason': None}
 
@@ -283,49 +280,95 @@ def validate_instruction(instruction: Any) -> Dict[str, Any]:
 # GET Functions
 # ============================================================================
 
-def seeds_groups_get(group_key: Optional[str] = None) -> Any:
+def seeds_groups_get(group_key: Optional[str] = None, existing_keys: set = None) -> Any:
     """
     Get group seed data from filesystem with validation wrapper.
     
     Args:
         group_key: Optional group key to filter. If None, returns all groups.
+        existing_keys: Set of group_key values that already exist in the database (defaults to empty set).
         
     Returns:
         - If group_key is None: List of wrapped group objects with validation metadata
         - If group_key is provided: Single wrapped group object or None if not found
     """
+    if existing_keys is None:
+        existing_keys = set()
+    if group_key == "templates":
+        # Scan templates folder for files named group-*
+        templates_path = SEED_BASE_PATH / "templates"
+        if not templates_path.exists():
+            return []
+        all_templates = []
+        for file in templates_path.iterdir():
+            if file.is_file() and file.name.startswith("group-"):
+                try:
+                    with open(file, 'r', encoding='utf-8') as f:
+                        group_data = json.load(f)
+                    # Set group_key to null in returned data
+                    group_data['group_key'] = None
+                    validation = validate_group(group_data)
+                    
+                    # Templates always have group_key None, so they can't exist in database
+                    exists_in_db = False
+                    
+                    wrapped_group = {
+                        'type': 'group',
+                        'seed_key': None,
+                        'json': group_data,
+                        'include': validation['valid'] and not exists_in_db,
+                        'valid': validation['valid'],
+                        'exist': exists_in_db,
+                        'error': None if validation['valid'] else f"group.json validation error: {validation['reason']}"
+                    }
+                    all_templates.append(wrapped_group)
+                except (json.JSONDecodeError, IOError) as e:
+                    all_templates.append({
+                        'type': 'group',
+                        'seed_key': file.name,
+                        'json': None,
+                        'include': False,
+                        'valid': False,
+                        'error': f'Error reading {file.name}: {str(e)}'
+                    })
+        return all_templates
+
     if not SEED_BASE_PATH.exists():
         raise FileNotFoundError(f"Seed base path does not exist: {SEED_BASE_PATH}")
-    
+
     all_groups = []
-    
+
     # Scan all directories in base path
     for item in SEED_BASE_PATH.iterdir():
         if not item.is_dir():
             continue
-        
+
         group_file = item / 'group.json'
         if not group_file.exists():
             continue
-        
+
         try:
             with open(group_file, 'r', encoding='utf-8') as f:
                 content = f.read()
                 group_data = json.loads(content)
-            
+
             # Validate structure
             validation = validate_group(group_data)
             
+            # Check if group_key already exists in database (independent of validation)
+            exists_in_db = group_data.get('group_key') in existing_keys
+
             # Wrap in metadata structure (like old implementation)
             wrapped_group = {
                 'type': 'group',
                 'seed_key': group_data.get('group_key'),
                 'json': group_data,
-                'include': validation['valid'],
+                'include': validation['valid'] and not exists_in_db,
                 'valid': validation['valid'],
+                'exist': exists_in_db,
                 'error': None if validation['valid'] else f"group.json validation error: {validation['reason']}"
             }
-            
+
             all_groups.append(wrapped_group)
         except (json.JSONDecodeError, IOError) as e:
             # Include invalid entries with error information
@@ -337,7 +380,7 @@ def seeds_groups_get(group_key: Optional[str] = None) -> Any:
                 'valid': False,
                 'error': f'Error reading group.json: {str(e)}'
             })
-    
+
     # Filter by group_key if provided
     if group_key is not None:
         matching_groups = [g for g in all_groups if g.get('seed_key') == group_key]
@@ -346,22 +389,26 @@ def seeds_groups_get(group_key: Optional[str] = None) -> Any:
         if len(matching_groups) > 1:
             raise ValueError(f"Multiple groups found with group_key '{group_key}' - key is not unique")
         return [matching_groups[0]]
-    
+
     return all_groups
 
 
-def seeds_members_get(group_key: str, member_key: Optional[str] = None) -> Any:
+def seeds_members_get(group_key: str, member_key: Optional[str] = None, existing_keys: set = None) -> Any:
     """
     Get members seed data from filesystem with validation wrapper.
     
     Args:
         group_key: Group key (required)
         member_key: Optional member key to filter. If None, returns all members.
+        existing_keys: Set of member_key values that already exist in the database (defaults to empty set).
         
     Returns:
-        - If member_key is None: List containing single wrapped object with all members array
-        - If member_key is provided: List containing single wrapped object with single member or empty list if not found
+        - If member_key is None: Array of all wrapped member objects with validation metadata
+        - If member_key is provided: Array with single wrapped member object or empty array if not found
     """
+    if existing_keys is None:
+        existing_keys = set()
+    
     group_dir = SEED_BASE_PATH / group_key
     if not group_dir.exists():
         # Create the directory if it doesn't exist
@@ -379,7 +426,7 @@ def seeds_members_get(group_key: str, member_key: Optional[str] = None) -> Any:
     except (json.JSONDecodeError, IOError) as e:
         # Return wrapped error structure
         return [{
-            'type': 'members',
+            'type': 'member',
             'seed_key': group_key,
             'json': None,
             'include': False,
@@ -389,7 +436,7 @@ def seeds_members_get(group_key: str, member_key: Optional[str] = None) -> Any:
     
     if not isinstance(members_data, list):
         return [{
-            'type': 'members',
+            'type': 'member',
             'seed_key': group_key,
             'json': None,
             'include': False,
@@ -397,56 +444,60 @@ def seeds_members_get(group_key: str, member_key: Optional[str] = None) -> Any:
             'error': 'members.json must contain an array'
         }]
     
-    # Validate all members
-    all_valid = True
-    error_msg = None
-    for idx, member in enumerate(members_data):
+    # Template validation: Check that all template seeds have null keys
+    if group_key == 'templates':
+        for member in members_data:
+            if member.get('member_key') is not None:
+                raise ValueError(f"System error: Template seed has non-null member_key: {member.get('member_key')}")
+    
+    # Wrap each member individually with validation metadata
+    wrapped_members = []
+    for member in members_data:
         validation = validate_member(member)
-        if not validation['valid']:
-            all_valid = False
-            error_msg = f"Member {idx}: {validation['reason']}"
-            break
+        
+        # Check if member_key already exists in database (independent of validation)
+        exists_in_db = member.get('member_key') in existing_keys
+        
+        wrapped_member = {
+            'type': 'member',
+            'seed_key': group_key,
+            'json': member,
+            'include': validation['valid'] and not exists_in_db,
+            'valid': validation['valid'],
+            'exist': exists_in_db,
+            'error': None if validation['valid'] else f"Member validation error: {validation['reason']}"
+        }
+        
+        wrapped_members.append(wrapped_member)
     
     # Filter by member_key if provided
     if member_key is not None:
-        matching_members = [m for m in members_data if m.get('member_key') == member_key]
+        matching_members = [m for m in wrapped_members if m['json'] and m['json'].get('member_key') == member_key]
         if len(matching_members) == 0:
             return []
         if len(matching_members) > 1:
             raise ValueError(f"Multiple members found with member_key '{member_key}' - key is not unique")
-        
-        # Return wrapped structure with single member
-        return [{
-            'type': 'members',
-            'seed_key': group_key,
-            'json': matching_members[0],
-            'include': all_valid,
-            'valid': all_valid,
-            'error': error_msg
-        }]
+        return matching_members
     
-    # Return wrapped structure with all members
-    return [{
-        'type': 'members',
-        'seed_key': group_key,
-        'json': members_data,
-        'include': all_valid,
-        'valid': all_valid,
-        'error': error_msg
-    }]
+    return wrapped_members
 
 
-def seeds_instructions_get(group_key: str, instruction_key: Optional[str] = None) -> Any:
+def seeds_instructions_get(group_key: str, instruction_key: Optional[str] = None, existing_keys: set = None) -> Any:
     """
     Get instructions seed data from filesystem with validation wrapper.
     
     Args:
         group_key: Group key (required)
         instruction_key: Optional instruction key to filter. If None, returns all instructions.
+        existing_keys: Set of instruction_key values that already exist in the database (defaults to empty set).
         
     Returns:
-        - List of wrapped instruction objects with validation metadata
+        - If instruction_key is None: Array of all wrapped instruction objects with validation metadata
+        - If instruction_key is provided: Array with single wrapped instruction object or empty array if not found
     """
+    if existing_keys is None:
+        existing_keys = set()
+    
     group_dir = SEED_BASE_PATH / group_key
     if not group_dir.exists():
         # Create the directory if it doesn't exist
@@ -481,17 +532,27 @@ def seeds_instructions_get(group_key: str, instruction_key: Optional[str] = None
             'error': 'instructions.json must contain an array'
         }]
     
+    # Template validation: Check that all template seeds have null keys
+    if group_key == 'templates':
+        for instruction in instructions_data:
+            if instruction.get('instruction_key') is not None:
+                raise ValueError(f"System error: Template seed has non-null instruction_key: {instruction.get('instruction_key')}")
+    
     # Wrap each instruction individually with validation metadata
     wrapped_instructions = []
     for instruction in instructions_data:
         validation = validate_instruction(instruction)
         
+        # Check if instruction_key already exists in database (independent of validation)
+        exists_in_db = instruction.get('instruction_key') in existing_keys
+        
         wrapped_instruction = {
             'type': 'instruction',
             'seed_key': group_key,
             'json': instruction,
-            'include': validation['valid'],
+            'include': validation['valid'] and not exists_in_db,
             'valid': validation['valid'],
+            'exist': exists_in_db,
             'error': None if validation['valid'] else f"Instruction validation error: {validation['reason']}"
         }
         
@@ -519,7 +580,7 @@ def seeds_groups_set(group_key: str, group_data: Dict[str, Any]) -> Dict[str, An
     
     Args:
         group_key: Group key (used for directory name)
-        group_data: Group data to save (must include group_key, group_name, group_description)
+        group_data: Group data to save (must include group_key, group_name)
         
     Returns:
         Dict with file_path and operation info

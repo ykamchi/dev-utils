@@ -166,7 +166,6 @@ def register_groups_apis(app, base_path: str):
             upstream_payload = {
                 'group_name': payload.get('group_name'),
                 'group_key': payload.get('group_key'),
-                'description': payload.get('group_description')
             }
             return jsonify(_proxy_post('/api/groups/add', upstream_payload))
 
@@ -211,7 +210,7 @@ def register_groups_apis(app, base_path: str):
             upstream_payload = {
                 'group_id': payload.get('group_id'),
                 'group_name': payload.get('group_name'),
-                'group_description': payload.get('group_description')
+                'info': payload.get('info')
             }
             return jsonify(_proxy_post('/api/groups/update', upstream_payload))
 
@@ -258,15 +257,11 @@ def register_instructions_apis(app, base_path: str):
         try:
             payload = request.get_json(force=True)
             
-            if not payload.get('group_id'):
-                return jsonify({'success': False, 'error': 'missing group_id'}), 400
-            
-            if not payload.get('instructions_key'):
-                return jsonify({'success': False, 'error': 'missing instructions_key'}), 400
+            if not payload.get('instruction_id'):
+                return jsonify({'success': False, 'error': 'missing instruction_id'}), 400
             
             upstream_payload = {
-                'group_id': payload.get('group_id'),
-                'instructions_key': payload.get('instructions_key')
+                'instruction_id': payload.get('instruction_id')
             }
             
             return jsonify(_proxy_post('/api/instructions/delete', upstream_payload))
@@ -293,6 +288,7 @@ def register_instructions_apis(app, base_path: str):
             upstream_payload = {
                 'group_id': payload.get('group_id'),
                 'info': payload.get('info'),
+                'instruction_key': payload.get('instruction_key')  
             }
             
             return jsonify(_proxy_post('/api/instructions/add', upstream_payload))
@@ -310,14 +306,14 @@ def register_instructions_apis(app, base_path: str):
         try:
             payload = request.get_json(force=True)
             
-            if not payload.get('group_id'):
-                return jsonify({'success': False, 'error': 'missing group_id'}), 400
+            if not payload.get('instruction_id'):
+                return jsonify({'success': False, 'error': 'missing instruction_id'}), 400
                         
             if not payload.get('info'):
                 return jsonify({'success': False, 'error': 'missing info'}), 400
             
             upstream_payload = {
-                'group_id': payload.get('group_id'),
+                'instruction_id': payload.get('instruction_id'),
                 'info': payload.get('info')
             }
             
@@ -354,6 +350,29 @@ def register_members_apis(app, base_path: str):
         except RequestException:
             app.logger.exception('Failed to contact upstream /api/members/list')
             return jsonify({'success': False, 'error': 'Failed to contact upstream members/list'}), 502
+
+
+    @app.route(f"{base_path}/members_get", methods=["POST"])
+    def members_get():
+        """
+        Proxy to upstream /api/members/get (POST) with member_id from request body (required).
+        """
+        try:
+            payload = request.get_json(force=True)
+            
+            if not payload.get('member_id'):
+                return jsonify({'success': False, 'error': 'missing member_id'}), 400
+            
+            upstream_payload = {
+                'member_id': payload.get('member_id')
+            }
+
+            
+            return jsonify(_proxy_post('/api/members/get', upstream_payload))
+        
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/members/get')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream members/get'}), 502
 
 
     @app.route(f"{base_path}/members_add", methods=["POST"])
@@ -506,7 +525,14 @@ def register_seed_data_apis(app, base_path: str):
             payload = request.get_json(force=True)
             group_key = payload.get('group_key')
             
-            seeding_data = seed_utils.seeds_groups_get(group_key)
+            # Get existing group keys from database
+            existing_keys = set()
+            if group_key != 'templates':  # Don't check for templates
+                upstream_resp = _proxy_post('/api/groups/list', {})
+                if upstream_resp.get('success') and upstream_resp.get('data'):
+                    existing_keys = {g.get('group_key') for g in upstream_resp['data'] if g.get('group_key')}
+            
+            seeding_data = seed_utils.seeds_groups_get(group_key, existing_keys)
             
             return jsonify({'success': True, 'data': seeding_data})
         except Exception as e:
@@ -518,9 +544,10 @@ def register_seed_data_apis(app, base_path: str):
         """
         Get members seed data from members.json in group directory.
         
-        Expects JSON payload: {"group_key": ..., "member_key": ...} 
+        Expects JSON payload: {"group_key": ..., "member_key": ..., "group_id": ...} 
         - group_key is required
         - member_key is optional
+        - group_id is optional (used to check for existing members in database)
         - If member_key is None: returns array of all members
         - If member_key is provided: returns single member object or null if not found
         """
@@ -531,11 +558,19 @@ def register_seed_data_apis(app, base_path: str):
             payload = request.get_json(force=True)
             group_key = payload.get('group_key')
             member_key = payload.get('member_key')
+            group_id = payload.get('group_id')
             
             if not group_key:
                 return jsonify({'success': False, 'error': 'missing group_key'}), 400
             
-            seeding_data = seed_utils.seeds_members_get(group_key, member_key)
+            # Get existing member keys from database if group_id provided and not templates
+            existing_keys = set()
+            if group_id and group_key != 'templates':
+                upstream_resp = _proxy_post('/api/members/list', {'group_id': group_id})
+                if upstream_resp.get('success') and upstream_resp.get('data'):
+                    existing_keys = {m.get('member_key') for m in upstream_resp['data'] if m.get('member_key')}
+            
+            seeding_data = seed_utils.seeds_members_get(group_key, member_key, existing_keys)
             
             return jsonify({'success': True, 'data': seeding_data})
         except Exception as e:
@@ -547,9 +582,10 @@ def register_seed_data_apis(app, base_path: str):
         """
         Get instructions seed data from instructions.json in group directory.
         
-        Expects JSON payload: {"group_key": ..., "instruction_key": ...} 
+        Expects JSON payload: {"group_key": ..., "instruction_key": ..., "group_id": ...} 
         - group_key is required
         - instruction_key is optional
+        - group_id is optional (used to check for existing instructions in database)
         - If instruction_key is None: returns array of all instructions
         - If instruction_key is provided: returns single instruction object or null if not found
         """
@@ -560,11 +596,19 @@ def register_seed_data_apis(app, base_path: str):
             payload = request.get_json(force=True)
             group_key = payload.get('group_key')
             instruction_key = payload.get('instruction_key')
+            group_id = payload.get('group_id')
             
             if not group_key:
                 return jsonify({'success': False, 'error': 'missing group_key'}), 400
             
-            seeding_data = seed_utils.seeds_instructions_get(group_key, instruction_key)
+            # Get existing instruction keys from database if group_id provided and not templates
+            existing_keys = set()
+            if group_id and group_key != 'templates':
+                upstream_resp = _proxy_post('/api/instructions/list', {'group_id': group_id})
+                if upstream_resp.get('success') and upstream_resp.get('data'):
+                    existing_keys = {i['info']['instruction_key'] for i in upstream_resp['data'] if i.get('info') and i['info'].get('instruction_key')}
+            
+            seeding_data = seed_utils.seeds_instructions_get(group_key, instruction_key, existing_keys)
             
             return jsonify({'success': True, 'data': seeding_data})
         except Exception as e:
@@ -580,8 +624,7 @@ def register_seed_data_apis(app, base_path: str):
             "group_key": "...",
             "group_data": {
                 "group_key": "...",
-                "group_name": "...",
-                "group_description": "..."
+                "group_name": "..."
             }
         }
         """

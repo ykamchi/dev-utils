@@ -29,7 +29,7 @@
             this.page = new window.conversations.PageComponent(this.container, 
                 window.conversations.CONVERSATION_TYPES_ICONS[this.conversationType], 
                 'Start ' + window.conversations.CONVERSATION_TYPES_NAMES[this.conversationType],
-                [ this.member.name, this.group.group_name ]
+                [ this.member.member_name, this.group.group_name ]
             );
 
             // Start and Cancel buttons
@@ -230,7 +230,7 @@
             Object.entries(this.selectedMembers).forEach(([role, members]) => {
                 members.forEach(member => {
                     participants.push({
-                        member_name: member.name,
+                        member_name: member.member_name,
                         instruction_role: role  // Use the actual role
                     });
                 });

@@ -72,7 +72,7 @@
 
         async loadContent() {
             // Fetch conversations for the member
-            const conversations = await window.conversations.apiConversations.membersConversationsList('', this.groupId, this.member.name, this.conversation_type, this.showOnlyLast);
+            const conversations = await window.conversations.apiConversations.membersConversationsList('', this.groupId, this.member.member_name, this.conversation_type, this.showOnlyLast);
             
             // Page content
             const contentDiv = window.conversations.utils.createDivContainer();

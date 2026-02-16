@@ -37,7 +37,7 @@ window.conversations.CONVERSATION_TYPES_STRING = function(type, icon = true, nam
     return result.trim();
 }
 
-// Seed types for ManageGroupSeedsImportComponent
+// Seed types for ManageSeedsImportComponent
 window.conversations.SEED_TYPES = {
     GROUP: 'group',
     MEMBERS: 'members',

@@ -25,7 +25,7 @@
             // Add tabs for each role in the instruction, plus an additional tab for adding a new role
             const storageKey = `conversations-instruction-editor-${this.groupId}-${this.instruction.instructions_key}`;
             const rolesTabs = [];
-            Object.entries(this.instruction.info.roles).forEach(([role, roleDef]) => {
+            Object.entries(this.instruction.roles).forEach(([role, roleDef]) => {
                 rolesTabs.push({ name: roleDef.role_name, populateFunc: (c) => this.populateRoleTab(c, role, roleDef) });
             });
             rolesTabs.push({ name: '+ Add role', populateFunc: (c) => this.populateAddRoleTab(c) });
@@ -44,8 +44,8 @@
                     // Callback: add the copied roles to current instruction
                     rolesToCopy.forEach(roleToCopy => {
                         const newRoleKey = `role_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                        this.instruction.info.roles[newRoleKey] = JSON.parse(JSON.stringify(roleToCopy));
-                        this.instruction.info.roles[newRoleKey].role_name += ' Copy';
+                        this.instruction.roles[newRoleKey] = JSON.parse(JSON.stringify(roleToCopy));
+                        this.instruction.roles[newRoleKey].role_name += ' Copy';
                     });
                     this.render();
                 }
@@ -65,7 +65,7 @@
             });
 
             // Horizontal wrapper for role details and feedback definitions
-            const horizontalWrapper = window.conversations.utils.createDivContainer(verticalWrapper, 'conversation-container-horizontal-space-between');
+            const horizontalWrapper = window.conversations.utils.createDivContainer(verticalWrapper, 'conversation-container-horizontal-space-between-full');
 
             // Left side: Role details
             const systemPromptContainer = window.conversations.utils.createDivContainer(horizontalWrapper, 'conversation-container-vertical');
@@ -127,7 +127,7 @@
                 return;
             }
 
-            console.log('Populating feedback editor for role', role, 'with feedback definitions', roleDef.feedback_def, this.instruction.info.roles[role].feedback_def);
+            console.log('Populating feedback editor for role', role, 'with feedback definitions', roleDef.feedback_def, this.instruction.roles[role].feedback_def);
             // container, items, renderItemFunction, selectionMode = ListComponent.SELECTION_MODE_NONE, onSelect = null, filterCondition = null
             new window.ListComponent(wrapper, roleDef.feedback_def, 
                 (feedback_def) => {
@@ -183,10 +183,10 @@
                     const buttonContainer = window.conversations.utils.createDivContainer(feedbackDiv, 'conversations-buttons-container');
 
                     // TODO: Need to decide where to store the "important" flag in the instruction object, and how to handle it in the UI (e.g., show important feedback fields at the top of the list, or with a badge)
-                    new window.CheckboxComponent(buttonContainer,this.instruction.info.meta?.feedbackImportant?.[feedback_def.feedbackName],(checked) => { 
-                        if (!this.instruction.info.meta) this.instruction.info.meta = {};
-                        if (!this.instruction.info.meta.feedbackImportant) this.instruction.info.meta.feedbackImportant = {};
-                        this.instruction.info.meta.feedbackImportant[feedback_def.feedbackName] = checked;
+                    new window.CheckboxComponent(buttonContainer,this.instruction.meta?.feedbackImportant?.[feedback_def.feedbackName],(checked) => { 
+                        if (!this.instruction.meta) this.instruction.meta = {};
+                        if (!this.instruction.meta.feedbackImportant) this.instruction.meta.feedbackImportant = {};
+                        this.instruction.meta.feedbackImportant[feedback_def.feedbackName] = checked;
                     },'Show on list');
 
                     // Required checkbox
@@ -262,7 +262,7 @@
         // Convert feedback_def from object to array for easier editing, and deep clone the instruction object to avoid mutating the original
         getInstructionsForEditing(origInstruction) {
             const ret = _.cloneDeep(origInstruction);
-            Object.values(ret.info.roles).forEach(role => {
+            Object.values(ret.roles).forEach(role => {
                 role.feedback_def = Object.entries(role.feedback_def).map(([feedbackName, feedbackDef]) => ({
                     feedbackName,
                     ...feedbackDef
@@ -275,7 +275,7 @@
         // Convert feedback_def from array back to object for saving
         getOrigInstructions(instructionForEditing) {
             const ret = _.cloneDeep(instructionForEditing);
-            Object.values(ret.info.roles).forEach(role => {
+            Object.values(ret.roles).forEach(role => {
                 role.feedback_def = role.feedback_def.reduce((acc, feedbackDef) => {
                     const { feedbackName, ...rest } = feedbackDef;
                     acc[feedbackName] = rest;

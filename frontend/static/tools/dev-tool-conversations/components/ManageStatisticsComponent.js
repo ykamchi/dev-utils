@@ -3,13 +3,10 @@
         ManageStatisticsComponent: TODO - implement group settings UI and logic
     */
     class ManageStatisticsComponent {
-        constructor(container, groupId, optionId, manageOptions) {
+        constructor(container, groupId) {
             this.container = container;
             this.groupId = groupId;
-            this.optionId = optionId;
             this.group = null;
-            this.manageOptions = manageOptions;
-            this.groupEditor = null;
             this.page = null;
             this.render();
         }
@@ -23,8 +20,11 @@
         async load() {
             this.group = await window.conversations.apiGroups.groupsGet(this.container, this.groupId);
             // Create the main page component
-            this.page = new window.conversations.PageComponent(this.container, this.manageOptions[this.optionId].icon, this.manageOptions[this.optionId].name,
-                `${this.group.group_name} Settings`
+            this.page = new window.conversations.PageComponent(
+                this.container,
+                '📊',
+                'Statistics',
+                `${this.group.group_name} Statistics`
             );
 
             // Page control

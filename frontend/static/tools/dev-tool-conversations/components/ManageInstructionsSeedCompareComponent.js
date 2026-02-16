@@ -80,7 +80,7 @@
 
             // Create tabset for different diff views
             const tabsetDiv = window.conversations.utils.createDivContainer(wrapper);
-            const storageKey = `conversations-seed-diff-${this.groupId}-${this.selectedInstruction.info.instruction_key}`;
+            const storageKey = `conversations-seed-diff-${this.groupId}-${this.selected_member.member_id}`;
             
             // Build tabs dynamically: Info tab + one tab per role
             const tabs = [

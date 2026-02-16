@@ -39,7 +39,7 @@ window.conversations.apiInstructions.instructionsList = async function (spinnerC
 
 
 // Add group instructions
-window.conversations.apiInstructions.instructionsAdd = async function (spinnerContainer, instruction_key, groupId, info) {
+window.conversations.apiInstructions.instructionsAdd = async function (spinnerContainer, groupId, info, instruction_key) {
     // Show loading spinner while adding instructions
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Adding instructions ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
     
@@ -57,7 +57,7 @@ window.conversations.apiInstructions.instructionsAdd = async function (spinnerCo
         const result = await resp.json();
         spinner.remove();
         if (result.success) {
-            return result;
+            return result.data;
         } else {
             throw new Error('Failed to add group instructions for ' + groupId + ': ' + (result.error || 'Unknown error'));
         }
@@ -72,7 +72,7 @@ window.conversations.apiInstructions.instructionsAdd = async function (spinnerCo
 
 
 // Delete group instructions
-window.conversations.apiInstructions.instructionsDelete = async function (spinnerContainer, groupId, instructionsKey) {
+window.conversations.apiInstructions.instructionsDelete = async function (spinnerContainer, instruction_id) {
     // Show loading spinner while deleting instructions
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Deleting instructions for ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
     try {
@@ -80,15 +80,14 @@ window.conversations.apiInstructions.instructionsDelete = async function (spinne
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                group_id: groupId,
-                instructions_key: instructionsKey
+                instruction_id: instruction_id
             })
         });
 
         const result = await resp.json();
         spinner.remove();
         if (result.success) {
-            return result;
+            return result.data;
         } else {
             throw new Error('Failed to delete group instructions for ' + groupId + ': ' + (result.error || 'Unknown error'));
         }
@@ -102,7 +101,7 @@ window.conversations.apiInstructions.instructionsDelete = async function (spinne
 };
 
 // Update group instructions
-window.conversations.apiInstructions.instructionsUpdate = async function (spinnerContainer, groupId, info) {
+window.conversations.apiInstructions.instructionsUpdate = async function (spinnerContainer, instruction_id, info) {
     // Show loading spinner while updating instructions
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Updating instructions for ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
     
@@ -111,7 +110,7 @@ window.conversations.apiInstructions.instructionsUpdate = async function (spinne
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                group_id: groupId,
+                instruction_id: instruction_id,
                 info: info
             })
         });
@@ -119,7 +118,7 @@ window.conversations.apiInstructions.instructionsUpdate = async function (spinne
         const result = await resp.json();
         spinner.remove();
         if (result.success) {
-            return result;
+            return result.data;
         } else {
             throw new Error('Failed to update group instructions for ' + groupId + ': ' + (result.error || 'Unknown error'));
         }

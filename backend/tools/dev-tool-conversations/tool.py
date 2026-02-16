@@ -8,9 +8,9 @@ This is a regular tool (not a panel-based tool).
 def get_tool_info():
     return {
         'name': 'Conversations',
-        'description': 'Generic group members browser with group selection.',
+        'description': 'A Structured Multi-Agent Framework for Discovering Individual and Group Decision Needs. This tool provides a comprehensive interface for managing and analyzing conversations within groups.',
         'category': 'utility',
-        'icon': '👥',
+        'icon': '🗫',
         'version': '1.0.0',
         'imports': [
             'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
@@ -21,6 +21,7 @@ def get_tool_info():
             'status_api.js',
             'api*.js',
             'utils.js',
+            'popups.js',
             'components/*.js',
             'components/charts/*.js',
         ],

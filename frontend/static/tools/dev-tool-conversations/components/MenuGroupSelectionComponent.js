@@ -2,14 +2,24 @@
     class MenuGroupSelectionComponent {
         /**
          * @param {HTMLElement} container - The container to render into
-         * @param {function} onChange - Callback when group selection of mode or group changes
+         * @param {function} onSelection.Change - Callback when group selection of mode or group changes
+         * @param {function} onGroupAdded - Callback when a group is added
+         * @param {function} onGroupDeleted - Callback when a group is deleted
          */
-        constructor(container, onChange) {
+        constructor(container, onSelectionChange, onGroupAdded, onGroupDeleted) {
             this.container = container;
-            this.onChange = onChange;
+            this.onSelectionChange = onSelectionChange;
+            this.onGroupAdded = onGroupAdded;
+            this.onGroupDeleted = onGroupDeleted;
+
             this.selectedGroupId = null;
-            this.selectedMode = 'view';
             this.groups = null;
+
+            this.settingsButton = null;
+            this.addButton = null;
+            this.deleteButton = null;
+
+            this.groupSelectionContainer = null;
             this.render();
         }
 
@@ -25,32 +35,49 @@
             // Header - Group
             window.conversations.utils.createReadOnlyText(headerDiv, 'Group', 'conversations-menu-selection-header');
 
-            // Add and Delete group button
+            // Content container
+            const contentContainer = window.conversations.utils.createDivContainer(wrapper, 'conversations-menu-group-selection-controls');
+
+            this.groupSelectionContainer = window.conversations.utils.createDivContainer(contentContainer, 'conversations-menu-group-selection-container');
+
+            // Add and Delete and settings group button
             const buttonContainer = window.conversations.utils.createDivContainer(headerDiv, 'conversations-buttons-container');
-            new window.ButtonComponent(buttonContainer, {
-                label: '+',
-                onClick: () => this.addGroup(),
+            this.settingsButton = new window.ButtonComponent(buttonContainer, {
+                label: '🛠️',
+                onClick: () => this.openGroupSettings(),
                 type: window.ButtonComponent.TYPE_GHOST,
-                tooltip: '+ Add group'
+                tooltip: '🛠️ Group settings'
             });
-            new window.ButtonComponent(buttonContainer, {
+            this.deleteButton = new window.ButtonComponent(buttonContainer, {
                 label: '🗙',
                 onClick: () => this.deleteGroup(),
                 type: window.ButtonComponent.TYPE_GHOST_DANGER,
                 tooltip: '🗙 Delete group'
             });
-
-            // Content container
-            this.contentContainer = window.conversations.utils.createDivContainer(wrapper);
+            this.addButton = new window.ButtonComponent(buttonContainer, {
+                label: '+',
+                onClick: () => window.conversations.popups.addGroup(this.onGroupAdded),
+                type: window.ButtonComponent.TYPE_GHOST,
+                tooltip: '+ Add group'
+            });
 
             this.load();
         }
 
+        updateButtonsArea() {
+            this.deleteButton.setVisible(this.selectedGroupId !== null);
+            this.settingsButton.setVisible(this.selectedGroupId !== null);
+        }
+
         async load() {
+            this.groupSelectionContainer.innerHTML = '';
             // Fetch groups
-            this.groups = await window.conversations.apiGroups.groupsList(this.contentContainer);
+            this.groups = await window.conversations.apiGroups.groupsList(this.groupSelectionContainer);
             if (!this.groups || this.groups.length === 0) {
-                this.contentContainer.innerHTML = '<div class="conversations-message-empty">No groups available. Please add a group.</div>';
+                window.conversations.utils.createReadOnlyText(this.groupSelectionContainer, 'No groups available. Please add a group.', 'conversations-message-empty');
+                this.selectedGroupId = null;
+                this.onSelectionChange();
+                this.updateButtonsArea();
                 return;
             }
 
@@ -69,142 +96,39 @@
             }
 
             // Clear content container
-            this.contentContainer.innerHTML = '';
+            this.groupSelectionContainer.innerHTML = '';
 
-            // Controls container for select group and mode buttons
-            const controlsContainer = window.conversations.utils.createDivContainer(this.contentContainer, 'conversations-menu-selection-controls');
+            // Controls container for select group dropdown
+            // const controlsContainer = window.conversations.utils.createDivContainer(this.contentContainer, 'conversations-menu-selection-controls');
 
             // Select group dropdown 
             new window.SelectComponent(
-                controlsContainer,
+                this.groupSelectionContainer,
                 this.groups.map(g => ({ label: g.group_name, value: g.group_id })),
                 (selectedGroup) => {
                     this.selectedGroupId = parseInt(selectedGroup);
-                    this.onChange();
 
                     // Persist selection
                     window.StorageService.setStorageJSON('last-selected-group', this.selectedGroupId);
+
+                    // Trigger onChange callback
+                    this.onSelectionChange();
+
                 },
                 'Select Group ...',
                 this.selectedGroupId
             );
 
-            // Option buttons (View/Manage)
-            const options = [{ label: 'View', value: 'view' }, { label: 'Manage', value: 'manage' }];
-            const viewModeButtons = new window.OptionButtonsComponent(
-                controlsContainer,
-                {
-                    options: options,
-                    selected: 'view',
-                    onChange: (selectedMode) => {
-                        this.selectedMode = selectedMode;
-                        this.onChange();
-                    },
-                    storageKey: 'conversations-menu-selection-mode'
-                }
-            );
+            this.updateButtonsArea();
 
-            this.selectedMode = viewModeButtons.getSelection();
-            // Trigger onChange callback with current selection
-            this.onChange();
+            // Trigger onSelectionChange callback 
+            this.onSelectionChange();
         }
 
-        async addGroup() {
-            const popup = new window.PopupComponent({
-                icon: '👥',
-                title: 'Add New Group',
-                width: 640,
-                height: 720,
-                content: (container) => {
-                    const contentDiv = window.conversations.utils.createDivContainer(container, 'conversations-page-wrapper');
-                    const tabsetTabs = [
-                        { name: 'Edit', populateFunc: (c) => this.populateAddGroupTab(c, popup), },
-                        { name: 'Seed Data', populateFunc: (c) => this.populateSeedGroupsTab(c, popup), }
-                    ];
-                    new window.TabsetComponent(contentDiv, tabsetTabs, 'manage-group-settings-tabset');
-                },
-            });
-            popup.show();
-        }
-
-        // Populate Seed Groups tab
-        async populateSeedGroupsTab(container, popup) {
-            const editorDiv = window.conversations.utils.createDivContainer(container, 'conversation-container-vertical');
-
-            const seeds = await window.conversations.apiSeeds.seedsGroupsGet(null);
-            
-            // Seed group button
-            const buttonContainer = window.conversations.utils.createDivContainer(editorDiv, 'conversations-buttons-container');
-            new window.ButtonComponent(buttonContainer, {
-                label: '📤 Group seeding',
-                onClick: async () => {
-                    popup.hide();
-
-                    // Call API to add group for each selected seed
-                    for (const seedEntry of seeds) {
-                        if (seedEntry.include && seedEntry.valid) {
-                            const result = await window.conversations.apiGroups.groupsAdd(null, seedEntry.seed_key, seedEntry.json.group_name, seedEntry.json.group_description);
-                            this.selectedGroupId = result.group_id;
-                            this.render();
-                        }
-                    }
-                },
-                type: window.ButtonComponent.TYPE_GHOST,
-                tooltip: '📤 Group seeding'
-            });
-
-            if (seeds && seeds.length > 0) {
-
-                new window.ListComponent(editorDiv, seeds, (seedEntry) => {
-                    // Create header content
-                    const headerContent = window.conversations.utils.createDivContainer();
-                    new window.CheckboxComponent(headerContent, seedEntry.include, (checked) => {
-                        seedEntry.include = checked;
-                    }, seedEntry.json.group_name + (!seedEntry.valid ? ' <b style="color: var(--color-warning-error)">(Invalid)</b>' : ''), !seedEntry.valid);
-
-                    // Create body content
-                    const bodyContent = window.conversations.utils.createDivContainer();
-                    if (!seedEntry.valid) {
-                        window.conversations.utils.createReadOnlyText(bodyContent, seedEntry.error, 'conversations-message-error');
-                    } else {
-                        window.conversations.utils.createJsonDiv(bodyContent, seedEntry.json);
-                    }
-                    // Create ExpandDivComponent
-                    const seedDiv = window.conversations.utils.createDivContainer();
-                    new window.ExpandDivComponent(seedDiv, headerContent, bodyContent);
-                    return seedDiv;
-
-                });
-            } else {
-                editorDiv.innerHTML = '<div class="conversations-message-empty">No seed data available.</div>';
-            }
-
-            return editorDiv;
-        }
-
-        async populateAddGroupTab(container, popup) {
-            const editorDiv = window.conversations.utils.createDivContainer(container);
-
-            // Save group button
-            const buttonContainer = window.conversations.utils.createDivContainer(editorDiv, 'conversations-buttons-container');
-            new window.ButtonComponent(buttonContainer, {
-                label: '💾 Add group',
-                onClick: async () => {
-                    const updatedData = groupEditor.updatedGroup();
-
-                    popup.hide();
-
-                    // Call API to add group
-                    const result = await window.conversations.apiGroups.groupsAdd(null, null, updatedData.groupName, updatedData.groupDescription);
-                    this.selectedGroupId = result.group_id;
-                    this.render();
-                },
-                type: window.ButtonComponent.TYPE_GHOST,
-                tooltip: '💾 Add group'
-            });
-
-            const groupEditor =new window.conversations.ManageGroupEditorComponent(editorDiv, '', ''); // Empty name and description for new group
-            return editorDiv;
+        selectGroup(groupId) {
+            this.selectedGroupId = groupId;
+            window.StorageService.setStorageJSON('last-selected-group', this.selectedGroupId);
+            this.render();
         }
 
         async deleteGroup() {
@@ -214,12 +138,49 @@
                     // Call API to delete group
                     await window.conversations.apiGroups.groupsDelete(null, this.selectedGroupId);
                     this.selectedGroupId = null;
-                    this.load();
+                    // this.load();
                     // this.render();
-                    this.onChange();
+                    this.onGroupDeleted();
                 }],
                 ['Cancel', () => { }]
             ]);
+        }
+
+        async openGroupSettings() {
+            if (!this.selectedGroupId) {
+                new window.AlertComponent('No Group Selected', 'Please select a group first.', [
+                    ['OK', () => { }]
+                ]);
+                return;
+            }
+
+            const popup = new window.PopupComponent({
+                icon: '🛠️',
+                title: 'Group Settings',
+                width: 1920,
+                height: 1080,
+                content: (container) => {
+                    new window.conversations.ManageGroupSettingsComponent(
+                        container,
+                        this.selectedGroupId,
+                        async (group_id) => {
+                            // onGroupNameChange: Reload the group list when name changes
+                            // popup.hide();
+                            this.selectedGroupId = group_id;
+                            this.render();
+                        },
+                        () => {
+                            // onMembersChanged: Trigger onChange to reload members in left panel
+                            this.onSelectionChange();
+                        }
+                    );
+                },
+                onClose: () => {
+                    // Reload groups in case anything changed
+                    this.load();
+                }
+            });
+            popup.show();
         }
     }
 

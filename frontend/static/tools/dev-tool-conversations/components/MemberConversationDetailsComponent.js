@@ -25,7 +25,7 @@
                 this.conversation.info.name +
                 ` (${this.conversation.participants})`,
                 {
-                    'Viewing member': this.member.name,
+                    'Viewing member': this.member.member_name,
                     Date: Utils.formatDateTime(this.conversation.created_at),
                     Type: this.conversation.info.name
                 }
@@ -134,7 +134,7 @@
         async populateFeedbackTab(container) {
 
             // Get the participant data including the feedback and the feedback_def from the conversation
-            const participant = this.conversation.participants.find(p => p.member_name === this.member.name);
+            const participant = this.conversation.participants.find(p => p.member_name === this.member.member_name);
             const feedback_def = this.conversation.info.roles[participant.instruction_role].feedback_def;
             
             // Feedback info

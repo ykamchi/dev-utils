@@ -23,10 +23,10 @@
             const info = window.conversations.utils.createDivContainer(wrapper, 'conversations-card-info');
 
             // Name
-            window.conversations.utils.createReadOnlyText(info, this.member.name, 'conversations-card-name');
+            window.conversations.utils.createReadOnlyText(info, this.member.member_name, 'conversations-card-name');
 
             // Description
-            window.conversations.utils.createReadOnlyText(info, `${this.member.location} • ${this.member.age}`, 'conversations-card-description');
+            window.conversations.utils.createReadOnlyText(info, `${this.member.member_profile.location} • ${this.member.member_profile.age}`, 'conversations-card-description');
         }
     }
 

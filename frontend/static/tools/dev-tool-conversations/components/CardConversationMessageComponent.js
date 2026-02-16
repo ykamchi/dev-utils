@@ -19,7 +19,7 @@
             const info = window.conversations.utils.createDivContainer(wrapper, 'conversations-card-info');
 
             // First line
-            const firstLine = window.conversations.utils.createDivContainer(info, 'conversation-container-horizontal-space-between');
+            const firstLine = window.conversations.utils.createDivContainer(info, 'conversation-container-horizontal-space-between-full');
 
             // Member names
             window.conversations.utils.createReadOnlyText(firstLine, this.message.member_nick_name, 'conversations-card-name');
@@ -28,7 +28,7 @@
             window.conversations.utils.createLabel(firstLine, Utils.formatDateTime(this.message.created_at), 'conversations-instructions-item-created-at');    
             
             // Second line
-            const secondLine = window.conversations.utils.createDivContainer(info, 'conversation-container-horizontal-space-between');            
+            const secondLine = window.conversations.utils.createDivContainer(info, 'conversation-container-horizontal-space-between-full');            
 
             // Description
             window.conversations.utils.createReadOnlyText(secondLine, this.message.message_text.length > 100  ? this.message.message_text.substring(0, 100) + "..." : this.message.message_text, 'conversations-card-description');

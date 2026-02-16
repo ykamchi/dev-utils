@@ -3,11 +3,9 @@
         ManageSystemComponent
     */
     class ManageSystemComponent {
-        constructor(container, groupId, optionId, manageOptions) {
+        constructor(container, groupId) {
             this.container = container;
             this.groupId = groupId;
-            this.optionId = optionId;
-            this.manageOptions = manageOptions;
             this.page = null;
             this.group = null;
             this.queueState = null;
@@ -25,9 +23,9 @@
             // Create the main page component
             this.page = new window.conversations.PageComponent(
                 this.container,
-                this.manageOptions[this.optionId].icon,
-                this.manageOptions[this.optionId].name,
-                `${this.group.group_name} Settings Settings Settings Settings Settings `
+                '🌐',
+                'System',
+                `${this.group.group_name} System`
             );
 
             // Page control
@@ -55,7 +53,6 @@
             const controlDiv = window.conversations.utils.createDivContainer(null, '-');
 
             // Queue state toggle
-            new window.conversations.utils.createLabel(controlDiv, 'Queue State:');
             new ToggleButtonComponent(
                 controlDiv,
                 !this.queueState.paused,
@@ -70,11 +67,11 @@
                 'Active',
                 'Paused',
                 '140px',
-                '34px'
+                '32px'
             );
 
             // Update control area
-            this.page.updateControlArea(controlDiv);
+            this.page.updateButtonsArea(controlDiv);
         }
 
         async loadContent() {
@@ -87,7 +84,7 @@
             const systemQueueStatusDiv = window.conversations.utils.createDivContainer(wrapper);
 
             // Running
-            window.conversations.utils.createField(systemQueueStatusDiv, 'Running', this.queueState.running, true);
+            // window.conversations.utils.createField(systemQueueStatusDiv, 'Running', this.queueState.running, true);
 
             // Paused
             window.conversations.utils.createField(systemQueueStatusDiv, 'Paused', this.queueState.paused, true);

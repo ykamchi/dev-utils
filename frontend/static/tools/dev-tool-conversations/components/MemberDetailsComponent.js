@@ -3,61 +3,39 @@
         MemberDetails: right side tabset for member details in dev-tool-conversations
     */
     class MemberDetailsComponent {
-        constructor(container, groupId, member) {
+        constructor(container, groupId, member, onMembersChanged = null) {
             this.container = container;
             this.groupId = groupId;
             this.member = member;
+            this.onMembersChanged = onMembersChanged;
             this.page = null;
             this.render();
         }
 
         render() {
             // Create the main page component
-            this.page = new window.conversations.PageComponent(this.container, '👤', this.member.name, {
-                Age: this.member.age,
-                Gender: this.member.gender,
-                Location: this.member.location,
-                Occupation: this.member.occupation
+            this.page = new window.conversations.PageComponent(this.container, '👤', this.member.member_name, {
+                Age: this.member.member_profile?.age,
+                Gender: this.member.member_profile?.gender,
+                Location: this.member.member_profile?.location,
+                Occupation: this.member.member_profile?.occupation
             });
 
             // Page control
-            const controlDiv = window.conversations.utils.createDivContainer(null, '-');
-            this.page.updateControlArea(controlDiv);
-
-            // Page buttons
-            const buttonsDiv = window.conversations.utils.createDivContainer(null, 'conversations-buttons-container');
-            new window.ButtonComponent(buttonsDiv, {
-                label: '💾',
-                onClick: () => new window.AlertComponent('Save', 'Save member not yet implemented'),
-                type: window.ButtonComponent.TYPE_GHOST,
-                tooltip: '💾 Save member'
-            });
-            new window.ButtonComponent(buttonsDiv, {
-                label: '+',
-                onClick: () => new window.AlertComponent('Add', 'Add member not yet implemented'),
-                type: window.ButtonComponent.TYPE_GHOST,
-                tooltip: '+ Add member'
-            });
-            new window.ButtonComponent(buttonsDiv, {
-                label: '🗙',
-                onClick: () => new window.AlertComponent('Delete', 'Delete member not yet implemented'),
-                type: window.ButtonComponent.TYPE_GHOST_DANGER,
-                tooltip: '🗙 Delete member'
-            });
-            this.page.updateButtonsArea(buttonsDiv);
+            // this.page.updateButtonsArea(null);
 
             this.loadContent();
         }
 
         async loadContent() {
             // Page content
-            const contentDiv = window.conversations.utils.createDivContainer();
+            const contentDiv = window.conversations.utils.createDivContainer(null, 'conversations-page-wrapper');
             const tabs = [
-                { name: '🧑 Profile', populateFunc: (container) => { window.conversations.utils.createJsonDiv(container, this.member) } },
+                { name: '🧑 Profile', populateFunc: (container) => { new window.conversations.ManageMembersComponent(container, this.groupId, this.member, this.onMembersChanged) } },
                 { name: window.conversations.CONVERSATION_TYPES_STRING(window.conversations.CONVERSATION_TYPES.AI_DECISION), populateFunc: (container) => { new window.conversations.MemberConversationsComponent(container, this.groupId, this.member, window.conversations.CONVERSATION_TYPES.AI_DECISION); } },
                 { name: window.conversations.CONVERSATION_TYPES_STRING(window.conversations.CONVERSATION_TYPES.AI_CONVERSATION), populateFunc: (container) => { new window.conversations.MemberConversationsComponent(container, this.groupId, this.member, window.conversations.CONVERSATION_TYPES.AI_CONVERSATION); } }
             ];
-            const storageKey = `conversations-member-tabset-${this.member.name}`;
+            const storageKey = `conversations-member-tabset-${this.member.member_name}`;
             new window.TabsetComponent(contentDiv, tabs, storageKey);
             this.page.updateContentArea(contentDiv);
         }

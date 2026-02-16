@@ -29,7 +29,7 @@
             const info = window.conversations.utils.createDivContainer(wrapper, 'conversations-card-info');
 
             // First line
-            const firstLine = window.conversations.utils.createDivContainer(info, 'conversation-container-horizontal-space-between');
+            const firstLine = window.conversations.utils.createDivContainer(info, 'conversation-container-horizontal-space-between-full');
 
             // Member names
             window.conversations.utils.createReadOnlyText(firstLine, this.conversation.participants.map(p => p.member_name).join(", "), 'conversations-card-name');
@@ -38,7 +38,7 @@
             window.conversations.utils.createLabel(firstLine, Utils.formatDateTime(this.conversation.created_at), 'conversations-instructions-item-created-at');    
 
             // Second line
-            const secondLine = window.conversations.utils.createDivContainer(info, 'conversation-container-horizontal-space-between');
+            const secondLine = window.conversations.utils.createDivContainer(info, 'conversation-container-horizontal-space-between-full');
 
             // Feedback fields
             const leftSide = window.conversations.utils.createDivContainer(secondLine, 'conversation-container-horizontal');

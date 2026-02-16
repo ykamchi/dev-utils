@@ -15,8 +15,8 @@
         
         async render() {
             // Fetch seed data
-            this.templateInstructionsSeed = await window.conversations.apiSeeds.seedsInstructionsGet(null, 'templates');
-            this.groupInstructionsSeed = await window.conversations.apiSeeds.seedsInstructionsGet(null, this.group.group_key);
+            this.templateInstructionsSeed = await window.conversations.apiSeeds.seedsInstructionsGet(this.container, null);
+            this.groupInstructionsSeed = await window.conversations.apiSeeds.seedsInstructionsGet(this.container, this.group);
             
             this.load();
         }

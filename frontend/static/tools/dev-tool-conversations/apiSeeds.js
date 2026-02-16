@@ -31,16 +31,27 @@ window.conversations.apiSeeds.seedsGroupsGet = async function (spinnerContainer,
     }
 };
 
-// Fetch members seed data from backend (requires group_key, optional member_key - returns array or single object)
-window.conversations.apiSeeds.seedsMembersGet = async function (spinnerContainer, groupKey, memberKey = null) {
+// Fetch members seed data from backend (group: group object or null for templates, memberKey: filter by specific member or null for all)
+window.conversations.apiSeeds.seedsMembersGet = async function (spinnerContainer, group, memberKey = null) {
     // Show loading spinner while fetching
-    const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Loading members seed data for ${groupKey}${memberKey ? '/' + memberKey : ''} ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+    const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Loading members seed data for ${group?.group_key || 'templates'}${memberKey ? '/' + memberKey : ''} ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
 
     try {
+        const payload = {};
+        if (group) {
+            payload.group_key = group.group_key;
+            payload.group_id = group.group_id;
+        } else {
+            payload.group_key = 'templates';
+        }
+        if (memberKey !== null) {
+            payload.member_key = memberKey;
+        }
+        
         const resp = await fetch('/api/dev-tool-conversations/seeds_members_get', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ group_key: groupKey, member_key: memberKey })
+            body: JSON.stringify(payload)
         });
 
         const result = await resp.json();
@@ -48,26 +59,37 @@ window.conversations.apiSeeds.seedsMembersGet = async function (spinnerContainer
         if (result.success) {
             return result.data;
         } else {
-            throw new Error('Failed to fetch members seed data for ' + groupKey + (memberKey ? '/' + memberKey : '') + ': ' + (result.error || 'Unknown error'));
+            throw new Error('Failed to fetch members seed data for ' + (group?.group_key || 'templates') + (memberKey ? '/' + memberKey : '') + ': ' + (result.error || 'Unknown error'));
         }
     } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error fetching members seed data for ' + groupKey + (memberKey ? '/' + memberKey : '') + '\nError: ' + (e.message || e.toString()));
-        console.error('Error fetching members seed data for ' + groupKey + (memberKey ? '/' + memberKey : '') + ':', e);
+        new window.AlertComponent('API Error', 'Error fetching members seed data for ' + (group?.group_key || 'templates') + (memberKey ? '/' + memberKey : '') + '\nError: ' + (e.message || e.toString()));
+        console.error('Error fetching members seed data for ' + (group?.group_key || 'templates') + (memberKey ? '/' + memberKey : '') + ':', e);
         throw e;
     }
 };
 
-// Fetch instructions seed data from backend (requires group_key, optional instruction_key - returns array or single object)
-window.conversations.apiSeeds.seedsInstructionsGet = async function (spinnerContainer, groupKey, instructionKey = null) {
+// Fetch instructions seed data from backend (group: group object or null for templates, instructionKey: filter by specific instruction or null for all)
+window.conversations.apiSeeds.seedsInstructionsGet = async function (spinnerContainer, group, instructionKey = null) {
     // Show loading spinner while fetching
-    const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Loading instructions seed data for ${groupKey}${instructionKey ? '/' + instructionKey : ''} ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+    const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Loading instructions seed data for ${group?.group_key || 'templates'}${instructionKey ? '/' + instructionKey : ''} ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
 
     try {
+        const payload = {};
+        if (group) {
+            payload.group_key = group.group_key;
+            payload.group_id = group.group_id;
+        } else {
+            payload.group_key = 'templates';
+        }
+        if (instructionKey !== null) {
+            payload.instruction_key = instructionKey;
+        }
+        
         const resp = await fetch('/api/dev-tool-conversations/seeds_instructions_get', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ group_key: groupKey, instruction_key: instructionKey })
+            body: JSON.stringify(payload)
         });
 
         const result = await resp.json();
@@ -75,12 +97,12 @@ window.conversations.apiSeeds.seedsInstructionsGet = async function (spinnerCont
         if (result.success) {
             return result.data;
         } else {
-            throw new Error('Failed to fetch instructions seed data for ' + groupKey + (instructionKey ? '/' + instructionKey : '') + ': ' + (result.error || 'Unknown error'));
+            throw new Error('Failed to fetch instructions seed data for ' + (group?.group_key || 'templates') + (instructionKey ? '/' + instructionKey : '') + ': ' + (result.error || 'Unknown error'));
         }
     } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error fetching instructions seed data for ' + groupKey + (instructionKey ? '/' + instructionKey : '') + '\nError: ' + (e.message || e.toString()));
-        console.error('Error fetching instructions seed data for ' + groupKey + (instructionKey ? '/' + instructionKey : '') + ':', e);
+        new window.AlertComponent('API Error', 'Error fetching instructions seed data for ' + (group?.group_key || 'templates') + (instructionKey ? '/' + instructionKey : '') + '\nError: ' + (e.message || e.toString()));
+        console.error('Error fetching instructions seed data for ' + (group?.group_key || 'templates') + (instructionKey ? '/' + instructionKey : '') + ':', e);
         throw e;
     }
 };

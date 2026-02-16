@@ -221,6 +221,14 @@ class PopupComponent {
                 if (alertModal && alertModal.contains(e.target)) {
                     return;
                 }
+                
+                // If click is inside any popup (including child popups), don't close
+                const clickedPopup = e.target.closest('.framework-popup');
+                if (clickedPopup) {
+                    return;
+                }
+                
+                // If click is outside this popup, close it
                 if (this.popupElement && !this.popupElement.contains(e.target)) {
                     this.hide();
                 }
