@@ -24,6 +24,21 @@
             // Create wrapper for popup content
             const wrapper = window.conversations.utils.createDivContainer(null, 'conversations-page-wrapper');
             
+            // Variable to hold popup reference for close button
+            let popup = null;
+            
+            // Add close button at the top
+            const buttonContainer = window.conversations.utils.createDivContainer(wrapper, 'conversations-buttons-container');
+            new window.ButtonComponent(buttonContainer, {
+                label: '🏃 Close',
+                type: window.ButtonComponent.TYPE_GHOST,
+                onClick: () => {
+                    if (popup) {
+                        popup.hide();
+                    }
+                }
+            });
+            
             // Create content container
             const container = window.conversations.utils.createDivContainer(wrapper, 'conversation-container-vertical');
 
@@ -36,7 +51,19 @@
             if (this.errorResponse.request_params) {
                 const paramsField = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
                 window.conversations.utils.createLabel(paramsField, 'Request Parameters:');
-                window.conversations.utils.createJsonDiv(paramsField, this.errorResponse.request_params);
+                
+                // Parse request_params if it's a string
+                let params = this.errorResponse.request_params;
+                if (typeof params === 'string') {
+                    try {
+                        params = JSON.parse(params);
+                    } catch (e) {
+                        // If parsing fails, keep it as string
+                        console.warn('Failed to parse request_params as JSON:', e);
+                    }
+                }
+                
+                window.conversations.utils.createJsonDiv(paramsField, params);
             }
 
             // 3. Error
@@ -52,6 +79,8 @@
 
                 // Body: Message and Exception
                 const bodyContent = window.conversations.utils.createDivContainer(null, 'conversation-container-vertical');
+                bodyContent.style.maxHeight = '200px';
+                bodyContent.style.overflow = 'auto';
                 
                 if (this.errorResponse.message) {
                     window.conversations.utils.createField(bodyContent, 'Message:', this.errorResponse.message, true);
@@ -63,15 +92,15 @@
 
                 // Create expandable div
                 const expandDiv = window.conversations.utils.createDivContainer(container);
-                new window.ExpandDivComponent(expandDiv, headerContent, bodyContent, true);
+                new window.ExpandDivComponent(expandDiv, headerContent, bodyContent, false);
             }
 
             // Show popup with error icon and title
-            const popup = new window.PopupComponent({
+            popup = new window.PopupComponent({
                 icon: '⚠️',
                 title: 'API Failed',
                 width: 800,
-                height: 800,
+                height: 'auto',
                 content: wrapper,
                 closable: true,
                 overlay: true,

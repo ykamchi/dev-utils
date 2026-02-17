@@ -39,7 +39,7 @@
                     }
 
                     // Create feedback field according to its type
-                    const feedbackField = window.conversations.utils.createDivContainer(wrapperDiv, 'conversation-field-container-vertical', feedbackDef.description);
+                    const feedbackField = window.conversations.utils.createDivContainer(wrapperDiv, 'conversation-field-container-vertical', null, feedbackDef.description);
                     window.conversations.utils.createLabel(feedbackField, key);
                     if (feedbackDef.type === 'integer') {
                         new window.RateComponent(feedbackField, feedbackDef.min, feedbackDef.max, value, '100px', '18px', true);

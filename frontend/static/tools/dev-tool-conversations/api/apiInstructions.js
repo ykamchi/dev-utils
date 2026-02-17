@@ -26,12 +26,11 @@ window.conversations.apiInstructions.instructionsList = async function (spinnerC
         if (result.success && result.data && typeof result.data === 'object') {
             return result.data;
         } else {
-            throw new Error('Failed to load group instructions for group ' + groupId + ': ' + (result.error || 'Unknown error'));
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to load group instructions for group ' + groupId);
         }
-
     } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error fetching group instructions for ' + groupId + '\nError: ' + (e.message || e.toString()));
         console.error('Error fetching group instructions for ' + groupId + ':', e);
         throw e;
     }
@@ -59,12 +58,11 @@ window.conversations.apiInstructions.instructionsAdd = async function (spinnerCo
         if (result.success) {
             return result.data;
         } else {
-            throw new Error('Failed to add group instructions for ' + groupId + ': ' + (result.error || 'Unknown error'));
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to add group instructions for ' + groupId);
         }
-
     } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error adding group instructions for ' + groupId + '\nError: ' + (e.message || e.toString()));
         console.error('Error adding group instructions for ' + groupId + ':', e);
         throw e;
     }
@@ -75,6 +73,7 @@ window.conversations.apiInstructions.instructionsAdd = async function (spinnerCo
 window.conversations.apiInstructions.instructionsDelete = async function (spinnerContainer, instruction_id) {
     // Show loading spinner while deleting instructions
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Deleting instructions for ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+    
     try {
         const resp = await fetch('/api/dev-tool-conversations/instructions_delete', {
             method: 'POST',
@@ -89,13 +88,12 @@ window.conversations.apiInstructions.instructionsDelete = async function (spinne
         if (result.success) {
             return result.data;
         } else {
-            throw new Error('Failed to delete group instructions for ' + groupId + ': ' + (result.error || 'Unknown error'));
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to delete instructions');
         }
-
     } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error deleting instructions for ' + groupId + '\nError: ' + (e.message || e.toString()));
-        console.error('Error deleting group instructions for ' + groupId + ':', e);
+        console.error('Error deleting instructions:', e);
         throw e;
     }
 };
@@ -120,13 +118,12 @@ window.conversations.apiInstructions.instructionsUpdate = async function (spinne
         if (result.success) {
             return result.data;
         } else {
-            throw new Error('Failed to update group instructions for ' + groupId + ': ' + (result.error || 'Unknown error'));
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to update instructions');
         }
-
     } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error updating group instructions for ' + groupId + '\nError: ' + (e.message || e.toString()));
-        console.error('Error updating group instructions for ' + groupId + ':', e);
+        console.error('Error updating instructions:', e);
         throw e;
     }
 };

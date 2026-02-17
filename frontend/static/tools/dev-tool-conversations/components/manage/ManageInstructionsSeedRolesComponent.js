@@ -1,34 +1,30 @@
 (function () {
     /*
-        ManageInstructionsSeedRoleComponent: Displays seed instructions and allows copying roles
+        ManageInstructionsSeedRolesComponent: Displays seed instructions and allows copying roles
     */
-    class ManageInstructionsSeedRoleComponent {
-        constructor(container, group, copyCallback) {
+    class ManageInstructionsSeedRolesComponent {
+        constructor(container, group, onRolesSelected) {
             this.container = container;
             this.group = group;
-            this.copyCallback = copyCallback;
-            this.groupInstructionsSeed = null;
-            this.templateInstructionsSeed = null;
+            this.onRolesSelected = onRolesSelected;
+
             this.allRoles = [];
             this.render();
         }
         
-        async render() {
-            // Fetch seed data
-            this.templateInstructionsSeed = await window.conversations.apiSeeds.seedsInstructionsGet(this.container, null);
-            this.groupInstructionsSeed = await window.conversations.apiSeeds.seedsInstructionsGet(this.container, this.group);
-            
+        render() {
             this.load();
         }
 
-        load() {
-            this.container.innerHTML = '';
+        async load() {
+            // Fetch seed data
+            const templateInstructionsSeed = await window.conversations.apiSeeds.seedsInstructionsGet(this.container, null);
+            const groupInstructionsSeed = await window.conversations.apiSeeds.seedsInstructionsGet(this.container, this.group);
+
             const wrapper = window.conversations.utils.createDivContainer(this.container, 'conversation-container-vertical');
 
             // Flatten all roles from all instructions
-            this.allRoles = [];
-            this.flattenRolesFromSeeds(this.groupInstructionsSeed, 'Group');
-            this.flattenRolesFromSeeds(this.templateInstructionsSeed, 'Template');
+            this.allRoles = [...groupInstructionsSeed, ...templateInstructionsSeed];
 
             if (this.allRoles.length === 0) {
                 window.conversations.utils.createReadOnlyText(wrapper, 'No seed roles found.', 'conversations-message-empty');
@@ -39,15 +35,15 @@
             const buttonContainer = window.conversations.utils.createDivContainer(wrapper, 'conversations-buttons-container');
             new window.ButtonComponent(buttonContainer, {
                 label: '🗐 Copy selected roles',
-                onClick: () => this.copySelectedRoles(),
+                onClick: () => this.selectRoles(),
                 type: window.ButtonComponent.TYPE_GHOST
             });
 
             // Create list of roles
-            new window.ListComponent(wrapper, this.allRoles, (roleEntry) => {
+            new window.ListComponent(wrapper, this.allRoles, (role) => {
                 // Create header content
-                const icon = roleEntry.valid ? window.conversations.CONVERSATION_TYPES_ICONS[roleEntry.instruction.conversation_type] + ' ' : '✘ ';
-                const name = `${roleEntry.role.role_name} (${roleEntry.instruction.name})`;
+                const icon = role.s.valid ? window.conversations.CONVERSATION_TYPES_ICONS[roleEntry.instruction.conversation_type] + ' ' : '✘ ';
+                const name = `${role.role_name} (${roleEntry.instruction.name})`;
 
                 const headerContent = window.conversations.utils.createDivContainer(this.container, 'conversations-card-wrapper');
 
@@ -97,24 +93,16 @@
             });
         }
 
-        flattenRolesFromSeeds(seedData, sourceName) {
+        getRules(seedData, sourceName) {
             if (!seedData || seedData.length === 0) {
                 return;
             }
 
-            seedData.forEach(seedItem => {
+            seedData.info.roles.map(role => {
                 const instruction = seedItem.json;
                 const roles = instruction.roles || {};
 
-                Object.entries(roles).forEach(([roleKey, role]) => {
-                    // Convert feedback_def from object to array
-                    const roleCopy = JSON.parse(JSON.stringify(role));
-                    roleCopy.feedback_def = Object.entries(roleCopy.feedback_def || {}).map(([feedbackName, feedbackDef]) => ({
-                        feedbackName,
-                        ...feedbackDef
-                    }));
-
-                    this.allRoles.push({
+                return {
                         type: 'role',
                         seed_key: seedItem.seed_key,
                         instruction: instruction,
@@ -124,12 +112,11 @@
                         include: false,
                         valid: seedItem.valid,
                         error: seedItem.error
-                    });
-                });
+                };
             });
         }
 
-        copySelectedRoles() {
+        selectRoles() {
             const selectedRoles = this.allRoles.filter(roleEntry => roleEntry.include && roleEntry.valid);
             
             if (selectedRoles.length === 0) {
@@ -138,10 +125,10 @@
             }
 
             // Pass array of role objects to callback
-            this.copyCallback(selectedRoles.map(entry => entry.role));
+            this.onRolesSelected(selectedRoles.map(entry => entry.role));
         }
     }
 
     window.conversations = window.conversations || {};
-    window.conversations.ManageInstructionsSeedRoleComponent = ManageInstructionsSeedRoleComponent;
+    window.conversations.ManageInstructionsSeedRolesComponent = ManageInstructionsSeedRolesComponent;
 })();

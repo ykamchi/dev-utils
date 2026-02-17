@@ -21,11 +21,11 @@ window.conversations.apiSeeds.seedsGroupsGet = async function (spinnerContainer,
         if (result.success) {
             return result.data;
         } else {
-            throw new Error('Failed to fetch groups seed data' + (groupKey ? ' for ' + groupKey : '') + ': ' + (result.error || 'Unknown error'));
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to fetch groups seed data' + (groupKey ? ' for ' + groupKey : ''));
         }
     } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error fetching groups seed data' + (groupKey ? ' for ' + groupKey : '') + '\nError: ' + (e.message || e.toString()));
         console.error('Error fetching groups seed data' + (groupKey ? ' for ' + groupKey : '') + ':', e);
         throw e;
     }
@@ -59,11 +59,11 @@ window.conversations.apiSeeds.seedsMembersGet = async function (spinnerContainer
         if (result.success) {
             return result.data;
         } else {
-            throw new Error('Failed to fetch members seed data for ' + (group?.group_key || 'templates') + (memberKey ? '/' + memberKey : '') + ': ' + (result.error || 'Unknown error'));
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to fetch members seed data for ' + (group?.group_key || 'templates') + (memberKey ? '/' + memberKey : ''));
         }
     } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error fetching members seed data for ' + (group?.group_key || 'templates') + (memberKey ? '/' + memberKey : '') + '\nError: ' + (e.message || e.toString()));
         console.error('Error fetching members seed data for ' + (group?.group_key || 'templates') + (memberKey ? '/' + memberKey : '') + ':', e);
         throw e;
     }
@@ -97,12 +97,47 @@ window.conversations.apiSeeds.seedsInstructionsGet = async function (spinnerCont
         if (result.success) {
             return result.data;
         } else {
-            throw new Error('Failed to fetch instructions seed data for ' + (group?.group_key || 'templates') + (instructionKey ? '/' + instructionKey : '') + ': ' + (result.error || 'Unknown error'));
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to fetch instructions seed data for ' + (group?.group_key || 'templates') + (instructionKey ? '/' + instructionKey : ''));
         }
     } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error fetching instructions seed data for ' + (group?.group_key || 'templates') + (instructionKey ? '/' + instructionKey : '') + '\nError: ' + (e.message || e.toString()));
         console.error('Error fetching instructions seed data for ' + (group?.group_key || 'templates') + (instructionKey ? '/' + instructionKey : '') + ':', e);
+        throw e;
+    }
+};
+
+// Fetch instruction roles seed data from backend (group: group object or null for templates)
+// Returns all roles from all instructions as a flat array
+window.conversations.apiSeeds.seedsInstructionsRolesGet = async function (spinnerContainer, group) {
+    // Show loading spinner while fetching
+    const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Loading instruction roles seed data for ${group?.group_key || 'templates'} ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+
+    try {
+        const payload = {};
+        if (group) {
+            payload.group_key = group.group_key;
+        } else {
+            payload.group_key = 'templates';
+        }
+        
+        const resp = await fetch('/api/dev-tool-conversations/seeds_instructions_roles_get', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await resp.json();
+        spinner.remove();
+        if (result.success) {
+            return result.data;
+        } else {
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to fetch instruction roles seed data for ' + (group?.group_key || 'templates'));
+        }
+    } catch (e) {
+        spinner.remove();
+        console.error('Error fetching instruction roles seed data for ' + (group?.group_key || 'templates') + ':', e);
         throw e;
     }
 };
@@ -128,7 +163,6 @@ window.conversations.apiSeeds.seedsGroupsSet = async function (spinnerContainer,
         }
     } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error saving group seed data for ' + groupKey + '\nError: ' + (e.message || e.toString()));
         console.error('Error saving group seed data for ' + groupKey + ':', e);
         throw e;
     }
@@ -155,11 +189,11 @@ window.conversations.apiSeeds.seedsMembersSet = async function (spinnerContainer
         if (result.success) {
             return result.data;
         } else {
-            throw new Error('Failed to save member seed data for ' + groupKey + '/' + memberKey + ': ' + (result.error || 'Unknown error'));
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to save member seed data for ' + groupKey + '/' + memberKey);
         }
     } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error saving member seed data for ' + groupKey + '/' + memberKey + '\nError: ' + (e.message || e.toString()));
         console.error('Error saving member seed data for ' + groupKey + '/' + memberKey + ':', e);
         throw e;
     }
@@ -186,11 +220,11 @@ window.conversations.apiSeeds.seedsInstructionsSet = async function (spinnerCont
         if (result.success) {
             return result.data;
         } else {
-            throw new Error('Failed to save instruction seed data for ' + groupKey + '/' + instructionKey + ': ' + (result.error || 'Unknown error'));
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to save instruction seed data for ' + groupKey + '/' + instructionKey);
         }
     } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error saving instruction seed data for ' + groupKey + '/' + instructionKey + '\nError: ' + (e.message || e.toString()));
         console.error('Error saving instruction seed data for ' + groupKey + '/' + instructionKey + ':', e);
         throw e;
     }
@@ -216,11 +250,11 @@ window.conversations.apiSeeds.seedsMembersDelete = async function (spinnerContai
         if (result.success) {
             return result.data;
         } else {
-            throw new Error('Failed to delete member seed data for ' + groupKey + '/' + memberKey + ': ' + (result.error || 'Unknown error'));
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to delete member seed data for ' + groupKey + '/' + memberKey);
         }
     } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error deleting member seed data for ' + groupKey + '/' + memberKey + '\nError: ' + (e.message || e.toString()));
         console.error('Error deleting member seed data for ' + groupKey + '/' + memberKey + ':', e);
         throw e;
     }
@@ -246,11 +280,11 @@ window.conversations.apiSeeds.seedsInstructionsDelete = async function (spinnerC
         if (result.success) {
             return result.data;
         } else {
-            throw new Error('Failed to delete instruction seed data for ' + groupKey + '/' + instructionKey + ': ' + (result.error || 'Unknown error'));
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to delete instruction seed data for ' + groupKey + '/' + instructionKey);
         }
     } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error deleting instruction seed data for ' + groupKey + '/' + instructionKey + '\nError: ' + (e.message || e.toString()));
         console.error('Error deleting instruction seed data for ' + groupKey + '/' + instructionKey + ':', e);
         throw e;
     }

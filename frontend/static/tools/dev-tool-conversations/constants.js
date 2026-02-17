@@ -43,7 +43,8 @@ window.conversations.SEED_TYPES = {
     MEMBERS: 'members',
     INSTRUCTIONS_CONVERSATIONS: 'instructions_conversations',
     INSTRUCTIONS_DECISIONS: 'instructions_decisions',
-    INSTRUCTIONS_ALL: 'instructions_all'
+    INSTRUCTIONS_ALL: 'instructions_all',
+    ROLES: 'roles'
 }
 
 // Default instructions template for conversations

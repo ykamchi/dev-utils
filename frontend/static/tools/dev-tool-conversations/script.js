@@ -81,7 +81,7 @@ window.tool_script = {
             new window.conversations.ManageSeedsImportComponent(
                 this.contentArea,
                 null, // No groupId since we're creating a new group
-                [window.conversations.SEED_TYPES.GROUP],
+                window.conversations.SEED_TYPES.GROUP,
                 (added) => {
                     // Callback when seeds are imported
                     console.log('[Conversations Tool] Group added:', added.groups[0].group_id);
@@ -136,7 +136,7 @@ window.tool_script = {
 
                     } else {
                         console.log('[Conversations Tool] No members exist - showing ManageSeedsImportComponent on the content area');
-                        new window.conversations.ManageSeedsImportComponent(this.contentArea, this.menuGroupSelectionComponent.selectedGroupId, [window.conversations.SEED_TYPES.MEMBERS],
+                        new window.conversations.ManageSeedsImportComponent(this.contentArea, this.menuGroupSelectionComponent.selectedGroupId, window.conversations.SEED_TYPES.MEMBERS,
                             // onAddedSeeds callback when seeds are imported from the ManageSeedsImportComponent - reload the members list for the selected group
                             (added) => {
                                 if (added.members && added.members.length > 0) {

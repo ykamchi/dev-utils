@@ -1,12 +1,12 @@
 (function () {
     /*
-        ManageSeedsImportComponent: Displays and imports seed data (members, instructions) from seed files
+        ManageSeedsImportComponent: Displays and imports seed data (members, instructions, roles) from seed files
     */
     class ManageSeedsImportComponent {
-        constructor(container, groupId, seedTypes, onAddedSeeds = null) {
+        constructor(container, groupId, seedType, onAddedSeeds = null) {
             this.container = container;
             this.groupId = groupId;
-            this.seedTypes = seedTypes; // e.g., ['members', 'instruction'] or ['instruction']
+            this.seedType = seedType; // Single seed type: 'members', 'instructions_all', 'roles', etc.
             this.allSeedsByType = {};
             this.page = null;
             this.onAddedSeeds = onAddedSeeds;
@@ -14,10 +14,6 @@
         }
 
         render() {
-            if (this.seedTypes.length === 0) {
-                window.conversations.utils.createReadOnlyText(this.container, 'No seed types specified for import.', 'conversations-message-empty');
-                return;
-            }
             this.loadSeeds();
         }
 
@@ -26,36 +22,44 @@
                 this.group = await window.conversations.apiGroups.groupsGet(this.container, this.groupId);
             }
 
-            // Load seeds based on requested types
-            if (this.seedTypes.includes(window.conversations.SEED_TYPES.GROUP)) {
-                const groupSeeds = await window.conversations.apiSeeds.seedsGroupsGet(this.container, null);
-                const templateGroups = await window.conversations.apiSeeds.seedsGroupsGet(this.container, 'templates');
-                await this.loadGroupSeeds(groupSeeds, templateGroups);
-            }
-            
-            if (this.seedTypes.includes(window.conversations.SEED_TYPES.MEMBERS)) {
-                const memberSeeds = this.group ? await window.conversations.apiSeeds.seedsMembersGet(this.container, this.group) : [];
-                const templateMembers = await window.conversations.apiSeeds.seedsMembersGet(this.container, null);
-                await this.loadMemberSeeds(memberSeeds, templateMembers);
-            }
-            
-            if (this.seedTypes.includes(window.conversations.SEED_TYPES.INSTRUCTIONS_ALL)) {
-                const groupInstructions = this.group ? await window.conversations.apiSeeds.seedsInstructionsGet(this.container, this.group) : [];
-                const templateInstructions = this.group ? await window.conversations.apiSeeds.seedsInstructionsGet(this.container, null) : [];
-                await this.loadInstructionSeeds(groupInstructions, templateInstructions, window.conversations.CONVERSATION_TYPES.AI_CONVERSATION);
-                await this.loadInstructionSeeds(groupInstructions, templateInstructions, window.conversations.CONVERSATION_TYPES.AI_DECISION);
-            }
+            // Load seeds based on the single seed type
+            switch(this.seedType) {
+                case window.conversations.SEED_TYPES.GROUP:
+                    const groupSeeds = await window.conversations.apiSeeds.seedsGroupsGet(this.container, null);
+                    const templateGroups = await window.conversations.apiSeeds.seedsGroupsGet(this.container, 'templates');
+                    await this.loadGroupSeeds(groupSeeds, templateGroups);
+                    break;
+                    
+                case window.conversations.SEED_TYPES.MEMBERS:
+                    const memberSeeds = this.group ? await window.conversations.apiSeeds.seedsMembersGet(this.container, this.group) : [];
+                    const templateMembers = await window.conversations.apiSeeds.seedsMembersGet(this.container, null);
+                    await this.loadMemberSeeds(memberSeeds, templateMembers);
+                    break;
+                    
+                case window.conversations.SEED_TYPES.INSTRUCTIONS_ALL:
+                    const groupInstructionsAll = this.group ? await window.conversations.apiSeeds.seedsInstructionsGet(this.container, this.group) : [];
+                    const templateInstructionsAll = this.group ? await window.conversations.apiSeeds.seedsInstructionsGet(this.container, null) : [];
+                    await this.loadInstructionSeeds(groupInstructionsAll, templateInstructionsAll, window.conversations.CONVERSATION_TYPES.AI_CONVERSATION);
+                    await this.loadInstructionSeeds(groupInstructionsAll, templateInstructionsAll, window.conversations.CONVERSATION_TYPES.AI_DECISION);
+                    break;
 
-            if (this.seedTypes.includes(window.conversations.SEED_TYPES.INSTRUCTIONS_CONVERSATIONS)) {
-                const groupInstructions = this.group ? await window.conversations.apiSeeds.seedsInstructionsGet(this.container, this.group) : [];
-                const templateInstructions = this.group ? await window.conversations.apiSeeds.seedsInstructionsGet(this.container, null) : [];
-                await this.loadInstructionSeeds(groupInstructions, templateInstructions, window.conversations.CONVERSATION_TYPES.AI_CONVERSATION);
-            }
+                case window.conversations.SEED_TYPES.INSTRUCTIONS_CONVERSATIONS:
+                    const groupInstructionsConv = this.group ? await window.conversations.apiSeeds.seedsInstructionsGet(this.container, this.group) : [];
+                    const templateInstructionsConv = this.group ? await window.conversations.apiSeeds.seedsInstructionsGet(this.container, null) : [];
+                    await this.loadInstructionSeeds(groupInstructionsConv, templateInstructionsConv, window.conversations.CONVERSATION_TYPES.AI_CONVERSATION);
+                    break;
 
-            if (this.seedTypes.includes(window.conversations.SEED_TYPES.INSTRUCTIONS_DECISIONS)) {
-                const groupInstructions = this.group ? await window.conversations.apiSeeds.seedsInstructionsGet(this.container, this.group) : [];
-                const templateInstructions = this.group ? await window.conversations.apiSeeds.seedsInstructionsGet(this.container, null) : [];
-                await this.loadInstructionSeeds(groupInstructions, templateInstructions, window.conversations.CONVERSATION_TYPES.AI_DECISION);
+                case window.conversations.SEED_TYPES.INSTRUCTIONS_DECISIONS:
+                    const groupInstructionsDec = this.group ? await window.conversations.apiSeeds.seedsInstructionsGet(this.container, this.group) : [];
+                    const templateInstructionsDec = this.group ? await window.conversations.apiSeeds.seedsInstructionsGet(this.container, null) : [];
+                    await this.loadInstructionSeeds(groupInstructionsDec, templateInstructionsDec, window.conversations.CONVERSATION_TYPES.AI_DECISION);
+                    break;
+
+                case window.conversations.SEED_TYPES.ROLES:
+                    const groupRoles = this.group ? await window.conversations.apiSeeds.seedsInstructionsRolesGet(this.container, this.group) : [];
+                    const templateRoles = await window.conversations.apiSeeds.seedsInstructionsRolesGet(this.container, null);
+                    await this.loadRoleSeeds(groupRoles, templateRoles);
+                    break;
             }
 
             this.loadContent();
@@ -127,6 +131,30 @@
             });
         }
 
+        async loadRoleSeeds(groupRoles, templateRoles) {
+            this.allSeedsByType[window.conversations.SEED_TYPES.ROLES] = [];
+
+            this.allSeedsByType[window.conversations.SEED_TYPES.ROLES].push({
+                type: 'seeds',
+                data: groupRoles ? groupRoles.map(seed => { 
+                    seed.include = false; 
+                    seed.source = 'Group'; 
+                    return seed; 
+                }) : [],
+                tabName: '🎭 Group Roles'
+            });
+
+            this.allSeedsByType[window.conversations.SEED_TYPES.ROLES].push({
+                type: 'templates',
+                data: templateRoles ? templateRoles.map(seed => { 
+                    seed.include = false; 
+                    seed.source = 'Templates'; 
+                    return seed; 
+                }) : [],
+                tabName: '🎭 Template Roles'
+            });
+        }
+
         loadContent() {
 
             // Calculate total seeds count
@@ -134,15 +162,46 @@
                 return total + entries.reduce((sum, entry) => sum + entry.data.length, 0);
             }, 0);
 
-            const seedNames = this.seedTypes.map(type => {
-                if (type === window.conversations.SEED_TYPES.GROUP) return 'Groups';
-                if (type === window.conversations.SEED_TYPES.MEMBERS) return 'Members';
-                if (type === window.conversations.SEED_TYPES.INSTRUCTIONS_CONVERSATIONS) return 'Conversations';
-                if (type === window.conversations.SEED_TYPES.INSTRUCTIONS_DECISIONS) return 'Decisions';
-                return type;
-            });
+            // Determine page icon and title based on seed type
+            let pageIcon = '📦';
+            let seedName = 'Seeds';
+            let buttonLabel = '📤 Import Selected';
+            
+            switch(this.seedType) {
+                case window.conversations.SEED_TYPES.GROUP:
+                    pageIcon = '👥';
+                    seedName = 'Groups';
+                    buttonLabel = '📤 Import Groups';
+                    break;
+                case window.conversations.SEED_TYPES.MEMBERS:
+                    pageIcon = '👤';
+                    seedName = 'Members';
+                    buttonLabel = '📤 Import Members';
+                    break;
+                case window.conversations.SEED_TYPES.INSTRUCTIONS_ALL:
+                    pageIcon = '📋';
+                    seedName = 'Instructions';
+                    buttonLabel = '📤 Import Instructions';
+                    break;
+                case window.conversations.SEED_TYPES.INSTRUCTIONS_CONVERSATIONS:
+                    pageIcon = '💬';
+                    seedName = 'Conversations';
+                    buttonLabel = '📤 Import Conversations';
+                    break;
+                case window.conversations.SEED_TYPES.INSTRUCTIONS_DECISIONS:
+                    pageIcon = '⚖️';
+                    seedName = 'Decisions';
+                    buttonLabel = '📤 Import Decisions';
+                    break;
+                case window.conversations.SEED_TYPES.ROLES:
+                    pageIcon = '🎭';
+                    seedName = 'Roles';
+                    buttonLabel = '✅ Select Roles';
+                    break;
+            }
+
             // Create page component with proper header format
-            this.page = new window.conversations.PageComponent(this.container, '📦', `Import ${seedNames.join(', ')} Seeds`, [ this.group?.group_name, `Total seeds: ${totalSeeds}` ] );
+            this.page = new window.conversations.PageComponent(this.container, pageIcon, `Import ${seedName} Seeds`, [ this.group?.group_name, `Total seeds: ${totalSeeds}` ] );
 
             // Control area - show selection counts
             this.loadControlArea();
@@ -150,7 +209,7 @@
             // Buttons area
             const buttonsDiv = window.conversations.utils.createDivContainer(null, 'conversations-buttons-container');
             new window.ButtonComponent(buttonsDiv, {
-                label: '📤 seed selected',
+                label: buttonLabel,
                 onClick: () => this.startSeedingAllData(),
                 type: window.ButtonComponent.TYPE_GHOST
             });
@@ -160,7 +219,7 @@
             const contentDiv = window.conversations.utils.createDivContainer();
             const tabs = [];
             
-            // Generate tabs from allSeedsByType structure - no length check needed!
+            // Generate tabs from allSeedsByType structure
             Object.values(this.allSeedsByType).forEach(entries => {
                 entries.forEach(entry => {
                     tabs.push({ 
@@ -180,17 +239,18 @@
             const controlDiv = window.conversations.utils.createDivContainer(null, '-');
 
             // Count selected seeds by type in one pass
-            const counts = { groups: 0, members: 0, conversations: 0, decisions: 0 };
+            const counts = { groups: 0, members: 0, roles: 0, conversations: 0, decisions: 0 };
             Object.values(this.allSeedsByType).forEach(entries => {
                 entries.forEach(entry => {
                     entry.data.forEach(seed => {
                         if (seed.include && seed.valid) {
                             if (seed.type === 'group') counts.groups++;
                             else if (seed.type === 'member') counts.members++;
+                            else if (seed.type === 'role') counts.roles++;
                             else if (seed.type === 'instruction') {
-                                if (seed.json.conversation_type === window.conversations.CONVERSATION_TYPES.AI_CONVERSATION) {
+                                if (seed.json.info.conversation_type === window.conversations.CONVERSATION_TYPES.AI_CONVERSATION) {
                                     counts.conversations++;
-                                } else if (seed.json.conversation_type === window.conversations.CONVERSATION_TYPES.AI_DECISION) {
+                                } else if (seed.json.info.conversation_type === window.conversations.CONVERSATION_TYPES.AI_DECISION) {
                                     counts.decisions++;
                                 }
                             }
@@ -203,6 +263,7 @@
             let details = '';
             details += counts.groups ? `${counts.groups} Groups ` : '';
             details += counts.members ? `${counts.members} Members ` : '';
+            details += counts.roles ? `${counts.roles} Roles ` : '';
             details += counts.conversations ? `${counts.conversations} Conversations ` : '';
             details += counts.decisions ? `${counts.decisions} Decisions ` : '';
             
@@ -228,28 +289,32 @@
             new window.ListComponent(container, seeds, (seedEntry) => {
                 // Create header content
                 let icon = '☰ ';
-                let name = 'Unknown Seed';
+                let name = seedEntry.seed_name || 'Unknown Seed';
+                
                 if (seedEntry.type === 'member') {
                     if (seedEntry.exist) {
                         icon = '✔️ ';
                     } else {
                         icon = seedEntry.valid ? '👤 ' : '✘ ';
                     }
-                    name = seedEntry.json?.member_name;
                 } else if (seedEntry.type === 'instruction') {
                     if (seedEntry.exist) {
                         icon = '✔️ ';
                     } else {
                         icon = seedEntry.valid ? window.conversations.CONVERSATION_TYPES_ICONS[seedEntry.json.info.conversation_type] + ' ' : '✘ ';
                     }
-                    name = 'Instruction - ' + seedEntry.json.info.name;
                 } else if (seedEntry.type === 'group') {
                     if (seedEntry.exist) {
                         icon = '✔️ ';
                     } else {
                         icon = seedEntry.valid ? '👥 ' : '✘ ';
                     }
-                    name = 'Group - ' + seedEntry.json.group_name;
+                } else if (seedEntry.type === 'role') {
+                    if (seedEntry.exist) {
+                        icon = '✔️ ';
+                    } else {
+                        icon = seedEntry.valid ? '🎭 ' : '✘ ';
+                    }
                 }
 
                 const headerContent = window.conversations.utils.createDivContainer(this.container, 'conversations-card-wrapper');
@@ -319,16 +384,26 @@
             const selectedSeeds = allSeeds.filter(entry => entry.include && entry.valid);
 
             if (selectedSeeds.length === 0) {
-                new window.AlertComponent('Seed Import', 'No items selected. Please select at least one item to import.');
+                const actionName = this.seedType === window.conversations.SEED_TYPES.ROLES ? 'selection' : 'import';
+                new window.AlertComponent('Seed ' + actionName.charAt(0).toUpperCase() + actionName.slice(1), `No items selected. Please select at least one item to ${actionName === 'selection' ? 'select' : 'import'}.`);
                 return;
             }
 
+            // Special handling for roles - just return selected seeds via callback
+            if (this.seedType === window.conversations.SEED_TYPES.ROLES) {
+                if (this.onAddedSeeds) {
+                    this.onAddedSeeds({ roles: selectedSeeds });
+                }
+                new window.AlertComponent('Role Selection', `Selected ${selectedSeeds.length} role(s).`);
+                return;
+            }
+
+            // Regular seed import flow for all other types
             try {
-                // Group members together for batch import
-                const selectedGroups = selectedSeeds.filter(entry => entry.type === 'group').map(entry => entry.json);
+                const added = {};
                 
-                const added = {}
-                // Import all members in one API call if any selected
+                // Import groups
+                const selectedGroups = selectedSeeds.filter(entry => entry.type === 'group').map(entry => entry.json);
                 if (selectedGroups.length > 0) {
                     added.groups = [];
                     for (const entry of selectedGroups) {
@@ -337,16 +412,14 @@
                     }
                 }
 
-                // Group members together for batch import
+                // Import members (batch)
                 const selectedMembers = selectedSeeds.filter(entry => entry.type === 'member').map(entry => entry.json);
-                
-                // Import all members in one API call if any selected
                 if (selectedMembers.length > 0) {
                     await window.conversations.apiMembers.membersAdd(null, this.group.group_id, selectedMembers);
                     added.members = selectedMembers;
                 }
                 
-                // Import instructions one by one
+                // Import instructions (one by one)
                 const selectedInstructions = selectedSeeds.filter(entry => entry.type === 'instruction');
                 if (selectedInstructions.length > 0) {
                     added.instructions = [];

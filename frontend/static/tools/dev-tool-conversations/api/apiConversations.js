@@ -10,6 +10,7 @@ window.conversations.apiConversations.conversationAdd = async function (spinnerC
     // Show loading spinner while starting conversation
     const participantNames = participants.map(p => p.member_name).join(', ');
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Starting conversation for ${participantNames}...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+    
     try {
         const resp = await fetch('/api/dev-tool-conversations/conversations_add', {
             method: 'POST',
@@ -26,11 +27,11 @@ window.conversations.apiConversations.conversationAdd = async function (spinnerC
         if (result.success) {
             return result;
         } else {
-            throw new Error('Failed to start conversation for group ' + groupId + ': ' + (result.error || 'Unknown error'));
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to start conversation for group ' + groupId);
         }
     } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error starting conversation for ' + groupId + '\nError: ' + (e.message || e.toString()));
         console.error('Error starting conversation for ' + groupId + ':', e);
         throw e;
     }
@@ -52,12 +53,11 @@ window.conversations.apiConversations.conversationsMessages = async function (sp
         if (result.success && result.data && Array.isArray(result.data)) {
             return result.data;
         } else {
-            throw new Error('Failed to fetch conversation messages: ' + (result.error || 'Unknown error'));
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to fetch conversation messages');
         }
-    }
-    catch (e) {
+    } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error fetching conversation messages.\nError: ' + (e.message || e.toString()));
         console.error('Error fetching conversation messages:', e);
         throw e;
     }

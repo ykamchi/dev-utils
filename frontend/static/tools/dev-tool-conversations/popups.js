@@ -17,7 +17,7 @@ window.conversations.popups.addGroup = async function (onAdded = null, onClose =
             new window.conversations.ManageSeedsImportComponent(
                 wrapperDiv,
                 null, // No groupId since we're creating a new group
-                [window.conversations.SEED_TYPES.GROUP],
+                window.conversations.SEED_TYPES.GROUP,
                 (added) => {
                     // Callback when seeds are imported
                     popup.hide();
@@ -40,7 +40,7 @@ window.conversations.popups.addMember = async function (groupId, onClose = null)
             const wrapperDiv = window.conversations.utils.createDivContainer(container, 'conversations-page-wrapper');
 
             // Create seed import component for members
-            new window.conversations.ManageSeedsImportComponent(wrapperDiv, groupId, [window.conversations.SEED_TYPES.MEMBERS]);
+            new window.conversations.ManageSeedsImportComponent(wrapperDiv, groupId, window.conversations.SEED_TYPES.MEMBERS);
         },
         onClose: () => onClose && onClose()
     });
@@ -58,15 +58,15 @@ window.conversations.popups.addInstruction = async function (groupId, conversati
 
             if (conversation_type === window.conversations.CONVERSATION_TYPES.AI_CONVERSATION) {
                 // Create seed import component for conversation instructions
-                new window.conversations.ManageSeedsImportComponent(wrapperDiv, groupId, [window.conversations.SEED_TYPES.INSTRUCTIONS_CONVERSATIONS]);
+                new window.conversations.ManageSeedsImportComponent(wrapperDiv, groupId, window.conversations.SEED_TYPES.INSTRUCTIONS_CONVERSATIONS);
 
             } else if (conversation_type === window.conversations.CONVERSATION_TYPES.AI_DECISION) {
                 // Create seed import component for decision instructions
-                new window.conversations.ManageSeedsImportComponent(wrapperDiv, groupId, [window.conversations.SEED_TYPES.INSTRUCTIONS_DECISIONS]);
+                new window.conversations.ManageSeedsImportComponent(wrapperDiv, groupId, window.conversations.SEED_TYPES.INSTRUCTIONS_DECISIONS);
 
             } else {
                 // Create seed import component for all instructions
-                new window.conversations.ManageSeedsImportComponent(wrapperDiv, groupId, [window.conversations.SEED_TYPES.INSTRUCTIONS_ALL]);
+                new window.conversations.ManageSeedsImportComponent(wrapperDiv, groupId, window.conversations.SEED_TYPES.INSTRUCTIONS_ALL);
             }
 
         },

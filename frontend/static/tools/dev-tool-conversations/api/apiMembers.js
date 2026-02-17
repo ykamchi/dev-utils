@@ -22,17 +22,14 @@ window.conversations.apiMembers.membersList = async function (spinnerContainer, 
         if (result.success) {
             return result.data;
         } else {
-            spinner.remove();
-            throw new Error('Failed to load group members for group ' + groupId + ': ' + (result.error || 'Unknown error'));
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to load group members for group ' + groupId);
         }
-
     } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error fetching group members for ' + groupId + '\n\n\n<br><br>Error: ' + (e.message || e.toString()));
-        console.error('Error fetching group members for ' + groupId + ':', e);
+        console.error('Error fetching group members for group ' + groupId + ':', e);
         throw e;
     }
-
 };
 
 window.conversations.apiMembers.membersGet = async function (spinnerContainer, memberId) {
@@ -51,17 +48,14 @@ window.conversations.apiMembers.membersGet = async function (spinnerContainer, m
         if (result.success) {
             return result.data;
         } else {
-            spinner.remove();
-            throw new Error('Failed to load member details for member ' + memberId + ' in group ' + groupId + ': ' + (result.error || 'Unknown error'));
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to load member details for member ' + memberId);
         }
-
     } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error fetching member details for member ' + memberId + ' in group ' + groupId + '\n\n\n<br><br>Error: ' + (e.message || e.toString()));
-        console.error('Error fetching member details for member ' + memberId + ' in group ' + groupId + ':', e);
+        console.error('Error fetching member details for member ' + memberId + ':', e);
         throw e;
     }
-
 };
 
 // Add members to group
@@ -114,12 +108,11 @@ window.conversations.apiMembers.membersDelete = async function (spinnerContainer
             return result.data;
         } else {
             new window.conversations.AlertApiErrorComponent(result);
-            throw new Error(result.message || 'Failed to delete member from group ' + groupId);
+            throw new Error(result.message || 'Failed to delete member ' + memberId);
         }
     } catch (e) {
         spinner.remove();
-        // new window.AlertComponent('API Error', 'Error deleting member from group ' + groupId + '\nError: ' + (e.message || e.toString()));
-        console.error('Error deleting member from group ' + groupId + ':', e);
+        console.error('Error deleting member ' + memberId + ':', e);
         throw e;
     }
 };
@@ -143,12 +136,11 @@ window.conversations.apiMembers.membersUpdate = async function (spinnerContainer
             return result.data;
         } else {
             new window.conversations.AlertApiErrorComponent(result);
-            throw new Error(result.message || 'Failed to update member in group ' + groupId);
+            throw new Error(result.message || 'Failed to update member');
         }
     } catch (e) {
         spinner.remove();
-        // new window.AlertComponent('API Error', 'Error updating member in group ' + groupId + '\nError: ' + (e.message || e.toString()));
-        console.error('Error updating member in group ' + groupId + ':', e);
+        console.error('Error updating member:', e);
         throw e;
     }
 }
@@ -158,7 +150,6 @@ window.conversations.apiConversations.membersConversationsList = async function 
     // Show loading spinner while fetching
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: 'Loading conversations ...', size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
 
-    // Fetch conversations from API
     try {
         const resp = await fetch('/api/dev-tool-conversations/members_conversations_list', {
             method: 'POST',
@@ -172,18 +163,16 @@ window.conversations.apiConversations.membersConversationsList = async function 
         });
 
         const result = await resp.json();
+        spinner.remove();
         if (result.success) {
-            spinner.remove();
             return result.data;
         } else {
-            spinner.remove();
-            throw new Error('Failed to load conversations for ' + memberName + ': ' + (result.error || 'Unknown error'));
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to load conversations for ' + memberName);
         }
-
     } catch (e) {
         spinner.remove();
-        new window.AlertComponent('API Error', 'Error getting conversations for ' + memberName + '.' + '\nError: ' + (e.message || e.toString()));
-        console.error('Error getting conversations:', e);
+        console.error('Error getting conversations for ' + memberName + ':', e);
         throw e;
     }
 };

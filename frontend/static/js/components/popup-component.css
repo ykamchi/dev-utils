@@ -9,8 +9,8 @@
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
     backdrop-filter: blur(2px);
+    /* z-index set dynamically in JS for stacking multiple modals */
 }
 
 /* Popup container */
@@ -20,7 +20,7 @@
     border: 1px solid var(--color-border-light);
     border-radius: 8px;
     box-shadow: var(--shadow-card-main);
-    z-index: 1000;
+    /* z-index set dynamically in JS for stacking multiple modals */
     min-width: 200px;
     max-width: 90vw;
     max-height: 90vh;

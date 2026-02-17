@@ -53,15 +53,23 @@ window.conversations.utils.createSpan = function (container = null, value, class
 
 
 // Create a div container
-window.conversations.utils.createDivContainer = function (container = null, className = null, title = null) {
+window.conversations.utils.createDivContainer = function (container = null, className = null, style = null, title = null) {
     const div = document.createElement('div');
     div.className = className || 'conversations-scrollable-group';
     if (container) {
         container.appendChild(div);
     }
+    
+    // Apply inline styles from style object
+    if (style && typeof style === 'object') {
+        Object.assign(div.style, style);
+    }
+    
+    // Set title attribute
     if (title) {
         div.title = title;
     }
+    
     return div;
 }
 

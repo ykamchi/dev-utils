@@ -3,13 +3,12 @@
         ManageSeedCompareComponent: displays comparison between seed data and current group data
     */
     class ManageSeedCompareComponent {
-        constructor(data, onReloadFromSeed, onOverrideSeed, onDirtySeed, onDirty, dataFilter = [], views = [], title = 'Seed Data Compare') {
+        constructor(data, onReloadFromSeed, onOverrideSeed, onDirtySeed, onDirty, dataFilter = [], title = 'Seed Data Compare') {
             this.onReloadFromSeed = onReloadFromSeed;
             this.onOverrideSeed = onOverrideSeed;
             this.onDirtySeed = onDirtySeed;
             this.onDirty = onDirty;
             this.dataFilter = dataFilter;
-            this.views = views;
             this.title = title;
 
             this.data = data;
@@ -62,7 +61,12 @@
         // Show the popup
         show() {
             this.popup = new window.PopupComponent({
-                icon: '💡', title: this.title, width: 1200, height: 720, content: (container) => {
+                icon: '💡', 
+                title: this.title, 
+                width: 1200, 
+                height: 720, 
+                closeOnOutsideClick: false, // Keep modal open when clicking overlay
+                content: (container) => {
                     this.render(container);
                 },
             });
@@ -104,51 +108,14 @@
                 });
             }
 
-            if (this.views.length === 0) {
-                // No views - show single diff component
-                new window.DiffComponent(
-                    wrapper,
-                    window.Utils.sortJsonKeys(this.seed || {}),
-                    window.Utils.sortJsonKeys(filteredData),
-                    {
-                        leftLabel: 'Seed Data',
-                        rightLabel: 'Current Data',
-                        height: 500
-                    }
-                );
-            } else {
-                // Has views - create tabset with one tab per view
-                const tabsetDiv = window.conversations.utils.createDivContainer(wrapper);
-                
-                const tabs = this.views.map(viewPath => {
-                    // Extract label from path (use last part or full path)
-                    const parts = viewPath.split('.');
-                    const label = parts[parts.length - 1] || viewPath;
-                    
-                    return {
-                        name: label.charAt(0).toUpperCase() + label.slice(1), // Capitalize first letter
-                        populateFunc: (container) => this.populateViewTab(container, viewPath)
-                    };
-                });
-                
-                new window.TabsetComponent(tabsetDiv, tabs);
-            }
-        }
-
-        // Populate a specific view tab with diff data
-        populateViewTab(container, viewPath) {
-            // Get the specific property from seed and filtered data
-            const filteredData = this.applyDataFilter(this.data);
-            const seedValue = this.getPropertyByPath(this.seed, viewPath) || {};
-            const dataValue = this.getPropertyByPath(filteredData, viewPath) || {};
-            
+            // Show single diff component
             new window.DiffComponent(
-                container,
-                window.Utils.sortJsonKeys(seedValue),
-                window.Utils.sortJsonKeys(dataValue),
+                wrapper,
+                window.Utils.sortJsonKeys(this.seed || {}),
+                window.Utils.sortJsonKeys(filteredData),
                 {
-                    leftLabel: `Seed Data - ${viewPath}`,
-                    rightLabel: `Current Data - ${viewPath}`,
+                    leftLabel: 'Seed Data',
+                    rightLabel: 'Current Data',
                     height: 500
                 }
             );
@@ -170,21 +137,6 @@
             
             // Delete the final property
             delete current[lastPart];
-        }
-
-        // Helper to get a property from an object using dot notation
-        getPropertyByPath(obj, path) {
-            const parts = path.split('.');
-            let current = obj;
-            
-            for (const part of parts) {
-                if (current === undefined || current === null) {
-                    return undefined;
-                }
-                current = current[part];
-            }
-            
-            return current;
         }
 
         // Apply dataFilter to remove specified properties

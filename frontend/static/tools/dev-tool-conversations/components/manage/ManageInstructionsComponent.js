@@ -67,9 +67,10 @@
 
             const wrapper = window.conversations.utils.createDivContainer(contentDiv, 'conversation-container-horizontal-space-between-full');
 
-            this.instructionListDiv = window.conversations.utils.createDivContainer(wrapper, 'conversations-layout-left');
-            this.instructionPropertiesDiv = window.conversations.utils.createDivContainer(wrapper, 'conversation-container-vertical');
-            this.rolesAreaDiv = window.conversations.utils.createDivContainer(wrapper, 'conversation-container-vertical');
+            this.instructionListDiv = window.conversations.utils.createDivContainer(wrapper, 'conversations-layout-left', { flex: 0.2 });
+            const rightDiv = window.conversations.utils.createDivContainer(wrapper, 'conversation-container-horizontal-space-between-full', { flex: 0.8 });
+            this.instructionPropertiesDiv = window.conversations.utils.createDivContainer(rightDiv, 'conversation-container-vertical', { flex: 0.2 });
+            this.rolesAreaDiv = window.conversations.utils.createDivContainer(rightDiv, 'conversation-container-vertical', { flex: 0.8 });
 
             // Load instructions list component
             this.loadInstructions();
@@ -204,12 +205,20 @@
                 rows: 4
             });
 
+            this.loadRoles();
+        }
+
+        loadRoles() {
+            // Clear previous roles area content
+            this.rolesAreaDiv.innerHTML = '';
+
             // Roles area
-            const rolesFieldDiv = window.conversations.utils.createDivContainer(this.rolesAreaDiv, 'conversation-field-container-vertical-full');
-            window.conversations.utils.createLabel(rolesFieldDiv, 'Roles:');
-            new window.conversations.ManageInstructionRolesComponent(rolesFieldDiv, this.group, this.seedCompare.data.info, (info) => {
-                // Callback to update the selected instruction when roles are changed in the roles editor
-                this.seedCompare.change((data) => data.info.roles = info.roles);
+            this.rolesFieldDiv = window.conversations.utils.createDivContainer(this.rolesAreaDiv, 'conversation-field-container-vertical-full');
+            window.conversations.utils.createLabel(this.rolesFieldDiv, 'Roles:');
+            new window.conversations.ManageInstructionRolesComponent(this.rolesFieldDiv, this.group, this.seedCompare.data.info.roles, (roles) => {
+                // 
+                this.seedCompare.change((data) => data.info.roles = roles);
+                this.loadRoles();
             });
         }
 
@@ -279,90 +288,3 @@
     window.conversations = window.conversations || {};
     window.conversations.ManageInstructionsComponent = ManageInstructionsComponent;
 })();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        // // Show seed data differences in a popup with options to 
-        // // override seed data with current instruction data or to 
-        // // reload current instruction data from seed data
-        // showSeedData() {
-        //     const popup = new window.PopupComponent({
-        //         icon: '💡',
-        //         title: 'Instruction Seed Data - ' + this.selectedInstruction.info.name,
-        //         width: 1200,
-        //         height: 720,
-        //         content: (container) => {
-        //             new window.conversations.ManageInstructionsSeedCompareComponent(
-        //                 container,
-        //                 this.group.group_id,
-        //                 this.group.group_name,
-        //                 this.group.group_key,
-        //                 this.selectedInstruction,
-        //                 this.seed,
-        //                 () => {
-        //                     // onReloadFromSeed callback
-        //                     popup.hide();
-        //                     this.loadContent();
-        //                 },
-        //                 () => {
-        //                     // onOverrideSeed callback
-        //                     popup.hide();
-        //                     this.loadContent();
-        //                 }
-        //             );
-        //         },
-        //     });
-        //     popup.show();
-        // }
-
-
-
-
-
-
-
-        // // Add new instruction
-        // async addInstruction() {
-        //     const popup = new window.PopupComponent({
-        //         icon: window.conversations.CONVERSATION_TYPES_ICONS[this.conversationType],
-        //         title: 'Import ' + window.conversations.CONVERSATION_TYPES_STRING(this.conversationType, false, true, false, false),
-        //         width: 1200,
-        //         height: 720,
-        //         content: (container) => {
-        //             const wrapperDiv = window.conversations.utils.createDivContainer(container, 'conversations-page-wrapper');
-                    
-        //             // Create seed import component - filter by conversation type
-        //             let seedTypes = [];
-        //             if (this.conversationType === window.conversations.CONVERSATION_TYPES.AI_CONVERSATION) {
-        //                 seedTypes = [window.conversations.SEED_TYPES.INSTRUCTIONS_CONVERSATIONS];
-        //             } else if (this.conversationType === window.conversations.CONVERSATION_TYPES.AI_DECISION) {
-        //                 seedTypes = [window.conversations.SEED_TYPES.INSTRUCTIONS_DECISIONS];
-        //             }
-                    
-        //             new window.conversations.ManageSeedsImportComponent(
-        //                 wrapperDiv,
-        //                 this.groupId,
-        //                 seedTypes
-        //             );
-        //         },
-        //         onClose: () => {
-        //             // Reload the instruction list after popup closes
-        //             this.loadContent();
-        //         }
-        //     });
-        //     popup.show();
-
-        // }

@@ -91,12 +91,25 @@ class AlertComponent {
         wrapper.appendChild(buttonContainer);
 
         modal.appendChild(wrapper);
+        
+        // Store references to our elements for proper cleanup
+        this.overlay = overlay;
+        this.modal = modal;
+        
         this.container.appendChild(overlay);
         this.container.appendChild(modal);
     }
 
     close() {
-    this.container.innerHTML = '';
+        // Remove only our elements, not the entire container
+        if (this.overlay && this.overlay.parentNode) {
+            this.overlay.parentNode.removeChild(this.overlay);
+        }
+        if (this.modal && this.modal.parentNode) {
+            this.modal.parentNode.removeChild(this.modal);
+        }
+        this.overlay = null;
+        this.modal = null;
     }
 }
 

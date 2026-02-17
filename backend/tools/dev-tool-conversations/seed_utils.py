@@ -95,23 +95,32 @@ def validate_feedback_def(feedback_def: Any) -> Dict[str, Any]:
     """
     Validate feedback_def structure.
     
-    feedback_def is an object where each key is a feedback field name,
-    and each value has:
+    feedback_def is an array where each element has:
+    - name: string (required) - the feedback field name
     - description: string (required)
     - type: string (required) - "integer" or "string"
     - required: boolean (required)
     - For type="integer": min, max (required)
     - For type="string": optional-values (optional array of strings)
     """
-    if not isinstance(feedback_def, dict):
-        return {'valid': False, 'reason': 'feedback_def must be an object'}
+    if not isinstance(feedback_def, list):
+        return {'valid': False, 'reason': 'feedback_def must be an array'}
     
-    for field_name, field_def in feedback_def.items():
+    for idx, field_def in enumerate(feedback_def):
         if not isinstance(field_def, dict):
-            return {'valid': False, 'reason': f'feedback_def.{field_name} must be an object'}
+            return {'valid': False, 'reason': f'feedback_def[{idx}] must be an object'}
+        
+        # Check for name field
+        if 'name' not in field_def:
+            return {'valid': False, 'reason': f'feedback_def[{idx}]: Missing required field: name'}
+        
+        if not isinstance(field_def['name'], str):
+            return {'valid': False, 'reason': f'feedback_def[{idx}]: name must be a string'}
+        
+        field_name = field_def['name']
         
         # Define allowed fields based on type
-        base_fields = ['description', 'type', 'required']
+        base_fields = ['name', 'description', 'type', 'required']
         
         # Check required base fields
         for base_field in base_fields:
@@ -218,7 +227,7 @@ def validate_instruction(instruction: Any) -> Dict[str, Any]:
         - description: string
         - conversation_type: string
         - max_turns: integer
-        - roles: object (keys are role names, values are role definitions)
+        - roles: array of role objects
     """
     if not isinstance(instruction, dict):
         return {'valid': False, 'reason': 'Instruction must be a dictionary'}
@@ -252,11 +261,18 @@ def validate_instruction(instruction: Any) -> Dict[str, Any]:
     if not isinstance(info['max_turns'], int):
         return {'valid': False, 'reason': 'info.max_turns must be an integer'}
     
-    if not isinstance(info['roles'], dict):
-        return {'valid': False, 'reason': 'info.roles must be an object'}
+    if not isinstance(info['roles'], list):
+        return {'valid': False, 'reason': 'info.roles must be an array'}
     
-    # Validate each role
-    for role_name, role_def in info['roles'].items():
+    # Validate each role in the array
+    for idx, role_def in enumerate(info['roles']):
+        if not isinstance(role_def, dict):
+            return {'valid': False, 'reason': f'info.roles[{idx}] must be an object'}
+        
+        if 'role_name' not in role_def:
+            return {'valid': False, 'reason': f'info.roles[{idx}]: Missing required field: role_name'}
+        
+        role_name = role_def['role_name']
         role_validation = validate_role(role_name, role_def)
         if not role_validation['valid']:
             return role_validation
@@ -362,6 +378,7 @@ def seeds_groups_get(group_key: Optional[str] = None, existing_keys: set = None)
             wrapped_group = {
                 'type': 'group',
                 'seed_key': group_data.get('group_key'),
+                'seed_name': group_data.get('group_name', 'Unknown Group'),
                 'json': group_data,
                 'include': validation['valid'] and not exists_in_db,
                 'valid': validation['valid'],
@@ -375,6 +392,7 @@ def seeds_groups_get(group_key: Optional[str] = None, existing_keys: set = None)
             all_groups.append({
                 'type': 'group',
                 'seed_key': item.name,
+                'seed_name': item.name,
                 'json': None,
                 'include': False,
                 'valid': False,
@@ -428,6 +446,7 @@ def seeds_members_get(group_key: str, member_key: Optional[str] = None, existing
         return [{
             'type': 'member',
             'seed_key': group_key,
+            'seed_name': f'Error reading {group_key}/members.json',
             'json': None,
             'include': False,
             'valid': False,
@@ -438,6 +457,7 @@ def seeds_members_get(group_key: str, member_key: Optional[str] = None, existing
         return [{
             'type': 'member',
             'seed_key': group_key,
+            'seed_name': f'Invalid format in {group_key}/members.json',
             'json': None,
             'include': False,
             'valid': False,
@@ -461,6 +481,7 @@ def seeds_members_get(group_key: str, member_key: Optional[str] = None, existing
         wrapped_member = {
             'type': 'member',
             'seed_key': group_key,
+            'seed_name': member.get('member_name', 'Unknown Member'),
             'json': member,
             'include': validation['valid'] and not exists_in_db,
             'valid': validation['valid'],
@@ -516,6 +537,7 @@ def seeds_instructions_get(group_key: str, instruction_key: Optional[str] = None
         return [{
             'type': 'instruction',
             'seed_key': group_key,
+            'seed_name': f'Error reading {group_key}/instructions.json',
             'json': None,
             'include': False,
             'valid': False,
@@ -526,6 +548,7 @@ def seeds_instructions_get(group_key: str, instruction_key: Optional[str] = None
         return [{
             'type': 'instruction',
             'seed_key': group_key,
+            'seed_name': f'Invalid format in {group_key}/instructions.json',
             'json': None,
             'include': False,
             'valid': False,
@@ -549,6 +572,7 @@ def seeds_instructions_get(group_key: str, instruction_key: Optional[str] = None
         wrapped_instruction = {
             'type': 'instruction',
             'seed_key': group_key,
+            'seed_name': instruction.get('info', {}).get('name', 'Unknown Instruction'),
             'json': instruction,
             'include': validation['valid'] and not exists_in_db,
             'valid': validation['valid'],
@@ -568,6 +592,96 @@ def seeds_instructions_get(group_key: str, instruction_key: Optional[str] = None
         return matching_instructions
     
     return wrapped_instructions
+
+
+def seeds_instructions_roles_get(group_key: str) -> Any:
+    """
+    Get all roles from all instructions in a group as a flat array of wrapped role objects.
+    
+    Args:
+        group_key: Group key (required)
+        
+    Returns:
+        Array of all wrapped role objects with validation metadata from all instructions
+    """
+    group_dir = SEED_BASE_PATH / group_key
+    if not group_dir.exists():
+        # Create the directory if it doesn't exist
+        group_dir.mkdir(parents=True, exist_ok=True)
+    
+    instructions_file = group_dir / 'instructions.json'
+    if not instructions_file.exists():
+        # Return empty array if file doesn't exist
+        return []
+    
+    try:
+        with open(instructions_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+            instructions_data = json.loads(content)
+    except (json.JSONDecodeError, IOError) as e:
+        return [{
+            'type': 'role',
+            'seed_key': group_key,
+            'seed_name': f'Error reading {group_key}/instructions.json',
+            'json': None,
+            'include': False,
+            'valid': False,
+            'error': f'Error reading instructions.json: {str(e)}'
+        }]
+    
+    if not isinstance(instructions_data, list):
+        return [{
+            'type': 'role',
+            'seed_key': group_key,
+            'seed_name': f'Invalid format in {group_key}/instructions.json',
+            'json': None,
+            'include': False,
+            'valid': False,
+            'error': 'instructions.json must contain an array'
+        }]
+    
+    # Extract and wrap all roles from all instructions
+    wrapped_roles = []
+    for instruction in instructions_data:
+        # Basic instruction structure check
+        if not isinstance(instruction, dict):
+            continue
+            
+        if 'info' not in instruction or not isinstance(instruction['info'], dict):
+            continue
+            
+        info = instruction['info']
+        
+        if 'roles' not in info or not isinstance(info['roles'], list):
+            continue
+        
+        # Process each role in the instruction
+        for role in info['roles']:
+            if not isinstance(role, dict):
+                continue
+                
+            # Validate the role
+            role_name = role.get('role_name', 'unknown')
+            validation = validate_role(role_name, role)
+            
+            # Build descriptive seed name with instruction and role name
+            instruction_name = info.get('name', 'Unknown Instruction')
+            seed_name = f"{instruction_name} - {role_name}"
+            
+            wrapped_role = {
+                'type': 'role',
+                'seed_key': group_key,
+                'seed_name': seed_name,
+                'json': role,
+                'include': validation['valid'],
+                'valid': validation['valid'],
+                'exist': False,  # Roles don't have existence checking
+                'error': None if validation['valid'] else f"Role validation error: {validation['reason']}"
+            }
+            
+            wrapped_roles.append(wrapped_role)
+    
+    return wrapped_roles
 
 
 # ============================================================================

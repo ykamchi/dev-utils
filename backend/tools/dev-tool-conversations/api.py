@@ -615,6 +615,32 @@ def register_seed_data_apis(app, base_path: str):
             return jsonify({'success': False, 'error': str(e)}), 500
 
 
+    @app.route(f"{base_path}/seeds_instructions_roles_get", methods=["PUT"])
+    def seeds_instructions_roles_get():
+        """
+        Get instruction roles seed data from instructions.json in group directory.
+        Returns all roles from all instructions as a flat array.
+        
+        Expects JSON payload: {"group_key": ...} 
+        - group_key is required (can be 'templates')
+        """
+        try:
+            sleep(sleep_time)
+            from . import seed_utils
+            
+            payload = request.get_json(force=True)
+            group_key = payload.get('group_key')
+            
+            if not group_key:
+                return jsonify({'success': False, 'error': 'missing group_key'}), 400
+            
+            seeding_data = seed_utils.seeds_instructions_roles_get(group_key)
+            
+            return jsonify({'success': True, 'data': seeding_data})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+
     @app.route(f"{base_path}/seeds_groups_set", methods=["PUT"])
     def seeds_groups_set():
         """
