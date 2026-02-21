@@ -20,6 +20,33 @@
     gap: 12px;
 }
 
+.list-component-refresh-button {
+    margin-left: auto; /* Push to the right */
+    background-color: transparent;
+    border: 1px solid var(--color-border-light);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 16px;
+    cursor: pointer;
+    color: var(--color-text-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    transition: all 0.2s ease;
+}
+
+.list-component-refresh-button:hover {
+    background-color: var(--color-background-hover);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.list-component-refresh-button:active {
+    transform: scale(0.95);
+}
+
 .list-component-sort-wrapper {
     display: flex;
     align-items: center;

@@ -91,7 +91,7 @@
 
             // Restore last selection, or select first item
             this.list.setLastSelected('members-list-last-selection-' + this.groupId, item => item.member_name);
-            this.onMemberSelect(this.list.getSelectedItems()[0] || null);
+            // this.onMemberSelect(this.list.getSelectedItems()[0] || null);
         }
 
         async refreshMember(member) {

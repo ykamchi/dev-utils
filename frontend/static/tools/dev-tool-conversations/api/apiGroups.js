@@ -61,7 +61,7 @@ window.conversations.apiGroups.groupsGet = async function (spinnerContainer, gro
 
 
 // Add new group
-window.conversations.apiGroups.groupsAdd = async function (spinnerContainer, groupKey, groupName) {
+window.conversations.apiGroups.groupsAdd = async function (spinnerContainer, groupKey, groupName, groupObjectives, groupInfo) {
     // Show loading spinner while adding group
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Adding group ${groupName}...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
     
@@ -71,7 +71,9 @@ window.conversations.apiGroups.groupsAdd = async function (spinnerContainer, gro
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 group_key: groupKey,
-                group_name: groupName
+                group_name: groupName,
+                group_objectives: groupObjectives,
+                group_info: groupInfo
             })
         });
 
@@ -120,7 +122,7 @@ window.conversations.apiGroups.groupsDelete = async function (spinnerContainer, 
 };
 
 // Update group
-window.conversations.apiGroups.groupsUpdate = async function (spinnerContainer, groupId, groupName, oldGroupName = 'N/A') {
+window.conversations.apiGroups.groupsUpdate = async function (spinnerContainer, groupId, groupName, groupObjectives, groupInfo, oldGroupName = 'N/A') {
     // Show loading spinner while updating group
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Updating group ${oldGroupName}...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
     
@@ -130,7 +132,9 @@ window.conversations.apiGroups.groupsUpdate = async function (spinnerContainer, 
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 group_id: groupId,
-                group_name: groupName
+                group_name: groupName,
+                group_objectives: groupObjectives,
+                group_info: groupInfo
             })
         });
 

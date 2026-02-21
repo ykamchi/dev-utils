@@ -1,8 +1,8 @@
 (function () {
     /*
-        ManageMembersComponent: Manage group members
+        MemberPropertiesComponent: Manage group members
     */
-    class ManageMembersComponent {
+    class MemberPropertiesComponent {
         constructor(container, groupId, member, onMembersChanged = null) {
             this.container = container;
             this.groupId = groupId;
@@ -15,7 +15,7 @@
             this.saveButton = null;
             this.seedButton = null;
 
-            this.seedCompare = new window.conversations.ManageSeedCompareComponent(
+            this.seedCompare = new window.conversations.SeedCompareComponent(
                 member,
                 async () => {
                     // onReloadFromSeed callback - we update the data with the new data from seed and save
@@ -24,7 +24,7 @@
                 },
                 async (newSeed) => {
                     // onOverrideSeed callback - we save the new seed (the data filter is applied in the 
-                    // ManageSeedCompareComponent before calling this callback)
+                    // SeedCompareComponent before calling this callback)
                     await window.conversations.apiSeeds.seedsMembersSet(this.wrapper, this.group.group_key, this.seedCompare.data.member_key, newSeed);
                     this.loadContent();
                 },
@@ -114,6 +114,13 @@
                     this.seedCompare.change((data) => { data.member_name = value; });
                 }
             });
+            
+            const rolesFieldDiv = window.conversations.utils.createFieldDiv(this.memberEditArea, 'Member Roles:');
+            new window.StringArrayComponent(rolesFieldDiv, 
+                    this.seedCompare.data['member_roles'], 'Add optional value...', (values) => {
+                        this.seedCompare.change((data) => { data['member_roles'] = values; });
+                    }, window.StringArrayComponent.STYLE_WRAP);
+
 
             // Member profile as JSON textarea
             window.conversations.utils.createTextArea(this.memberEditArea, 'Member Profile (JSON):', {
@@ -158,8 +165,15 @@
                 ['Cancel', () => { }]
             ]);
         }
+
+        destroy() {
+            console.log('[Conversations Tool] - Destroying MemberPropertiesComponent and cleaning up resources...');
+            if (this.seedCompare && this.seedCompare.destroy) {
+                this.seedCompare.destroy();
+            }
+        }
     }
 
     window.conversations = window.conversations || {};
-    window.conversations.ManageMembersComponent = ManageMembersComponent;
+    window.conversations.MemberPropertiesComponent = MemberPropertiesComponent;
 })();

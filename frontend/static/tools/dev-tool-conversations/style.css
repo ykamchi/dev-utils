@@ -218,6 +218,9 @@
     line-height: 1.5;
     overflow: auto;
     width: 100%;
+    white-space: pre-wrap;       /* Maintains whitespace but wraps text */
+    overflow-wrap: break-word;   /* Breaks long strings (like URLs) to prevent overflow */
+    word-break: break-all;       /* Optional: forces breaks in very tight containers */
 }
 /************************************************************************/
 /* End of utils default styles for Conversations Tool, used in utils.js */

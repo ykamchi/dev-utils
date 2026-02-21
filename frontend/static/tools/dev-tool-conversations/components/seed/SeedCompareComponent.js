@@ -1,8 +1,8 @@
 (function () {
     /*
-        ManageSeedCompareComponent: displays comparison between seed data and current group data
+        SeedCompareComponent: displays comparison between seed data and current group data
     */
-    class ManageSeedCompareComponent {
+    class SeedCompareComponent {
         constructor(data, onReloadFromSeed, onOverrideSeed, onDirtySeed, onDirty, dataFilter = [], title = 'Seed Data Compare') {
             this.onReloadFromSeed = onReloadFromSeed;
             this.onOverrideSeed = onOverrideSeed;
@@ -155,5 +155,5 @@
     }
 
     window.conversations = window.conversations || {};
-    window.conversations.ManageSeedCompareComponent = ManageSeedCompareComponent;
+    window.conversations.SeedCompareComponent = SeedCompareComponent;
 })();

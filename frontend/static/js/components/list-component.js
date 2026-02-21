@@ -10,8 +10,10 @@ class ListComponent {
      * @param {string} [selectionMode] - ListComponent.SELECTION_MODE_NONE | ListComponent.SELECTION_MODE_SINGLE | ListComponent.SELECTION_MODE_MULTIPLE
      * @param {Function} [onSelect] - Callback(selectedItems)
      * @param {Function} [onFilter] - Function(item, query) => boolean, returns true if item matches the search query
+     * @param {Array} [sortFields] - Array of sort field objects
+     * @param {Function} [onRefresh] - Callback when refresh button is clicked
      */
-    constructor(container, items, renderItemFunction, selectionMode = ListComponent.SELECTION_MODE_NONE, onSelect = null, onFilter = null, sortFields = []) {
+    constructor(container, items, renderItemFunction, selectionMode = ListComponent.SELECTION_MODE_NONE, onSelect = null, onFilter = null, sortFields = [], onRefresh = null) {
         this.container = container;
         this.allItems = items || [];
         this.items = items || [];
@@ -20,6 +22,7 @@ class ListComponent {
         this.onSelect = onSelect;
         this.onFilter = onFilter;
         this.sortFields = sortFields;
+        this.onRefresh = onRefresh;
         this.selectedIndices = [];
         this.selectedItems = new Set(); // Track selected items by reference
         this.searchInput = null;
@@ -40,7 +43,7 @@ class ListComponent {
         }
         wrapper.innerHTML = '';
 
-        if (this.onFilter || (this.sortFields && this.sortFields.length > 0)) {
+        if (this.onFilter || (this.sortFields && this.sortFields.length > 0) || this.onRefresh) {
             const searchContainer = document.createElement('div');
             searchContainer.className = 'list-component-search-container';
 
@@ -105,6 +108,20 @@ class ListComponent {
                 searchIcon.className = 'list-component-search-icon';
                 searchIcon.textContent = '🔍';
                 inputWrapper.appendChild(searchIcon);
+            }
+
+            // Add refresh button if callback is provided
+            if (this.onRefresh) {
+                const refreshButton = document.createElement('button');
+                refreshButton.className = 'list-component-refresh-button';
+                refreshButton.textContent = '🗘';
+                refreshButton.title = 'Refresh list';
+                refreshButton.addEventListener('click', () => {
+                    if (typeof this.onRefresh === 'function') {
+                        this.onRefresh();
+                    }
+                });
+                searchContainer.appendChild(refreshButton);
             }
 
             wrapper.appendChild(searchContainer);
@@ -292,6 +309,11 @@ class ListComponent {
         }
     }
 
+    updateItems(newItems) {
+        this.allItems = newItems || [];
+        this.filterItems(this.searchInput ? this.searchInput.value : '');
+    }
+    
     /**
      * Updates a specific item in the list without re-rendering the entire list.
      * @param {*} updatedItem - The updated item data

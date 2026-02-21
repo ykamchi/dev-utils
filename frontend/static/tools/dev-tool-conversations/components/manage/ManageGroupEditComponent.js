@@ -3,9 +3,10 @@
         ManageGroupEditComponent: Standalone component for editing group properties
     */
     class ManageGroupEditComponent {
-        constructor(container, group, onGroupNameChange = null) {
+        constructor(container, group, onGroupNameChange = null, onGroupDelete = null) {
             this.container = container;
             this.onGroupNameChange = onGroupNameChange;
+            this.onGroupDelete = onGroupDelete;
 
             this.seed = null;
 
@@ -13,7 +14,7 @@
             this.saveButton = null;
             this.seedButton = null;
 
-            this.seedCompare = new window.conversations.ManageSeedCompareComponent(
+            this.seedCompare = new window.conversations.SeedCompareComponent(
                 group,
                 async () => {
                     // onReloadFromSeed callback - we update the data with the new data from seed and save
@@ -22,9 +23,9 @@
                 },
                 async (newSeed) => {
                     // onOverrideSeed callback - we save the new seed (the data filter is applied in the 
-                    // ManageSeedCompareComponent before calling this callback)
+                    // SeedCompareComponent before calling this callback)
                     await window.conversations.apiSeeds.seedsGroupsSet(this.container, this.seedCompare.data.group_key, newSeed);
-                    this.loadContent();
+                    this.loadSeedData();
                 },
                 (seedDirty) => {
                     // onDirty callback - we update the buttons area to show/hide seed button 
@@ -60,6 +61,15 @@
 
             // Update the page content
             this.page.updateContentArea(wrapper);
+
+            this.loadSeedData();
+
+            this.load();
+        }
+
+        async load() {
+            // Load content
+            await this.loadContent();
 
             // Load content
             this.loadContent();
@@ -102,9 +112,6 @@
         async loadContent() {
             this.groupEditArea.innerHTML = '';
 
-            // Load the seed data
-            await this.loadSeedData();
-
             // Group Name input
             window.conversations.utils.createInput(this.groupEditArea, 'Group Name:', {
                 initialValue: this.seedCompare.data.group_name,
@@ -112,6 +119,34 @@
                 placeholder: 'Enter group name',
                 onChange: (value) => {
                     this.seedCompare.change((data) => { data.group_name = value; });
+                }
+            });
+
+            // Group Objectives input
+            window.conversations.utils.createTextArea(this.groupEditArea, 'Group Objectives:', {
+                initialValue: this.seedCompare.data.group_objectives,
+                placeholder: 'Enter group objectives',
+                onChange: (value) => {
+                    this.seedCompare.change((data) => { data.group_objectives = value; });
+                },
+                rows: 4
+            });
+
+            // Group Info input
+            window.conversations.utils.createTextArea(this.groupEditArea, 'Group Info (JSON):', {
+                initialValue: JSON.stringify(this.seedCompare.data.group_info, null, 2),
+                placeholder: 'Enter group info as JSON',
+                onChange: (value) => {
+                    let parsedValue = {};
+                    try {
+                        parsedValue = JSON.parse(value);
+                    } catch (error) {
+                        // Invalid JSON - we can choose to ignore or show an error
+                        console.error('Invalid JSON in Group Info:', error);
+                        new window.AlertComponent('Invalid JSON', 'Please enter valid JSON for Group Info');
+                        return;
+                    }
+                    this.seedCompare.change((data) => { data.group_info = parsedValue; });
                 }
             });
         }
@@ -133,7 +168,7 @@
             try {
                 const nameChanged = this.seedCompare.data.group_name !== this.seedCompare.dataOrig.group_name;
                 
-                this.seedCompare.update(await window.conversations.apiGroups.groupsUpdate(null, this.seedCompare.data.group_id, this.seedCompare.data.group_name, this.seedCompare.dataOrig.group_name));
+                this.seedCompare.update(await window.conversations.apiGroups.groupsUpdate(null, this.seedCompare.data.group_id, this.seedCompare.data.group_name, this.seedCompare.data.group_objectives, this.seedCompare.data.group_info, this.seedCompare.dataOrig.group_name));
 
                 // If the group name was changed and we have a callback, notify parent
                 if (nameChanged) {
@@ -155,7 +190,7 @@
                     await window.conversations.apiGroups.groupsDelete(null, this.group.group_id);
 
                     // Notify parent if callback provided (e.g., to reload members in left panel)
-                    this.onGroupNameChange(null);
+                    this.onGroupDelete(this.group.group_id);
                 }],
                 ['Cancel', () => { }]
             ]);

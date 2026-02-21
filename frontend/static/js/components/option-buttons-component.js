@@ -21,14 +21,7 @@ class OptionButtonsComponent {
         this.multiSelect = options.multiSelect !== undefined ? options.multiSelect : false;
         this.viewType = options.viewType;
         this.layout = options.layout;
-        
-        console.log('[OptionButtonsComponent] Constructor called with:', {
-            viewType: options.viewType,
-            layout: options.layout,
-            multiSelect: options.multiSelect,
-            optionsCount: this.options.length
-        });
-        
+
         // Load last selected value if storageKey is provided
         let lastSelected = null;
         if (this.storageKey && window.StorageService) {
@@ -54,8 +47,6 @@ class OptionButtonsComponent {
     }
 
     render() {
-        console.log('[OptionButtonsComponent] render() called with viewType:', this.viewType, 'layout:', this.layout);
-        
         const wrapper = document.createElement('div');
         wrapper.className = 'option-buttons-component';
         
@@ -74,10 +65,7 @@ class OptionButtonsComponent {
         
         this.controls = []; // Store references to buttons or checkboxes
         
-        console.log('[OptionButtonsComponent] Checking viewType:', this.viewType, '=== window.OptionButtonsComponent.TYPE_CHECKBOXES:', window.OptionButtonsComponent.TYPE_CHECKBOXES, 'equals?', this.viewType === window.OptionButtonsComponent.TYPE_CHECKBOXES);
-        
         if (this.viewType === window.OptionButtonsComponent.TYPE_CHECKBOXES) {
-            console.log('[OptionButtonsComponent] Rendering as CHECKBOXES');
             // Render as checkboxes
             this.options.forEach(opt => {
                 const isSelected = this.multiSelect 
@@ -129,7 +117,6 @@ class OptionButtonsComponent {
                 this.controls.push(checkbox);
             });
         } else {
-            console.log('[OptionButtonsComponent] Rendering as BUTTONS (default)');
             // Render as buttons (default)
             this.options.forEach(opt => {
                 const btnContainer = document.createElement('div');

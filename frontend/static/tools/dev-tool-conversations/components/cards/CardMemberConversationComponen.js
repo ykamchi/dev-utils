@@ -11,11 +11,10 @@
          * @param {Object} groupInstructions - The instructions map
          * 
          */
-        constructor(container, conversation, member, instructions) {
+        constructor(container, conversation, member) {
             this.container = container;
             this.conversation = conversation;
             this.member = member;
-            this.instructions = instructions;
             this.render();
         }
 
@@ -44,8 +43,8 @@
             const leftSide = window.conversations.utils.createDivContainer(secondLine, 'conversation-container-horizontal');
 
             // Get the participant data including the feedback and the feedback_def from the conversation
-            const participant = this.conversation.participants.find(p => p.member_name === this.member.name);
-            const feedback_def = this.conversation.info.roles[participant.instruction_role].feedback_def;
+            const participant = this.conversation.participants.find(p => p.member_name === this.member.member_name);
+            const feedback_def = this.conversation.info.roles.find(r => r.role_name === participant.instruction_role).feedback_def;
             
             // Feedback info
             new window.conversations.ConversationFeedbackInfoComponent(leftSide, participant.feedback, feedback_def, true, false);
@@ -56,9 +55,12 @@
             const tagsDiv = window.conversations.utils.createDivContainer(rightSide, 'conversations-tags-container');
             // Conversation type
             window.conversations.utils.createReadOnlyText(tagsDiv, this.conversation.info.name, 'conversations-badge-generic', this.conversation.info.description);
-            window.conversations.utils.createReadOnlyText(tagsDiv, Utils.durationSecondsToHMS(this.conversation.status?.duration_seconds), 'conversations-badge-generic', 'Duration');
-            window.conversations.utils.createReadOnlyText(tagsDiv, this.conversation.status?.message_count, 'conversations-badge-generic', 'Number of messages');
-            window.conversations.utils.createReadOnlyText(tagsDiv, this.conversation.status?.state, 'conversations-badge-state-'+this.conversation.status?.state, 'State');
+            window.conversations.utils.createReadOnlyText(tagsDiv, Utils.durationSecondsToHMS(this.conversation.duration_seconds), 'conversations-badge-generic', 'Duration');
+            window.conversations.utils.createReadOnlyText(tagsDiv, this.conversation.message_count, 'conversations-badge-generic', 'Number of messages');
+            window.conversations.utils.createReadOnlyText(tagsDiv, this.conversation.state, 'conversations-badge-state-'+this.conversation.state, 'State');
+            
+            //new window.ProgressBarComponent(rightSide, { width: '100%', height: '12px', percentage: 100*this.conversation.message_count/this.conversation.info.max_turns, label: '' });
+            
             
             // Add click handler to show conversation details popup
             wrapper.addEventListener('click', this.showConversationDetails.bind(this));

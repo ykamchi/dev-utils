@@ -1,12 +1,10 @@
 (function () {
     /*
-        ManageStatisticsComponent: TODO - implement group settings UI and logic
+        SystemStatisticsComponent - System-wide statistics
     */
-    class ManageStatisticsComponent {
-        constructor(container, groupId) {
+    class SystemStatisticsComponent {
+        constructor(container) {
             this.container = container;
-            this.groupId = groupId;
-            this.group = null;
             this.page = null;
             this.render();
         }
@@ -16,15 +14,13 @@
             this.load();
         }
 
-        // Get the group available instructions and render them in tabs according to the conversation types
         async load() {
-            this.group = await window.conversations.apiGroups.groupsGet(this.container, this.groupId);
             // Create the main page component
             this.page = new window.conversations.PageComponent(
                 this.container,
                 '📊',
                 'Statistics',
-                `${this.group.group_name} Statistics`
+                'System'
             );
 
             // Page control
@@ -47,5 +43,5 @@
     }
 
     window.conversations = window.conversations || {};
-    window.conversations.ManageStatisticsComponent = ManageStatisticsComponent;
+    window.conversations.SystemStatisticsComponent = SystemStatisticsComponent;
 })();

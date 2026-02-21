@@ -54,7 +54,7 @@
             // Initial state - collect all unique feedback keys from all roles
             const allFeedbackKeys = new Set();
             this.conversation.participants.forEach(participant => {
-                const feedback_def = this.conversation.info.roles[participant.instruction_role]?.feedback_def;
+                const feedback_def = this.conversation.info.roles.find(r => r.role_name === participant.instruction_role)?.feedback_def;
                 if (feedback_def) {
                     Object.entries(feedback_def)
                         .filter(([_, val]) => val.type === 'integer')
@@ -69,7 +69,7 @@
             this.chartWrapper = window.conversations.utils.createDivContainer(horizontalDiv, 'conversations-scrollable-group');
 
             // Controls (filter lines) div
-            const controlsDiv = window.conversations.utils.createDivContainer(horizontalDiv, 'conversation-container-vertical');
+            const controlsDiv = window.conversations.utils.createDivContainer(horizontalDiv, 'conversation-container-vertical', { flex: '0 1 auto'});
 
             // Members options
             this.renderControlsDiv(controlsDiv);
@@ -109,25 +109,26 @@
                 if (rolesProcessed.has(roleKey)) return;
                 rolesProcessed.add(roleKey);
                 
-                const roleData = this.conversation.info.roles[roleKey];
+                const roleData = this.conversation.info.roles.find(r => r.role_name === roleKey);
                 if (!roleData) return;
                 
                 const feedback_def = roleData.feedback_def;
                 if (!feedback_def) return;
                 
-                const feedbackKeys = Object.entries(feedback_def)
-                    .filter(([_, val]) => val.type === 'integer')
-                    .map(([key]) => key);
+                const feedbackKeys = feedback_def
+                    .filter(f => f.type === 'integer')
+                    .map(f => f.name);
                 
                 if (feedbackKeys.length === 0) return;
                 
+                this.state.feedbacks.push(feedbackKeys[0]); // Select the first feedback key by default for this role
                 // Create a container for this role's feedback options
                 // const roleFeedbackDiv = window.conversations.utils.createDivContainer(feedbacksControlDiv, 'conversation-field-container-vertical');
                 // roleFeedbackDiv.style.marginBottom = '10px';
                 
                 // Use role_name if available, otherwise use roleKey
                 const roleName = roleData.role_name || roleKey;
-                window.conversations.utils.createLabel(controlsDiv, `${roleName}:`);
+                window.conversations.utils.createLabel(controlsDiv, `Role ${roleName}:`);
                 
                 new window.OptionButtonsComponent(
                     controlsDiv,
@@ -140,10 +141,12 @@
                         },
                         multiSelect: true,
                         viewType: window.OptionButtonsComponent.TYPE_CHECKBOXES,
-                        layout: window.OptionButtonsComponent.VIEW_TYPE_VERTICAL
+                        layout: window.OptionButtonsComponent.VIEW_TYPE_VERTICAL,
+                        selected: this.state.feedbacks
                     }
                 );
             });
+            this.renderChart();
         }
 
         parseFeedbackDatasets() {
@@ -164,13 +167,11 @@
                 
                 // Get the participant data including the feedback and the feedback_def from the conversation
                 const participant = this.conversation.participants.find(p => p.member_name === member);
-                console.log(participant)
-                const feedback_def = this.conversation.info.roles[participant.instruction_role].feedback_def;
-                console.log(feedback_def)
+                const feedback_def = this.conversation.info.roles.find(r => r.role_name === participant.instruction_role).feedback_def;
                 
                 // Select the base color for the member
                 const base = BASE_COLORS[memberIndex % BASE_COLORS.length] || { h: 0, s: 0 };
-                const feedbackKeys = Object.entries(feedback_def).filter(([_, val]) => val.type === 'integer').map(([key]) => key);
+                const feedbackKeys = feedback_def.filter(f => f.type === 'integer').map(f => f.name);
                 // For each feedback key, create a dataset
                 feedbackKeys.forEach((fKey, feedbackIndex) => {
                     // Calculate color based on base color and feedback index
@@ -214,7 +215,7 @@
             };
 
             // Create or update chart instance and render the graph
-            window.conversations.utils.updateChartInstance(this.chartWrapper, this.chartInstance, window.ChartComponent.TYPE_LINE, data);
+            this.chartInstance = window.conversations.utils.updateChartInstance(this.chartWrapper, this.chartInstance, window.ChartComponent.TYPE_LINE, data);
         }
     }
 

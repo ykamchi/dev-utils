@@ -23,7 +23,7 @@
                 window.conversations.CONVERSATION_TYPES_STRING(this.conversation.info.conversation_type, false, true, true, false) +
                 ' - ' +
                 this.conversation.info.name +
-                ` (${this.conversation.participants})`,
+                ` (${this.conversation.participants.map(p => p.member_name).join(', ')})`,
                 {
                     'Viewing member': this.member.member_name,
                     Date: Utils.formatDateTime(this.conversation.created_at),
@@ -83,29 +83,29 @@
             const queueInfoDiv = window.conversations.utils.createDivContainer(container, 'conversation-container-horizontal');
 
             // Queue status
-            window.conversations.utils.createBadge(queueInfoDiv, 'Queue status:', this.conversation.queue_info.status, 'state-' + this.conversation.queue_info.status);
-
+            window.conversations.utils.createBadge(queueInfoDiv, 'Queue status:', this.conversation.state, 'state-' + this.conversation.state);
+            
             // Queued at
-            if (this.conversation.queue_info.queued_at) {
-                window.conversations.utils.createField(queueInfoDiv, 'Queued at:', Utils.formatDateTime(this.conversation.queue_info.queued_at));
+            if (this.conversation.created_at) {
+                window.conversations.utils.createField(queueInfoDiv, 'Queued at:', Utils.formatDateTime(this.conversation.created_at));
             }
 
-            if (this.conversation.queue_info.position) {
-                // Position in queue
-                window.conversations.utils.createField(queueInfoDiv, 'Position in queue:', this.conversation.queue_info.position.toString());
-            }
+            // if (this.conversation.queue_info.position) {
+            //     // Position in queue
+            //     window.conversations.utils.createField(queueInfoDiv, 'Position in queue:', this.conversation.queue_info.position.toString());
+            // }
 
-            if (this.conversation.queue_info.started_at) {
-                // Started at
-                window.conversations.utils.createField(queueInfoDiv, 'Started at:', Utils.formatDateTime(this.conversation.queue_info.started_at));
-            }
+            // if (this.conversation.queue_info.started_at) {
+            //     // Started at
+            //     window.conversations.utils.createField(queueInfoDiv, 'Started at:', Utils.formatDateTime(this.conversation.queue_info.started_at));
+            // }
 
-            if (this.conversation.queue_info.completed_at) {
-                // Completed at
-                window.conversations.utils.createField(queueInfoDiv, 'Completed at:', Utils.formatDateTime(this.conversation.queue_info.completed_at));
-            }
+            // if (this.conversation.queue_info.completed_at) {
+            //     // Completed at
+            //     window.conversations.utils.createField(queueInfoDiv, 'Completed at:', Utils.formatDateTime(this.conversation.queue_info.completed_at));
+            // }
 
-            if (this.conversation.queue_info.error_message) {
+            if (this.conversation.error_message) {
                 // Error message
                 window.conversations.utils.createField(queueInfoDiv, 'Error message:', this.conversation.queue_info.error_message);
             }
@@ -135,7 +135,7 @@
 
             // Get the participant data including the feedback and the feedback_def from the conversation
             const participant = this.conversation.participants.find(p => p.member_name === this.member.member_name);
-            const feedback_def = this.conversation.info.roles[participant.instruction_role].feedback_def;
+            const feedback_def = this.conversation.info.roles.find(r => r.role_name === participant.instruction_role).feedback_def;
             
             // Feedback info
             new window.conversations.ConversationFeedbackInfoComponent(container, participant.feedback, feedback_def);

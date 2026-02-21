@@ -5,11 +5,13 @@
          * @param {function} onSelection.Change - Callback when group selection of mode or group changes
          * @param {function} onGroupAdded - Callback when a group is added
          * @param {function} onGroupDeleted - Callback when a group is deleted
+         * @param {function} onGroupNameChange - Callback when a group's name is changed
          */
-        constructor(container, onSelectionChange, onGroupAdded, onGroupDeleted) {
+        constructor(container, onSelectionChange, onGroupAdded, onGroupDeleted, onGroupNameChange) {
             this.container = container;
             this.onSelectionChange = onSelectionChange;
             this.onGroupAdded = onGroupAdded;
+            this.onGroupNameChange = onGroupNameChange;
             this.onGroupDeleted = onGroupDeleted;
 
             this.selectedGroupId = null;
@@ -43,10 +45,10 @@
             // Add and Delete and settings group button
             const buttonContainer = window.conversations.utils.createDivContainer(headerDiv, 'conversations-buttons-container');
             this.settingsButton = new window.ButtonComponent(buttonContainer, {
-                label: '🛠️',
-                onClick: () => this.openGroupSettings(),
+                label: '⚙️',
+                onClick: () => window.conversations.popups.openGroupSettings(this.selectedGroupId, this.onGroupNameChange,this.onGroupDeleted),
                 type: window.ButtonComponent.TYPE_GHOST,
-                tooltip: '🛠️ Group settings'
+                tooltip: '⚙️ Group settings'
             });
             this.deleteButton = new window.ButtonComponent(buttonContainer, {
                 label: '🗙',
@@ -137,50 +139,10 @@
 
                     // Call API to delete group
                     await window.conversations.apiGroups.groupsDelete(null, this.selectedGroupId);
-                    this.selectedGroupId = null;
-                    // this.load();
-                    // this.render();
-                    this.onGroupDeleted();
+                    this.onGroupDeleted(this.selectedGroupId);
                 }],
                 ['Cancel', () => { }]
             ]);
-        }
-
-        async openGroupSettings() {
-            if (!this.selectedGroupId) {
-                new window.AlertComponent('No Group Selected', 'Please select a group first.', [
-                    ['OK', () => { }]
-                ]);
-                return;
-            }
-
-            const popup = new window.PopupComponent({
-                icon: '🛠️',
-                title: 'Group Settings',
-                width: 1920,
-                height: 1080,
-                content: (container) => {
-                    new window.conversations.ManageGroupSettingsComponent(
-                        container,
-                        this.selectedGroupId,
-                        async (group_id) => {
-                            // onGroupNameChange: Reload the group list when name changes
-                            // popup.hide();
-                            this.selectedGroupId = group_id;
-                            this.render();
-                        },
-                        () => {
-                            // onMembersChanged: Trigger onChange to reload members in left panel
-                            this.onSelectionChange();
-                        }
-                    );
-                },
-                onClose: () => {
-                    // Reload groups in case anything changed
-                    this.load();
-                }
-            });
-            popup.show();
         }
     }
 

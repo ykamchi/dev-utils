@@ -145,35 +145,4 @@ window.conversations.apiMembers.membersUpdate = async function (spinnerContainer
     }
 }
 
-// Fetch group names from backend
-window.conversations.apiConversations.membersConversationsList = async function (spinnerContainer, groupId, memberName, conversationType = null, onlyLast = false) {
-    // Show loading spinner while fetching
-    const spinner = new window.SpinnerComponent(spinnerContainer, { text: 'Loading conversations ...', size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
-
-    try {
-        const resp = await fetch('/api/dev-tool-conversations/members_conversations_list', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                group_id: groupId,
-                member_name: memberName,
-                conversation_type: conversationType,
-                only_last: onlyLast
-            })
-        });
-
-        const result = await resp.json();
-        spinner.remove();
-        if (result.success) {
-            return result.data;
-        } else {
-            new window.conversations.AlertApiErrorComponent(result);
-            throw new Error(result.message || 'Failed to load conversations for ' + memberName);
-        }
-    } catch (e) {
-        spinner.remove();
-        console.error('Error getting conversations for ' + memberName + ':', e);
-        throw e;
-    }
-};
 

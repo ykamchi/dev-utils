@@ -20,8 +20,8 @@ class AlertComponent {
     }
 
     render() {
-        // Clear container
-        this.container.innerHTML = '';
+        // Don't clear container - just add our elements
+        // (Clearing would remove any existing popups in modal-root)
 
         // Modal overlay
         const overlay = document.createElement('div');
@@ -31,10 +31,29 @@ class AlertComponent {
             e.stopPropagation();
             e.preventDefault();
         });
+        overlay.addEventListener('mouseup', e => {
+            e.stopPropagation();
+            e.preventDefault();
+        });
+        overlay.addEventListener('click', e => {
+            e.stopPropagation();
+            e.preventDefault();
+        });
 
         // Centered modal dialog
         const modal = document.createElement('div');
         modal.className = 'alert-component-modal';
+        
+        // Also prevent events on modal from propagating
+        modal.addEventListener('mousedown', e => {
+            e.stopPropagation();
+        });
+        modal.addEventListener('mouseup', e => {
+            e.stopPropagation();
+        });
+        modal.addEventListener('click', e => {
+            e.stopPropagation();
+        });
 
         const wrapper = document.createElement('div');
         wrapper.className = 'alert-component-wrapper';

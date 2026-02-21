@@ -8,12 +8,13 @@ State is ephemeral and lives only in memory or is proxied upstream.
 """
 
 from time import sleep
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, Response, jsonify, request, stream_with_context
 import requests
 from requests.exceptions import RequestException
 
 upstream_base = 'http://127.0.0.1:8443'
 sleep_time = 0 # Sleep time to simulate network delay - testing
+
 
 def _proxy_post(path: str, payload: dict | None = None, *, member_id: int | None = None, timeout: float = 45.0):
     """
@@ -30,6 +31,7 @@ def _proxy_post(path: str, payload: dict | None = None, *, member_id: int | None
     return resp.json()
 
 def register_apis(app, base_path: str):
+    register_notifications_apis(app, base_path)
     register_system_apis(app, base_path)
     register_groups_apis(app, base_path)
     register_members_apis(app, base_path)
@@ -37,6 +39,29 @@ def register_apis(app, base_path: str):
     register_conversations_apis(app, base_path)
     register_seed_data_apis(app, base_path)
     register_ai_apis(app, base_path)
+
+
+def register_notifications_apis(app, base_path: str):
+    @app.route(f"{base_path}/notifications", methods=["GET"])
+    def notifications():
+        def generate():
+            try:
+                # 1. Open a streaming connection to the backend
+                # Use stream=True to avoid loading the whole response into memory
+                with requests.get(f"{upstream_base}/api/notifications", stream=True, timeout=None) as r:
+                    # 2. Iterate over the lines as they arrive (SSE is line-based)
+                    for line in r.iter_lines():
+                        if line:
+                            # 3. Yield the line plus the newline characters SSE requires
+                            yield line + b'\n\n'
+                        else:
+                            # Keep-alive chunks (empty lines)
+                            yield b'\n'
+            finally:
+                print("🚀 Flask Proxy: Browser disconnected, closing backend connection.")
+    
+        # 4. Use stream_with_context to keep the Flask request context alive
+        return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
 
 # System API endpoints
@@ -52,8 +77,8 @@ def register_system_apis(app, base_path: str):
             upstream_resp = _proxy_post('/api/queue/state', {})
             return jsonify(upstream_resp)
         except RequestException:
-            app.logger.exception('Failed to contact upstream /api/queue/state')
-            return jsonify({'success': False, 'error': 'Failed to contact upstream queue/state service'}), 502
+            app.logger.warning('Failed to contact upstream /api/queue/state - service unavailable')
+            return jsonify({'success': True, 'data': {'status': 'unavailable'}})
     
 
     @app.route(f"{base_path}/queue_pause", methods=["POST"])
@@ -111,7 +136,44 @@ def register_system_apis(app, base_path: str):
             app.logger.exception('Failed to contact upstream /api/status_conversation_timeline')
             return jsonify({'success': False, 'error': 'Failed to contact upstream status_conversation_timeline service'}), 502
         
+    @app.route(f"{base_path}/queue_conversations_stop", methods=["POST"])
+    def queue_conversations_stop():
+        """
+        Proxy to upstream /api/queue/conversations/stop (POST) to stop a conversation in the queue.
+        Expects JSON payload: {"conversation_id": 123}
+        """
+        payload = request.get_json(force=True)
+        try:
+            conversation_id = payload.get('conversation_id')
+            if conversation_id is None:
+                return jsonify({'success': False, 'error': 'conversation_id is required'}), 400
+            
+            request_payload = {'conversation_id': conversation_id}
+            upstream_resp = _proxy_post('/api/queue/conversations/stop', request_payload)
+            return jsonify(upstream_resp)
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/queue/conversations/stop')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream queue/conversations/stop service'}), 502
 
+
+    @app.route(f"{base_path}/queue_conversations_resume", methods=["POST"])
+    def queue_conversations_resume():
+        """
+        Proxy to upstream /api/queue/conversations/resume (POST) to resume a conversation in the queue.
+        Expects JSON payload: {"conversation_id": 123}
+        """
+        payload = request.get_json(force=True)
+        try:
+            conversation_id = payload.get('conversation_id')
+            if conversation_id is None:
+                return jsonify({'success': False, 'error': 'conversation_id is required'}), 400
+            
+            request_payload = {'conversation_id': conversation_id}
+            upstream_resp = _proxy_post('/api/queue/conversations/resume', request_payload)
+            return jsonify(upstream_resp)
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/queue/conversations/resume')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream queue/conversations/resume service'}), 502
 
 # Groups API endpoints
 #         
@@ -162,10 +224,16 @@ def register_groups_apis(app, base_path: str):
 
             if not payload.get('group_name'):
                 return jsonify({'success': False, 'error': 'missing group_name'}), 400
+            if not payload.get('group_objectives'):
+                return jsonify({'success': False, 'error': 'missing group_objectives'}), 400
+            if not payload.get('group_info'):
+                return jsonify({'success': False, 'error': 'missing group_info'}), 400
         
             upstream_payload = {
                 'group_name': payload.get('group_name'),
                 'group_key': payload.get('group_key'),
+                'group_objectives': payload.get('group_objectives'),
+                'group_info': payload.get('group_info')
             }
             return jsonify(_proxy_post('/api/groups/add', upstream_payload))
 
@@ -206,11 +274,18 @@ def register_groups_apis(app, base_path: str):
 
             if not payload.get('group_id'):
                 return jsonify({'success': False, 'error': 'missing group_id'}), 400
+            if not payload.get('group_name'):
+                return jsonify({'success': False, 'error': 'missing group_name'}), 400
+            if not payload.get('group_objectives'):
+                return jsonify({'success': False, 'error': 'missing group_objectives'}), 400
+            if not payload.get('group_info'):
+                return jsonify({'success': False, 'error': 'missing group_info'}), 400
         
             upstream_payload = {
                 'group_id': payload.get('group_id'),
                 'group_name': payload.get('group_name'),
-                'info': payload.get('info')
+                'group_objectives': payload.get('group_objectives'),
+                'group_info': payload.get('group_info')
             }
             return jsonify(_proxy_post('/api/groups/update', upstream_payload))
 
@@ -402,29 +477,43 @@ def register_members_apis(app, base_path: str):
             return jsonify({'success': False, 'error': 'Failed to contact upstream members/add'}), 502
 
 
-    @app.route(f"{base_path}/members_conversations_list", methods=["POST"])
-    def members_conversations_list():
+    @app.route(f"{base_path}/members_update", methods=["POST"])
+    def members_update():
+        """
+        Proxy to upstream /api/members/update (POST) with member_id and member_data from request body (required).
+        """
+        try:
+            payload = request.get_json(force=True)
+            
+            if not payload.get('member_data'):
+                return jsonify({'success': False, 'error': 'missing member_data'}), 400
+        
+            upstream_payload = {
+                'member_id': payload.get('member_id'),
+                'member_data': payload.get('member_data')
+            }   
+
+            
+            return jsonify(_proxy_post('/api/members/update', upstream_payload))
+        
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/members/update')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream members/update'}), 502
+
+
+    @app.route(f"{base_path}/conversations_list", methods=["POST"])
+    def conversations_list():
         """
         Proxy to upstream /api/members/conversations/list (POST) with group_name and member_name from request body (required).
         """
         try:
             payload = request.get_json(force=True)
-            if not payload.get('group_id'):
-                return jsonify({'success': False, 'error': 'missing group_id'}), 400
-            
-            if not payload.get('member_name'):
-                return jsonify({'success': False, 'error': 'missing member_name'}), 400
-                    
             upstream_payload = {
                 'group_id': payload.get('group_id'),
-                'member_name': payload.get('member_name'),
+                'member_id': payload.get('member_id'),
+                'conversation_type': payload.get('conversation_type'),
+                'only_last': payload.get('only_last')
             }   
-
-            if payload.get('conversation_type'):
-                upstream_payload['conversation_type'] = payload.get('conversation_type')
-            
-            if payload.get('only_last'):
-                upstream_payload['only_last'] = payload.get('only_last')
 
             return jsonify(_proxy_post('/api/conversations/list', upstream_payload))
         
@@ -474,6 +563,12 @@ def register_conversations_apis(app, base_path: str):
                 'info': payload.get('info'),
                 'participants': participants
             }
+            
+            # Add optional LLM parameters if provided
+            if payload.get('llm_provider'):
+                conversation_req['llm_provider'] = payload.get('llm_provider')
+            if payload.get('llm_model'):
+                conversation_req['llm_model'] = payload.get('llm_model')
             
             upstream_resp = _proxy_post('/api/conversations/add', conversation_req)
             return jsonify(upstream_resp)

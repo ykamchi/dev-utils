@@ -9,6 +9,7 @@
             this.member = member;
             this.onMembersChanged = onMembersChanged;
             this.page = null;
+            this.tabs = [];
             this.render();
         }
 
@@ -31,13 +32,22 @@
             // Page content
             const contentDiv = window.conversations.utils.createDivContainer(null, 'conversations-page-wrapper');
             const tabs = [
-                { name: '🧑 Profile', populateFunc: (container) => { new window.conversations.ManageMembersComponent(container, this.groupId, this.member, this.onMembersChanged) } },
-                { name: window.conversations.CONVERSATION_TYPES_STRING(window.conversations.CONVERSATION_TYPES.AI_DECISION), populateFunc: (container) => { new window.conversations.MemberConversationsComponent(container, this.groupId, this.member, window.conversations.CONVERSATION_TYPES.AI_DECISION); } },
-                { name: window.conversations.CONVERSATION_TYPES_STRING(window.conversations.CONVERSATION_TYPES.AI_CONVERSATION), populateFunc: (container) => { new window.conversations.MemberConversationsComponent(container, this.groupId, this.member, window.conversations.CONVERSATION_TYPES.AI_CONVERSATION); } }
+                { name: '🧑 Profile', populateFunc: (container) => { this.tabs.push(new window.conversations.MemberPropertiesComponent(container, this.groupId, this.member, this.onMembersChanged)) } },
+                { name: window.conversations.CONVERSATION_TYPES_STRING(window.conversations.CONVERSATION_TYPES.AI_DECISION), populateFunc: (container) => { this.tabs.push(new window.conversations.MemberConversationsComponent(container, this.groupId, this.member, window.conversations.CONVERSATION_TYPES.AI_DECISION)); } },
+                { name: window.conversations.CONVERSATION_TYPES_STRING(window.conversations.CONVERSATION_TYPES.AI_CONVERSATION), populateFunc: (container) => { this.tabs.push(new window.conversations.MemberConversationsComponent(container, this.groupId, this.member, window.conversations.CONVERSATION_TYPES.AI_CONVERSATION)); } }
             ];
             const storageKey = `conversations-member-tabset-${this.member.member_name}`;
             new window.TabsetComponent(contentDiv, tabs, storageKey);
             this.page.updateContentArea(contentDiv);
+        }
+
+        destroy() {
+            console.log('[Conversations Tool] - 💥 Destroying MemberDetailsComponent and cleaning up resources...');
+            this.tabs.forEach(tab => {
+                if (tab && tab.destroy) {
+                    tab.destroy();
+                }
+            });
         }
     }
 

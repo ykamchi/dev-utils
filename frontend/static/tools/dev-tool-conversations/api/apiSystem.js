@@ -5,32 +5,21 @@ window.conversations = window.conversations || {};
 window.conversations.system_api = window.conversations.system_api || {};
 
 // Fetch the current queue state from the backend API
-window.conversations.system_api.fetchQueueState = async function (spinnerContainer) {
-    // Show loading spinner while fetching
-    const spinner = new window.SpinnerComponent(spinnerContainer, { text: 'Getting queue state ...', size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+// This API is proprietary to system settings and doesn't follow standard conventions
+// Returns: queue state object when available, or { status: 'unavailable' } when not
+window.conversations.system_api.queueState = async function (spinnerContainer) {
+    const resp = await fetch('/api/dev-tool-conversations/queue_state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+    });
 
-    try {
-        const resp = await fetch('/api/dev-tool-conversations/queue_state', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
-        });
-
-        const result = await resp.json();
-        spinner.remove();
-        if (result.success && result.data && typeof result.data === 'object') {
-            return result.data;
-        } else {
-            new window.conversations.AlertApiErrorComponent(result);
-            throw new Error(result.message || 'Failed to load queue state');
-        }
-
-    } catch (e) {
-        spinner.remove();
-        console.error('Error fetching queue state:', e);
-        throw e;
+    const result = await resp.json();
+    if (result.success && result.data && typeof result.data === 'object') {
+        return result.data;
+    } else {
+        throw new Error(result.message || 'Failed to load queue state');
     }
-
 };
 
 window.conversations.system_api.queuePause = async function (spinnerContainer) {
@@ -131,3 +120,56 @@ window.conversations.system_api.fetchStatusConversationTimeline = async function
 
 };
 
+window.conversations.system_api.queueConversationsStop = async function (spinnerContainer, conversationId) {
+    // Show loading spinner while stopping
+    const spinner = new window.SpinnerComponent(spinnerContainer, { text: 'Stopping conversation ...', size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+
+    try {
+        const resp = await fetch('/api/dev-tool-conversations/queue_conversations_stop', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ conversation_id: conversationId })
+        });
+
+        const result = await resp.json();
+        spinner.remove();
+        if (result.success) {
+            return;
+        } else {
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to stop conversation');
+        }
+
+    } catch (e) {
+        spinner.remove();
+        console.error('Error stopping conversation:', e);
+        throw e;
+    }
+};
+
+window.conversations.system_api.queueConversationsResume = async function (spinnerContainer, conversationId) {
+    // Show loading spinner while resuming
+    const spinner = new window.SpinnerComponent(spinnerContainer, { text: 'Resuming conversation ...', size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+
+    try {
+        const resp = await fetch('/api/dev-tool-conversations/queue_conversations_resume', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ conversation_id: conversationId })
+        });
+
+        const result = await resp.json();
+        spinner.remove();
+        if (result.success) {
+            return;
+        } else {
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to resume conversation');
+        }
+
+    } catch (e) {
+        spinner.remove();
+        console.error('Error resuming conversation:', e);
+        throw e;
+    }
+};

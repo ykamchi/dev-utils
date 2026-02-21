@@ -105,6 +105,19 @@
                 this.pageContentArea.appendChild(newContentArea);
             }
         }
+
+        destroy() {
+            console.log('[Conversations Tool] - 💥 Destroying PageComponent and cleaning up resources...');
+            if (this.pageContentArea) {
+                this.pageContentArea.innerHTML = '';
+            }
+            if (this.pageControlArea) {
+                this.pageControlArea.innerHTML = '';
+            }
+            if (this.pageButtonsArea) {
+                this.pageButtonsArea.innerHTML = '';
+            }
+        }
     }
 
     // Expose the component

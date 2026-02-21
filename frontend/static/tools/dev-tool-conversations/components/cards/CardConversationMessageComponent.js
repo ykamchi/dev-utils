@@ -41,7 +41,7 @@
 
                 // Get the participant data including the feedback and the feedback_def from the conversation
                 const participant = this.conversation.participants.find(p => p.member_name === this.message.member_name);
-                const feedback_def = this.conversation.info.roles[participant.instruction_role].feedback_def;
+                const feedback_def = this.conversation.info.roles.find(r => r.role_name === participant.instruction_role).feedback_def;
                 
                 new window.conversations.ConversationFeedbackInfoComponent(bodyContent, this.message.feedback, feedback_def, true, true);
             }

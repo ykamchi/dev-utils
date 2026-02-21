@@ -3,11 +3,11 @@
         ManageGroupSettingsComponent: TODO - implement group settings UI and logic
     */
     class ManageGroupSettingsComponent {
-        constructor(container, groupId, onGroupNameChange = null, onMembersChanged = null) {
+        constructor(container, groupId, onGroupNameChange = null, onGroupDelete = null) {
             this.container = container;
             this.groupId = groupId;
             this.onGroupNameChange = onGroupNameChange;
-            this.onMembersChanged = onMembersChanged;
+            this.onGroupDelete = onGroupDelete;
 
             this.group = null;
 
@@ -24,21 +24,14 @@
         async load() {
             this.group = await window.conversations.apiGroups.groupsGet(null, this.groupId);
 
-            // Create tabset with two tabs
+            // Create tabset with tabs
             new TabsetComponent(
                 this.wrapper,
                 [
-
-                    {
-                        name: '🌐 System',
-                        populateFunc: (tabContentDiv) => {
-                            new window.conversations.ManageSystemComponent(tabContentDiv, this.groupId);
-                        }
-                    },
                     {
                         name: '👥 Group Definition',
                         populateFunc: (tabContentDiv) => {
-                            new window.conversations.ManageGroupEditComponent(tabContentDiv, this.group, this.onGroupNameChange);
+                            new window.conversations.ManageGroupEditComponent(tabContentDiv, this.group, this.onGroupNameChange, this.onGroupDelete);
                         },
                     },
                     {
@@ -51,12 +44,6 @@
                         name: `${window.conversations.CONVERSATION_TYPES_STRING(window.conversations.CONVERSATION_TYPES.AI_CONVERSATION, true, true, true, true)} Instructions`,
                         populateFunc: (tabContentDiv) => {
                             new window.conversations.ManageInstructionsComponent(tabContentDiv, this.group, window.conversations.CONVERSATION_TYPES.AI_CONVERSATION);
-                        }
-                    },
-                    {
-                        name: '📊 Statistics',
-                        populateFunc: (tabContentDiv) => {
-                            new window.conversations.ManageStatisticsComponent(tabContentDiv, this.groupId);
                         }
                     }
                 ],

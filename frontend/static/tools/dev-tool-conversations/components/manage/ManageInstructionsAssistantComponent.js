@@ -31,17 +31,14 @@
         }
 
         showConversationStartPopup() {
-            let popup = new window.PopupComponent({
-                icon: window.conversations.CONVERSATION_TYPES_ICONS[this.conversation_type],
-                title: 'Start new ' + window.conversations.CONVERSATION_TYPES_STRING(this.conversation_type, false, true, false, false),
-                content: (container) => {
-                    new window.conversations.MemberConversationStartComponent(container, this.groupName, null, this.members, { [this.instructions.info.type]: this.instructions }, this.instructions.info.conversation_type, popup);
-                },
-                closable: true,
-                width: '910px',
-                height: '900px'
-            });
-            popup.show();
+            window.conversations.popups.startConversation(
+                this.groupName, 
+                null, 
+                this.members, 
+                { [this.instructions.info.type]: this.instructions }, 
+                this.instructions.info.conversation_type,
+                null // No callback needed here
+            );
         }
 
 

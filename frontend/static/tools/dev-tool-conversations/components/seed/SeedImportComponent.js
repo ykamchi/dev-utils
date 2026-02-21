@@ -1,8 +1,8 @@
 (function () {
     /*
-        ManageSeedsImportComponent: Displays and imports seed data (members, instructions, roles) from seed files
+        SeedImportComponent: Displays and imports seed data (members, instructions, roles) from seed files
     */
-    class ManageSeedsImportComponent {
+    class SeedImportComponent {
         constructor(container, groupId, seedType, onAddedSeeds = null) {
             this.container = container;
             this.groupId = groupId;
@@ -10,6 +10,7 @@
             this.allSeedsByType = {};
             this.page = null;
             this.onAddedSeeds = onAddedSeeds;
+            this.contentDiv = null; // Store content div for re-rendering
             this.render();
         }
 
@@ -216,7 +217,15 @@
             this.page.updateButtonsArea(buttonsDiv);
 
             // Content area - Create tabs based on available seed data
-            const contentDiv = window.conversations.utils.createDivContainer();
+            this.contentDiv = window.conversations.utils.createDivContainer();
+            this.renderTabs();
+            this.page.updateContentArea(this.contentDiv);
+        }
+
+        renderTabs() {
+            // Clear and re-render tabs
+            this.contentDiv.innerHTML = '';
+            
             const tabs = [];
             
             // Generate tabs from allSeedsByType structure
@@ -231,8 +240,7 @@
                 });
             });
             
-            new window.TabsetComponent(contentDiv, tabs, 'manage-group-seeds-import-tabset');
-            this.page.updateContentArea(contentDiv);
+            new window.TabsetComponent(this.contentDiv, tabs, 'manage-group-seeds-import-tabset');
         }
 
         loadControlArea() {
@@ -364,11 +372,16 @@
 
         selectAll(seeds, select) {
             seeds.forEach(seed => {
-                if (seed.valid) {
+                if (seed.valid && !seed.exist) {
                     seed.include = select;
                 }
             });
-            this.loadContent(); // Refresh to show updated checkboxes and control area
+            
+            // Re-render tabs to update checkboxes
+            this.renderTabs();
+            
+            // Update control area with new counts
+            this.loadControlArea();
         }
 
         async startSeedingAllData() {
@@ -407,7 +420,7 @@
                 if (selectedGroups.length > 0) {
                     added.groups = [];
                     for (const entry of selectedGroups) {
-                        const group = await window.conversations.apiGroups.groupsAdd(null, entry.group_key, entry.group_name);
+                        const group = await window.conversations.apiGroups.groupsAdd(null, entry.group_key, entry.group_name, entry.group_objectives, entry.group_info);
                         added.groups.push(group);
                     }
                 }
@@ -444,5 +457,5 @@
     }
 
     window.conversations = window.conversations || {};
-    window.conversations.ManageSeedsImportComponent = ManageSeedsImportComponent;
+    window.conversations.SeedImportComponent = SeedImportComponent;
 })();

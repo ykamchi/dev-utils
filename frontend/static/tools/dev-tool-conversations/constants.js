@@ -37,7 +37,13 @@ window.conversations.CONVERSATION_TYPES_STRING = function(type, icon = true, nam
     return result.trim();
 }
 
-// Seed types for ManageSeedsImportComponent
+window.conversations.CONVERSATION_TYPES_OPTIONS = [
+    { label: window.conversations.CONVERSATION_TYPES_STRING(window.conversations.CONVERSATION_TYPES.AI_CONVERSATION), value: window.conversations.CONVERSATION_TYPES.AI_CONVERSATION },
+    { label: window.conversations.CONVERSATION_TYPES_STRING(window.conversations.CONVERSATION_TYPES.AI_DECISION), value: window.conversations.CONVERSATION_TYPES.AI_DECISION }
+]
+
+
+// Seed types for SeedImportComponent
 window.conversations.SEED_TYPES = {
     GROUP: 'group',
     MEMBERS: 'members',
@@ -47,6 +53,40 @@ window.conversations.SEED_TYPES = {
     ROLES: 'roles'
 }
 
+window.conversations.CONVERSATION_STATE_FAILED = 'failed';
+window.conversations.CONVERSATION_STATE_COMPLETED = 'completed';
+window.conversations.CONVERSATION_STATE_RUNNING = 'running';
+window.conversations.CONVERSATION_STATE_STOPPED = 'stopped';
+window.conversations.CONVERSATION_STATE_PENDING = 'pending';
+window.conversations.CONVERSATION_STATE_ICONS = {
+    [window.conversations.CONVERSATION_STATE_COMPLETED]: '✔',
+    [window.conversations.CONVERSATION_STATE_FAILED]: '✖',
+    [window.conversations.CONVERSATION_STATE_RUNNING]: '🏃‍➡️',
+    [window.conversations.CONVERSATION_STATE_STOPPED]: '✋',
+    [window.conversations.CONVERSATION_STATE_PENDING]: '⏳'
+}
+
+window.conversations.CONVERSATION_STATE_LABELS = {
+    [window.conversations.CONVERSATION_STATE_COMPLETED]: ' Completed',
+    [window.conversations.CONVERSATION_STATE_FAILED]: '✖ Failed',
+    [window.conversations.CONVERSATION_STATE_RUNNING]: '🏃‍➡️ Running',
+    [window.conversations.CONVERSATION_STATE_STOPPED]: '✋ Stopped',
+    [window.conversations.CONVERSATION_STATE_PENDING]: '⏳ Pending'
+}
+
+window.conversations.CONVERSATION_STATE_OPTIONS = [
+    { label: window.conversations.CONVERSATION_STATE_LABELS[window.conversations.CONVERSATION_STATE_STOPPED], value: window.conversations.CONVERSATION_STATE_STOPPED },
+    { label: window.conversations.CONVERSATION_STATE_LABELS[window.conversations.CONVERSATION_STATE_PENDING], value: window.conversations.CONVERSATION_STATE_PENDING },
+    { label: window.conversations.CONVERSATION_STATE_LABELS[window.conversations.CONVERSATION_STATE_RUNNING], value: window.conversations.CONVERSATION_STATE_RUNNING },
+    { label: window.conversations.CONVERSATION_STATE_LABELS[window.conversations.CONVERSATION_STATE_COMPLETED], value: window.conversations.CONVERSATION_STATE_COMPLETED },
+    { label: window.conversations.CONVERSATION_STATE_LABELS[window.conversations.CONVERSATION_STATE_FAILED], value: window.conversations.CONVERSATION_STATE_FAILED }
+];  
+
+window.conversations.LLM_PROVIDER_OPTIONS =
+[
+    { label: '𖠿 Ollama', value: 'ollama' },
+    { label: '֎ OpenAI', value: 'openai' }
+]
 // Default instructions template for conversations
 window.conversations.DEFAULT_INSTRUCTIONS = `
 This is a test conversation.

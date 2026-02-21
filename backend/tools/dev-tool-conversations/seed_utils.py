@@ -29,16 +29,24 @@ def validate_group(group: Any) -> Dict[str, Any]:
     Required fields:
     - group_key: string
     - group_name: string
+    - group_objectives: string
+    - group_info: object (any structure inside is valid, but must be an object)
     """
     if not isinstance(group, dict):
         return {'valid': False, 'reason': 'Group must be a dictionary'}
     
-    required_fields = ['group_key', 'group_name']
+    required_fields = ['group_key', 'group_name', 'group_objectives', 'group_info']
     for field in required_fields:
         if field not in group:
             return {'valid': False, 'reason': f'Missing required field: {field}'}
         if field == 'group_key' and group['group_key'] is not None and not isinstance(group['group_key'], str):
             return {'valid': False, 'reason': 'group_key must be a string or null'}
+        if field == 'group_name' and not isinstance(group['group_name'], str):
+            return {'valid': False, 'reason': 'group_name must be a string'}
+        if field == 'group_objectives' and not isinstance(group['group_objectives'], str):
+            return {'valid': False, 'reason': 'group_objectives must be a string'}
+        if field == 'group_info' and not isinstance(group['group_info'], dict):
+            return {'valid': False, 'reason': 'group_info must be an object'}
         
     # Check for unexpected fields
     allowed_fields = set(required_fields)
@@ -224,7 +232,7 @@ def validate_instruction(instruction: Any) -> Dict[str, Any]:
     - instruction_key: string (can be null for templates)
     - info: object containing:
         - name: string
-        - description: string
+        - conversation_objectives: string
         - conversation_type: string
         - max_turns: integer
         - roles: array of role objects
@@ -244,7 +252,7 @@ def validate_instruction(instruction: Any) -> Dict[str, Any]:
     
     # Validate info object fields
     info = instruction['info']
-    required_info_fields = ['name', 'description', 'conversation_type', 'max_turns', 'roles']
+    required_info_fields = ['name', 'conversation_objectives', 'conversation_type', 'max_turns', 'roles']
     for field in required_info_fields:
         if field not in info:
             return {'valid': False, 'reason': f'Missing required field in info: {field}'}
@@ -252,8 +260,8 @@ def validate_instruction(instruction: Any) -> Dict[str, Any]:
     if not isinstance(info['name'], str):
         return {'valid': False, 'reason': 'info.name must be a string'}
     
-    if not isinstance(info['description'], str):
-        return {'valid': False, 'reason': 'info.description must be a string'}
+    if not isinstance(info['conversation_objectives'], str):
+        return {'valid': False, 'reason': 'info.conversation_objectives must be a string'}
     
     if not isinstance(info['conversation_type'], str):
         return {'valid': False, 'reason': 'info.conversation_type must be a string'}

@@ -28,33 +28,107 @@ window.tool_script = {
         // Create content container (will hold either members list or manage component) at the bottom of left
         this.memberSelectionArea = window.conversations.utils.createDivContainer(left, 'conversations-layout-content-container');
 
-        // Create right
-        // this.right = window.conversations.utils.createDivContainer(root, 'conversations-layout-right');
+        this.settingsArea = window.conversations.utils.createDivContainer(left, 'conversations-layout-group-container');
 
+        this.initNotificationHub();
+
+        new window.conversations.MenuSystemComponent(this.settingsArea);
+
+        // Create right
         this.contentArea = window.conversations.utils.createDivContainer(root, 'conversations-layout-right');
 
-        this.loadGroupSelectionArea();
+        this.contentAreaComponent = null;
+
+        // Don't call loadGroupSelectionArea() here - let MenuSystemComponent determine availability first
+        // It will be called from handleSystemAvailability when system is available
+    },
+
+    initNotificationHub() {
+        window.conversations.notificationHub = new EventTarget();
+        
+        // Start as null (Unknown)
+        this.isAvailable = null; 
+
+        // Connect to the server-sent events endpoint to receive notifications about system status and other updates. The mere fact that 
+        // we can connect and receive messages means the system is "Available" (even if some messages are just heartbeats).
+        const eventSource = new EventSource("/api/dev-tool-conversations/notifications");
+
+        // Central function to handle the flip logic
+        const setAvailability = (newState) => {
+            // Only dispatch if the state actually CHANGED from what we last knew
+            if (this.isAvailable !== newState) {
+                this.isAvailable = newState;
+                console.log(`[Conversations Tool] - ${newState ? '🟢 System Status: ONLINE' : '🔴 System Status: OFFLINE'}`);
+                this.handleSystemAvailability(newState);
+            }
+        };
+
+        eventSource.onopen = () => {
+            // We don't call setAvailability(true) here because 
+            // a proxy might have answered but the backend is still dead.
+            console.log("[Conversations Tool] - 📡 SSE Connection attempt started...");
+        };
+
+        eventSource.onmessage = (event) => {
+            // We received bytes from the server.
+            setAvailability(true);
+            try {
+                const data = JSON.parse(event.data);
+                console.log('[Conversations Tool] - 📜 Received message from notification hub:', data);
+                window.conversations.notificationHub.dispatchEvent(new CustomEvent(data.type, { detail: data }));
+            } catch (e) {
+                // It was likely a ": ping" heartbeat. Still counts as "Available"!
+            }
+        };
+
+        eventSource.onerror = () => {
+            // If an error happens, we are definitely NOT available.
+            setAvailability(false);
+        };
+
+        window.onbeforeunload = () => {
+            eventSource.close();
+        };
+
+    },
+
+    destroyContentAreaComponent() {
+        if (this.contentAreaComponent) {
+            if (this.contentAreaComponent.destroy) {
+                this.contentAreaComponent.destroy();
+                this.contentAreaComponent = null;
+            } else {
+                console.log('[Conversations Tool] - 💥 contentAreaComponent does not have a destroy method.');
+            }
+        } else {
+            console.debug('[Conversations Tool] - No contentAreaComponent to destroy.');
+        }
     },
 
     async loadGroupSelectionArea() {
         // Initialize group selection component
         // MenuGroupSelectionComponent exposes the selectedGroupId property
         // the initial value of selectedGroupId will be available and triggered 
-        // from the callback onChange when component is loaded
+        // from the callback onSelectionChange when component is loaded
         this.menuGroupSelectionComponent = new window.conversations.MenuGroupSelectionComponent(this.groupSelectionArea,
-            // onChange callback when group selection changes in MenuGroupSelectionComponent
+            // onSelectionChange callback when group selection changes in MenuGroupSelectionComponent
             async () => {
-                console.log('[Conversations Tool] Group selection changed to:', this.menuGroupSelectionComponent.selectedGroupId, ' - reloading content and member selection area based on the new selected group');
+                console.log('[Conversations Tool] - 👥 Group selection changed to:', this.menuGroupSelectionComponent.selectedGroupId, ' - reloading content and member selection area based on the new selected group');
                 this.loadContentAndMemberSelectionArea();
             },
             // onGroupAdded callback when a group is added
             async (added) => {
-                console.log('[Conversations Tool] Group added:', added.groups[0].group_id);
+                console.log('[Conversations Tool] - 👥 Group added:', added.groups[0].group_id);
                 this.menuGroupSelectionComponent.selectGroup(added.groups[0].group_id);
             },
             // onGroupDeleted callback when a group is deleted from the ManageGroupSettingsComponent
-            async () => {
-                console.log('[Conversations Tool] Group deleted');
+            async (deletedGroupId) => {
+                console.log('[Conversations Tool] - 👥 Group deleted:', deletedGroupId);
+                await this.loadGroupSelectionArea();
+            },
+            // onGroupNameChange callback when a group's name is changed from the ManageGroupSettingsComponent
+            async (changedGroupId) => {
+                console.log('[Conversations Tool] - 👥 Group name changed:', changedGroupId);
                 await this.loadGroupSelectionArea();
             }
         );
@@ -78,7 +152,8 @@ window.tool_script = {
         if (this.menuGroupSelectionComponent.groups.length === 0) {
             console.log('[Conversations Tool] No groups available - showing message and option to add group on the content area');
             // Create seed import component for groups
-            new window.conversations.ManageSeedsImportComponent(
+            this.destroyContentAreaComponent();
+            this.contentAreaComponent = new window.conversations.SeedImportComponent(
                 this.contentArea,
                 null, // No groupId since we're creating a new group
                 window.conversations.SEED_TYPES.GROUP,
@@ -102,7 +177,7 @@ window.tool_script = {
         new window.SpinnerComponent(this.contentArea, { text: `Loading ...`, size: 16 });
 
         // Load members list component on the member selection area for the selected group
-        console.log('[Conversations Tool] Groups exist and selected group is:', this.menuGroupSelectionComponent.selectedGroupId, ' - loading members list for the selected group on the content area');
+        console.log('[Conversations Tool] - 👥 Groups exist and selected group is:', this.menuGroupSelectionComponent.selectedGroupId, ' - loading members list for the selected group on the content area');
         this.menuListMembersComponent = new window.conversations.MenuListMembersComponent(this.memberSelectionArea, this.menuGroupSelectionComponent.selectedGroupId,
             // onMemberSelect callback when member is selected from the MenuListMembersComponent - show member 
             // details in the content area on the right or if no member is selected show the 
@@ -110,7 +185,8 @@ window.tool_script = {
             (member) => {
                 this.contentArea.innerHTML = '';
                 if (member) {
-                    new window.conversations.MemberDetailsComponent(this.contentArea, this.menuGroupSelectionComponent.selectedGroupId, member,
+                    this.destroyContentAreaComponent();
+                    this.contentAreaComponent = new window.conversations.MemberDetailsComponent(this.contentArea, this.menuGroupSelectionComponent.selectedGroupId, member,
                         // onMembersChanged callback when members are changed from the MemberDetailsComponent - refresh the 
                         // member in the list or reload the entire content and member selection area 
                         // if the member is null (probably was deleted)
@@ -135,12 +211,13 @@ window.tool_script = {
                         window.conversations.utils.createReadOnlyText(wrapper, 'Please select a member to view details.', 'conversations-message-empty');
 
                     } else {
-                        console.log('[Conversations Tool] No members exist - showing ManageSeedsImportComponent on the content area');
-                        new window.conversations.ManageSeedsImportComponent(this.contentArea, this.menuGroupSelectionComponent.selectedGroupId, window.conversations.SEED_TYPES.MEMBERS,
-                            // onAddedSeeds callback when seeds are imported from the ManageSeedsImportComponent - reload the members list for the selected group
+                        console.log('[Conversations Tool] No members exist - showing SeedImportComponent on the content area');
+                        this.destroyContentAreaComponent();
+                        this.contentAreaComponent = new window.conversations.SeedImportComponent(this.contentArea, this.menuGroupSelectionComponent.selectedGroupId, window.conversations.SEED_TYPES.MEMBERS,
+                            // onAddedSeeds callback when seeds are imported from the SeedImportComponent - reload the members list for the selected group
                             (added) => {
                                 if (added.members && added.members.length > 0) {
-                                    console.log('[Conversations Tool] Seeds imported from ManageSeedsImportComponent - added:', added, ' - reloading members list for the selected group');
+                                    console.log('[Conversations Tool] Seeds imported from SeedImportComponent - added:', added, ' - reloading members list for the selected group');
                                     this.loadContentAndMemberSelectionArea();
                                 }
                             }
@@ -149,6 +226,26 @@ window.tool_script = {
                 }
             }
         );
+    },
+
+    handleSystemAvailability(isAvailable) {
+        console.log('[Conversations Tool] - 🔔 handleSystemAvailability called with:', isAvailable);
+        if (!isAvailable) {
+            // System is down - show message on left and clear right
+            this.groupSelectionArea.innerHTML = '';
+            this.memberSelectionArea.innerHTML = '';
+
+            // Show "System is down" message
+            const messageDiv = window.conversations.utils.createDivContainer(this.groupSelectionArea, 'conversations-system-unavailable');
+            window.conversations.utils.createReadOnlyText(messageDiv, 'System is unavailable', 'conversations-menu-selection-header');
+
+            // Clear content area
+            this.contentArea.innerHTML = '';
+        } else {
+            // System is back up - reload normal view
+            console.log('[Conversations Tool] - ✔️ System available, calling loadGroupSelectionArea');
+            this.loadGroupSelectionArea();
+        }
     },
 
     destroy(container) {

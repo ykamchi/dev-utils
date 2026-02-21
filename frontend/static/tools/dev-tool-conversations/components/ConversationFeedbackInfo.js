@@ -30,7 +30,7 @@
             for (const [key, value] of Object.entries(this.feedback)) {
                 // Check if we should display this feedback field
                 if (true || !this.onlyImportant || (feedbackImportant && feedbackImportant[key])) {
-                    const feedbackDef = this.feedback_def[key];
+                    const feedbackDef = this.feedback_def.find(f => f.name === key);
                     
                     // Skip if no definition found - this is an error case
                     if (!feedbackDef) {

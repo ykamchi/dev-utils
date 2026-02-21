@@ -5,21 +5,62 @@ window.conversations = window.conversations || {};
 window.conversations.apiConversations = window.conversations.apiConversations || {};
 
 
+// Fetch group names from backend
+window.conversations.apiConversations.conversationsList = async function (spinnerContainer, groupId = null, memberId = null, conversationType = null, onlyLast = false) {
+    // Show loading spinner while fetching
+    const spinner = new window.SpinnerComponent(spinnerContainer, { text: 'Loading conversations ...', size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
 
-window.conversations.apiConversations.conversationAdd = async function (spinnerContainer, groupId, instructionInfo, participants) {
+    try {
+        const resp = await fetch('/api/dev-tool-conversations/conversations_list', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                group_id: groupId,
+                member_id: memberId,
+                conversation_type: conversationType,
+                only_last: onlyLast
+            })
+        });
+
+        const result = await resp.json();
+        spinner.remove();
+        if (result.success) {
+            return result.data;
+        } else {
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to load conversations for group ' + groupId + ' and member ' + memberId + ' with conversation type ' + conversationType + ' and only_last ' + onlyLast);
+        }
+    } catch (e) {
+        spinner.remove();
+        console.error('Error getting conversations for group ' + groupId + ' and member ' + memberId + ' with conversation type ' + conversationType + ' and only_last ' + onlyLast + ':', e);
+        throw e;
+    }
+};
+
+window.conversations.apiConversations.conversationAdd = async function (spinnerContainer, groupId, instructionInfo, participants, llmProvider, llmModel) {
     // Show loading spinner while starting conversation
     const participantNames = participants.map(p => p.member_name).join(', ');
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Starting conversation for ${participantNames}...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
     
     try {
+        const requestBody = {
+            group_id: groupId,
+            info: instructionInfo,
+            participants: participants
+        };
+        
+        // Add LLM parameters if provided
+        if (llmProvider) {
+            requestBody.llm_provider = llmProvider;
+        }
+        if (llmModel) {
+            requestBody.llm_model = llmModel;
+        }
+        
         const resp = await fetch('/api/dev-tool-conversations/conversations_add', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                group_id: groupId,
-                info: instructionInfo,
-                participants: participants
-            })
+            body: JSON.stringify(requestBody)
         });
 
         const result = await resp.json();

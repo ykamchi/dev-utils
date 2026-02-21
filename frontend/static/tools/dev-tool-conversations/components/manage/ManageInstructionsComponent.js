@@ -14,7 +14,7 @@
             this.saveButton = null;
             this.seedButton = null;
 
-            this.seedCompare = new window.conversations.ManageSeedCompareComponent(
+            this.seedCompare = new window.conversations.SeedCompareComponent(
                 null,
                 async () => {
                     // onReloadFromSeed callback - we update the data with the new data from seed and save
@@ -23,7 +23,7 @@
                 },
                 async (newSeed) => {
                     // onOverrideSeed callback - we save the new seed (the data filter is applied in the 
-                    // ManageSeedCompareComponent before calling this callback)
+                    // SeedCompareComponent before calling this callback)
                     await window.conversations.apiSeeds.seedsInstructionsSet(this.wrapper, this.group.group_key, this.seedCompare.data.instruction_key, newSeed);
                     this.loadContent();
                 },
@@ -111,7 +111,7 @@
                 label: '💾',
                 onClick: () => this.save(),
                 type: window.ButtonComponent.TYPE_GHOST,
-                tooltip: '💾 Save group',
+                tooltip: '💾 Save instruction',
                 disabled: true
             });
 
@@ -125,7 +125,7 @@
                 label: '🗙',
                 onClick: () => this.delete(),
                 type: window.ButtonComponent.TYPE_GHOST_DANGER,
-                tooltip: '🗙 Delete group',
+                tooltip: '🗙 Delete instruction',
             });
             this.page.updateButtonsArea(buttonContainer);
         }
@@ -171,16 +171,16 @@
             window.conversations.utils.createField(this.instructionPropertiesDiv, 'Instructions Key:', this.seedCompare.data.instruction_key, true);
 
             // Description field (editable)
-            window.conversations.utils.createTextArea(this.instructionPropertiesDiv, 'Description:', {
-                initialValue: this.seedCompare.data.info.description,
-                placeholder: 'My Instruction Description',
+            window.conversations.utils.createTextArea(this.instructionPropertiesDiv, 'Objectives:', {
+                initialValue: this.seedCompare.data.info.conversation_objectives,
+                placeholder: 'My Instruction Objectives',
                 onChange: (value) => {
-                    this.seedCompare.change((data) => data.info.description = value);
+                    this.seedCompare.change((data) => data.info.conversation_objectives = value);
                 },
                 aiSuggestion: {
                     fn: window.conversations.apiAi.autocomplete,
                     context: {
-                        field: 'instruction_description',
+                        field: 'instruction_objectives',
                         operation: 'edit_instruction',
                         existing_data: {
                             'instruction_name': this.seedCompare.data.info.name,
@@ -215,8 +215,18 @@
             // Roles area
             this.rolesFieldDiv = window.conversations.utils.createDivContainer(this.rolesAreaDiv, 'conversation-field-container-vertical-full');
             window.conversations.utils.createLabel(this.rolesFieldDiv, 'Roles:');
-            new window.conversations.ManageInstructionRolesComponent(this.rolesFieldDiv, this.group, this.seedCompare.data.info.roles, (roles) => {
+            new window.conversations.ManageInstructionRolesComponent(this.rolesFieldDiv, this.group, this.seedCompare.data.info.roles, 
+                (roles) => {
                 // 
+                this.seedCompare.change((data) => data.info.roles = roles);
+            }, 
+                (roles) => {
+                // Handle roles added
+                this.seedCompare.change((data) => data.info.roles = roles);
+                this.loadRoles();
+            },
+                (roles) => {
+                // Handle role deleted
                 this.seedCompare.change((data) => data.info.roles = roles);
                 this.loadRoles();
             });

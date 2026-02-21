@@ -1,19 +1,21 @@
- (function () {
+(function () {
     /*
         ManageInstructionRolesComponent: handles editing a single instruction with Info, Instructions, and Feedback tabs
     */
     class ManageInstructionRolesComponent {
-        constructor(container, group, roles, onChange) {
+        constructor(container, group, roles, onChange, onRolesAdded, onRoleDeleted) {
             this.container = container;
             this.group = group;
             this.roles = roles;
 
             this.onChange = onChange;
+            this.onRolesAdded = onRolesAdded;
+            this.onRoleDeleted = onRoleDeleted;
             this.feedbackDefContainer = null;
 
             this.render();
         }
-        
+
         render() {
             this.feedbackDefContainer = window.conversations.utils.createDivContainer(this.container, 'conversation-container-vertical-full');
             this.loadContent();
@@ -35,9 +37,20 @@
             new window.TabsetComponent(tabsetDiv, rolesTabs, `conversations-instruction-editor-${this.group.group_id}`);
         }
 
+        handleDeleteRole(role) {
+            new window.AlertComponent('Delete Role', `Are you sure you want to delete the role "${role.role_name}"?`, [
+                ['Confirm Delete', async () => {
+                    this.roles = this.roles.filter(r => r !== role);
+                    this.onRoleDeleted(this.roles);
+                    this.render();
+                }],
+                ['Cancel', () => { }]
+            ]);
+        }
+
         populateAddRoleTab(container) {
-            // Use ManageSeedsImportComponent to select roles from seeds
-            new window.conversations.ManageSeedsImportComponent(
+            // Use SeedImportComponent to select roles from seeds
+            new window.conversations.SeedImportComponent(
                 container,
                 this.group.group_id,
                 window.conversations.SEED_TYPES.ROLES,
@@ -52,7 +65,7 @@
                             }
                             this.roles.push(roleCopy);
                         });
-                        this.onChange(this.roles);
+                        this.onRolesAdded(this.roles);
                         this.render();
                     }
                 }
@@ -69,6 +82,12 @@
                 label: '+ Add feedback field',
                 onClick: () => this.handleAddFeedback(role),
                 type: window.ButtonComponent.TYPE_GHOST
+            });
+            new window.ButtonComponent(buttonContainer, {
+                label: '🗙',
+                onClick: () => this.handleDeleteRole(role),
+                type: window.ButtonComponent.TYPE_GHOST_DANGER,
+                tooltip: '🗙 Delete role'
             });
 
             // Horizontal wrapper for role details and feedback definitions
@@ -97,7 +116,7 @@
             });
 
             // Role description (editable)
-            window.conversations.utils.createTextArea(systemPromptContainer,  'Role Description:', {
+            window.conversations.utils.createTextArea(systemPromptContainer, 'Role Description:', {
                 initialValue: role.role_description,
                 placeholder: 'Role initial system prompt',
                 onChange: (value) => {
@@ -106,9 +125,9 @@
                 },
                 rows: 2
             });
-        
+
             // System Prompt field
-            window.conversations.utils.createTextArea(systemPromptContainer,  'System Prompt:', {
+            window.conversations.utils.createTextArea(systemPromptContainer, 'System Prompt:', {
                 initialValue: role.system_prompt,
                 placeholder: 'Role initial system prompt',
                 onChange: (value) => {
@@ -119,7 +138,7 @@
 
             // Right side: Feedback Definitions
             const feedbackContainer = window.conversations.utils.createDivContainer(horizontalWrapper, 'conversation-container-vertical');
-            this.feedbackDefContainer = window.conversations.utils.createDivContainer(feedbackContainer, 'conversation-field-container-vertical-full');            
+            this.feedbackDefContainer = window.conversations.utils.createDivContainer(feedbackContainer, 'conversation-field-container-vertical-full');
             this.populateFeedbackEditor(role);
         }
 
@@ -135,10 +154,10 @@
             }
 
             // container, items, renderItemFunction, selectionMode = ListComponent.SELECTION_MODE_NONE, onSelect = null, filterCondition = null
-            new window.ListComponent(wrapper, role.feedback_def, 
+            new window.ListComponent(wrapper, role.feedback_def,
                 (feedback_def) => {
                     const feedbackDiv = document.createElement('div');
-                    
+
                     // Name (editable)
                     window.conversations.utils.createInput(feedbackDiv, 'Name:', {
                         initialValue: feedback_def.feedbackName,
@@ -149,7 +168,7 @@
                             this.onChange(this.roles);
                         }
                     });
-                    
+
                     // Description field (editable)
                     window.conversations.utils.createTextArea(feedbackDiv, 'Description:', {
                         initialValue: feedback_def.description,
@@ -168,8 +187,8 @@
                     const feedbackTypeSelectContainer = window.conversations.utils.createDivContainer(feedbackTypeContainer);
                     new window.SelectComponent(
                         feedbackTypeSelectContainer,
-                        [ { label: 'Integer', value: 'integer' }, { label: 'String', value: 'string' } ],
-                        (value) => { 
+                        [{ label: 'Integer', value: 'integer' }, { label: 'String', value: 'string' }],
+                        (value) => {
                             feedback_def.type = value;
                             // Clear other type-specific properties
                             delete feedback_def.min;
@@ -183,16 +202,16 @@
                     );
 
                     // Options Area
-                    const feedbackTypeOptionsContainer  = window.conversations.utils.createDivContainer(feedbackDiv, 'conversation-field-container-vertical');
+                    const feedbackTypeOptionsContainer = window.conversations.utils.createDivContainer(feedbackDiv, 'conversation-field-container-vertical');
                     this.renderFeedbackTypeOptions(feedbackTypeOptionsContainer, feedback_def);
 
                     const buttonContainer = window.conversations.utils.createDivContainer(feedbackDiv, 'conversations-buttons-container');
 
                     // Required checkbox
-                    new window.CheckboxComponent(buttonContainer,feedback_def.required,(checked) => {
+                    new window.CheckboxComponent(buttonContainer, feedback_def.required, (checked) => {
                         feedback_def.required = checked;
                         this.onChange(this.roles);
-                    },'Required');
+                    }, 'Required');
 
                     // Add delete button
                     new window.ButtonComponent(buttonContainer, {
@@ -205,7 +224,7 @@
                         type: window.ButtonComponent.TYPE_GHOST_DANGER,
                         tooltip: '🗙 Delete feedback field'
                     });
-                    
+
                     return feedbackDiv;
                 }
             );
@@ -220,7 +239,7 @@
             if (feedback_def.type === 'integer') {
                 // Use RangeComponent for integer type
                 window.conversations.utils.createLabel(feedbackTypeOptionsContainer, 'Value Range:');
-                feedbackTypeOptionsContainer.rangeComponent = new window.RangeComponent(feedbackTypeOptionsContainer, 
+                feedbackTypeOptionsContainer.rangeComponent = new window.RangeComponent(feedbackTypeOptionsContainer,
                     feedback_def.min, feedback_def.max || 10,
                     (range) => {
                         feedback_def.min = range.min; feedback_def.max = range.max;
@@ -234,7 +253,7 @@
             } else if (feedback_def.type === 'string') {
                 // Optional values field - store reference on the container for later retrieval
                 window.conversations.utils.createLabel(feedbackTypeOptionsContainer, 'Optional Values:');
-                feedbackTypeOptionsContainer.stringArrayComponent = new window.StringArrayComponent(feedbackTypeOptionsContainer, 
+                feedbackTypeOptionsContainer.stringArrayComponent = new window.StringArrayComponent(feedbackTypeOptionsContainer,
                     feedback_def['optional-values'], 'Add optional value...', (values) => {
                         feedback_def['optional-values'] = values;
                         this.onChange(this.roles);
