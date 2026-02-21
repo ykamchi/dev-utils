@@ -10,8 +10,10 @@ class ListComponent {
      * @param {string} [selectionMode] - ListComponent.SELECTION_MODE_NONE | ListComponent.SELECTION_MODE_SINGLE | ListComponent.SELECTION_MODE_MULTIPLE
      * @param {Function} [onSelect] - Callback(selectedItems)
      * @param {Function} [onFilter] - Function(item, query) => boolean, returns true if item matches the search query
+     * @param {Array} [sortFields] - Array of sort field objects
+     * @param {Function} [onRefresh] - Callback when refresh button is clicked
      */
-    constructor(container, items, renderItemFunction, selectionMode = ListComponent.SELECTION_MODE_NONE, onSelect = null, onFilter = null, sortFields = []) {
+    constructor(container, items, renderItemFunction, selectionMode = ListComponent.SELECTION_MODE_NONE, onSelect = null, onFilter = null, sortFields = [], onRefresh = null) {
         this.container = container;
         this.allItems = items || [];
         this.items = items || [];
@@ -20,6 +22,7 @@ class ListComponent {
         this.onSelect = onSelect;
         this.onFilter = onFilter;
         this.sortFields = sortFields;
+        this.onRefresh = onRefresh;
         this.selectedIndices = [];
         this.selectedItems = new Set(); // Track selected items by reference
         this.searchInput = null;
@@ -40,18 +43,19 @@ class ListComponent {
         }
         wrapper.innerHTML = '';
 
-        if (this.onFilter || (this.sortFields && this.sortFields.length > 0)) {
+        if (this.onFilter || (this.sortFields && this.sortFields.length > 0) || this.onRefresh) {
             const searchContainer = document.createElement('div');
             searchContainer.className = 'list-component-search-container';
 
             if (this.sortFields && Object.keys(this.sortFields).length > 0) {
                 this.selectedSortField = this.sortFields[0];
 
-                const sortContainer = document.createElement('div');
-                sortContainer.className = 'list-component-sort-container';
-                searchContainer.appendChild(sortContainer);
+                // Create sort wrapper with button inside (similar to search input wrapper)
+                const sortWrapper = document.createElement('div');
+                sortWrapper.className = 'list-component-sort-wrapper';
+                searchContainer.appendChild(sortWrapper);
 
-                // Create sort direction button
+                // Create sort direction button (positioned on the left inside the select)
                 this.sortButton = document.createElement('button');
                 this.sortButton.className = 'list-component-sort-button';
                 this.sortButton.title = 'Sort items';
@@ -60,11 +64,16 @@ class ListComponent {
                     this.sortItems();
                     this.renderList();
                 });
-                sortContainer.appendChild(this.sortButton);
+                sortWrapper.appendChild(this.sortButton);
+
+                // Create sort select component container
+                const sortSelectContainer = document.createElement('div');
+                sortSelectContainer.className = 'list-component-sort-select-container';
+                sortWrapper.appendChild(sortSelectContainer);
 
                 // Create sort select component
                 this.sortSelect = new window.SelectComponent(
-                    sortContainer,
+                    sortSelectContainer,
                     this.sortFields.map(field => ({ label: field.label, value: field.label })),
                     (selectedSortField) => {
                         if (selectedSortField) {
@@ -99,6 +108,20 @@ class ListComponent {
                 searchIcon.className = 'list-component-search-icon';
                 searchIcon.textContent = '🔍';
                 inputWrapper.appendChild(searchIcon);
+            }
+
+            // Add refresh button if callback is provided
+            if (this.onRefresh) {
+                const refreshButton = document.createElement('button');
+                refreshButton.className = 'list-component-refresh-button';
+                refreshButton.textContent = '🗘';
+                refreshButton.title = 'Refresh list';
+                refreshButton.addEventListener('click', () => {
+                    if (typeof this.onRefresh === 'function') {
+                        this.onRefresh();
+                    }
+                });
+                searchContainer.appendChild(refreshButton);
             }
 
             wrapper.appendChild(searchContainer);
@@ -191,10 +214,26 @@ class ListComponent {
         }
         this.listContainer.appendChild(ul);
 
+        // Scroll selected item into view
+        this.scrollSelectedIntoView();
+
         // Notify if selection changed
         if (selectionChanged && this.onSelect) {
             const selectedItems = this.selectedIndices.map(i => this.items[i]);
             this.onSelect(selectedItems);
+        }
+    }
+
+    /**
+     * Scrolls the first selected item into view if it exists.
+     */
+    scrollSelectedIntoView() {
+        if (this.selectedIndices.length > 0 && this.itemElements.length > 0) {
+            const selectedIndex = this.selectedIndices[0];
+            const selectedElement = this.itemElements[selectedIndex];
+            if (selectedElement) {
+                selectedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         }
     }
 
@@ -224,6 +263,9 @@ class ListComponent {
                 li.classList.remove('selected');
             }
         });
+
+        // Scroll selected item into view
+        this.scrollSelectedIntoView();
 
         if (this.onSelect) {
             const selectedItems = this.selectedIndices.map(i => this.items[i]);
@@ -265,6 +307,46 @@ class ListComponent {
         if (this.onSelect) {
             this.onSelect([]);
         }
+    }
+
+    updateItems(newItems) {
+        this.allItems = newItems || [];
+        this.filterItems(this.searchInput ? this.searchInput.value : '');
+    }
+    
+    /**
+     * Updates a specific item in the list without re-rendering the entire list.
+     * @param {*} updatedItem - The updated item data
+     * @param {Function} findFn - Function(item) => boolean, returns true for the item to update
+     */
+    updateItem(updatedItem, findFn) {
+        // Find and update the item in allItems array
+        const allIndex = this.allItems.findIndex(findFn);
+        if (allIndex === -1) {
+            return; // Item not found
+        }
+        
+        const oldItem = this.allItems[allIndex];
+        this.allItems[allIndex] = updatedItem;
+
+        // Update selectedItems if this item was selected
+        if (this.selectedItems.has(oldItem)) {
+            this.selectedItems.delete(oldItem);
+            this.selectedItems.add(updatedItem);
+        }
+
+        // Re-apply filter and sort to update the items array
+        if (this.searchInput && this.searchInput.value) {
+            this.filterItems(this.searchInput.value);
+        } else {
+            this.items = [...this.allItems];
+            if (this.selectedSortField) {
+                this.sortItems();
+            }
+        }
+
+        // Re-render the list (necessary because position might have changed)
+        this.renderList();
     }
 
     /**

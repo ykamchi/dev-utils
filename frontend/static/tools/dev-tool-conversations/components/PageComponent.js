@@ -30,15 +30,15 @@
 
             // Page control area
             this.pageControlArea = window.conversations.utils.createDivContainer(pageHeaderArea, 'conversations-page-control-area');
-            new window.SpinnerComponent(this.pageControlArea);
+            // new window.SpinnerComponent(this.pageControlArea);
 
             // Page buttons area
             this.pageButtonsArea = window.conversations.utils.createDivContainer(pageHeaderArea, 'conversations-page-buttons-area');
-            new window.SpinnerComponent(this.pageButtonsArea);
+            // new window.SpinnerComponent(this.pageButtonsArea);
 
             // Page content area
             this.pageContentArea = window.conversations.utils.createDivContainer(wrapper, 'conversations-page-content-area');
-            new window.SpinnerComponent(this.pageContentArea);
+            // new window.SpinnerComponent(this.pageContentArea, { text: `Loading content...`, size: 16 });
         }
 
         // Renders the page title box with emoji, title, and fields
@@ -103,6 +103,19 @@
             this.pageContentArea.innerHTML = '';
             if (newContentArea !== null) {
                 this.pageContentArea.appendChild(newContentArea);
+            }
+        }
+
+        destroy() {
+            console.log('[Conversations Tool] - 💥 Destroying PageComponent and cleaning up resources...');
+            if (this.pageContentArea) {
+                this.pageContentArea.innerHTML = '';
+            }
+            if (this.pageControlArea) {
+                this.pageControlArea.innerHTML = '';
+            }
+            if (this.pageButtonsArea) {
+                this.pageButtonsArea.innerHTML = '';
             }
         }
     }

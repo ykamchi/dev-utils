@@ -13,11 +13,17 @@ class RangeComponent {
             max: max,
         };
         this.onChange = onChange;
-        // Create wrapper once and reuse
+        
+        // Create a wrapper div instead of modifying the container
+        this.wrapper = document.createElement('div');
+        this.wrapper.className = 'range-component';
+        this.container.appendChild(this.wrapper);
+        
+        // Create range inputs wrapper
         this.rangeWrapper = document.createElement('div');
         this.rangeWrapper.className = 'range-inputs-wrapper';
-        this.container.className = 'range-component';
-        this.container.appendChild(this.rangeWrapper);
+        this.wrapper.appendChild(this.rangeWrapper);
+        
         this.render();
     }
 
@@ -108,8 +114,8 @@ class RangeComponent {
         }
 
         // If min is greater than or equal to max, set min to max - 1
-        if (minValue >= maxValue) {
-            this.range.min = maxValue - 1;
+        if (minValue > maxValue) {
+            this.range.min = maxValue;
             minInput.value = this.range.min;
         } else {
             this.range.min = minValue;
@@ -127,8 +133,8 @@ class RangeComponent {
         }
 
         // If max is less than or equal to min, set max to min + 1
-        if (maxValue <= minValue) {
-            this.range.max = minValue + 1;
+        if (maxValue < minValue) {
+            this.range.max = minValue;
             maxInput.value = this.range.max;
         } else {
             this.range.max = maxValue;

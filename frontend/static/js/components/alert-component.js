@@ -20,8 +20,8 @@ class AlertComponent {
     }
 
     render() {
-        // Clear container
-        this.container.innerHTML = '';
+        // Don't clear container - just add our elements
+        // (Clearing would remove any existing popups in modal-root)
 
         // Modal overlay
         const overlay = document.createElement('div');
@@ -31,10 +31,29 @@ class AlertComponent {
             e.stopPropagation();
             e.preventDefault();
         });
+        overlay.addEventListener('mouseup', e => {
+            e.stopPropagation();
+            e.preventDefault();
+        });
+        overlay.addEventListener('click', e => {
+            e.stopPropagation();
+            e.preventDefault();
+        });
 
         // Centered modal dialog
         const modal = document.createElement('div');
         modal.className = 'alert-component-modal';
+        
+        // Also prevent events on modal from propagating
+        modal.addEventListener('mousedown', e => {
+            e.stopPropagation();
+        });
+        modal.addEventListener('mouseup', e => {
+            e.stopPropagation();
+        });
+        modal.addEventListener('click', e => {
+            e.stopPropagation();
+        });
 
         const wrapper = document.createElement('div');
         wrapper.className = 'alert-component-wrapper';
@@ -71,26 +90,45 @@ class AlertComponent {
         buttonContainer.className = 'alert-component-buttons-container';
         if (Array.isArray(this.buttons) && this.buttons.length > 0) {
             this.buttons.forEach(([label, callback]) => {
-                new window.ButtonComponent(buttonContainer, label, () => {
-                    callback();
-                    this.close();
+                new window.ButtonComponent(buttonContainer, {
+                    label,
+                    onClick: () => {
+                        callback();
+                        this.close();
+                    }
                 });
             });
         } else {
             // Default Ok button
-            new window.ButtonComponent(buttonContainer, 'Ok', () => {
-                this.close();
+            new window.ButtonComponent(buttonContainer, {
+                label: 'Ok',
+                onClick: () => {
+                    this.close();
+                }
             });
         }
         wrapper.appendChild(buttonContainer);
 
         modal.appendChild(wrapper);
+        
+        // Store references to our elements for proper cleanup
+        this.overlay = overlay;
+        this.modal = modal;
+        
         this.container.appendChild(overlay);
         this.container.appendChild(modal);
     }
 
     close() {
-    this.container.innerHTML = '';
+        // Remove only our elements, not the entire container
+        if (this.overlay && this.overlay.parentNode) {
+            this.overlay.parentNode.removeChild(this.overlay);
+        }
+        if (this.modal && this.modal.parentNode) {
+            this.modal.parentNode.removeChild(this.modal);
+        }
+        this.overlay = null;
+        this.modal = null;
     }
 }
 

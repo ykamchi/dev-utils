@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='js/components/checkbox-component.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='js/components/diff-component.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='js/components/toggle-button-component.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='js/components/progressbar-component.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='js/components/chart-component.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='js/components/expand-div-component.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='js/components/list-component.css') }}">
@@ -44,12 +45,20 @@
             <div class="theme-switcher">
                 <label for="theme-select">Theme:</label>
                 <select id="theme-select" onchange="ThemeService.setTheme(this.value)">
+                    <option value="default">Executive Blue/Gold</option>
                     <option value="natural-neutral">Natural</option>
                     <option value="natural-green">Natural Green</option>
                     <option value="natural-blue">Natural Blue</option>
                     <option value="natural-red">Natural Red</option>
-                    <option value="default">Executive Blue/Gold</option>
-                    <option value="monochrome">Monochromatic Elegance</option>
+                    <option value="natural-teal">Natural Teal</option>
+                    <option value="natural-gold">Natural Gold</option>
+                    <option value="natural-dark-neutral">Natural Dark</option>
+                    <option value="natural-dark-green">Natural Dark Green</option>
+                    <option value="natural-dark-blue">Natural Dark Blue</option>
+                    <option value="natural-dark-red">Natural Dark Red</option>
+                    <option value="natural-dark-teal">Natural Dark Teal</option>
+                    <option value="natural-dark-gold">Natural Dark Gold</option>
+                    <!-- <option value="monochrome">Monochromatic Elegance</option>
                     <option value="mahogany">Traditional Mahogany</option>
                     <option value="regal-dark">Regal Dark Mode</option>
                     <option value="sage-stone">Soft Sage & Stone</option>
@@ -59,7 +68,7 @@
                     <option value="github-dark">GitHub Dark</option>
                     <option value="solarized-dark">Solarized Dark</option>
                     <option value="dracula">Dracula</option>
-                    <option value="one-dark-pro">One Dark Pro</option>
+                    <option value="one-dark-pro">One Dark Pro</option> -->
                 </select>
             </div>
         </div>
@@ -128,6 +137,7 @@
     <script src="{{ url_for('static', filename='js/components/checkbox-component.js') }}"></script>
     <script src="{{ url_for('static', filename='js/components/diff-component.js') }}"></script>
     <script src="{{ url_for('static', filename='js/components/toggle-button-component.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/progressbar-component.js') }}"></script>
     <script src="{{ url_for('static', filename='js/components/chart-component.js') }}"></script>
     <script src="{{ url_for('static', filename='js/components/expand-div-component.js') }}"></script>
     <script src="{{ url_for('static', filename='js/components/spinner-component.js') }}"></script>
@@ -142,6 +152,7 @@
     <script src="{{ url_for('static', filename='js/components/list-chooser-component.js') }}"></script>
     <script src="{{ url_for('static', filename='js/components/string-array-component.js') }}"></script>
     <script src="{{ url_for('static', filename='js/components/range-component.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ai-suggestion-handler.js') }}"></script>
     <script src="{{ url_for('static', filename='js/components/text-input-component.js') }}"></script>  
     <script src="{{ url_for('static', filename='js/components/text-area-component.js') }}"></script>
     <script src="{{ url_for('static', filename='js/components/rate-component.js') }}"></script>

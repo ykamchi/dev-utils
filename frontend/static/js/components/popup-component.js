@@ -2,9 +2,14 @@
 // Provides overlay, positioning, close functionality, and theme integration
 // Content is provided by the calling component as HTML elements
 
+// Track z-index for stacking multiple popups
+let popupZIndexCounter = 1000;
+
 class PopupComponent {
     constructor(options = {}) {
-        this.container = options.container || document.body;
+        // Use modal-root for modal behavior, or specified container
+        const modalRoot = document.getElementById('modal-root');
+        this.container = options.container || modalRoot || document.body;
         this.content = options.content; // HTML element or array of elements
         this.icon = options.icon || '📋'; // Default icon
         this.title = options.title || ''; // Default title
@@ -33,6 +38,10 @@ class PopupComponent {
 
         this.isVisible = true;
 
+        // Assign z-index for this popup instance
+        this.baseZIndex = popupZIndexCounter;
+        popupZIndexCounter += 2; // Increment by 2 (overlay + popup)
+
         // Handle anchor-based positioning
         if (this.anchorElement) {
             const anchorRect = this.anchorElement.getBoundingClientRect();
@@ -55,6 +64,12 @@ class PopupComponent {
         if (!this.isVisible) return;
 
         this.isVisible = false;
+        
+        // Restore z-index counter when closing
+        if (this.baseZIndex === popupZIndexCounter - 2) {
+            popupZIndexCounter -= 2;
+        }
+        
         // Call destroy on content instance if available
         if (this._contentInstance && typeof this._contentInstance.destroy === 'function') {
             try { this._contentInstance.destroy(); } catch (e) { }
@@ -73,19 +88,36 @@ class PopupComponent {
         if (this.overlay) {
             this.overlayElement = document.createElement('div');
             this.overlayElement.className = 'framework-popup-overlay';
-            this.overlayElement.addEventListener('click', () => {
+            this.overlayElement.style.zIndex = this.baseZIndex; // Set dynamic z-index
+            
+            // ALWAYS block all events from passing through to elements below (modal behavior)
+            this.overlayElement.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+            });
+            this.overlayElement.addEventListener('mouseup', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+            });
+            this.overlayElement.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                
+                // Optionally close the popup when clicking the overlay
                 if (this.onOutsideClick) {
                     this.onOutsideClick();
                 } else if (this.closeOnOutsideClick) {
                     this.hide();
                 }
             });
+            
             this.container.appendChild(this.overlayElement);
         }
 
         // Create popup element
         this.popupElement = document.createElement('div');
         this.popupElement.className = 'framework-popup';
+        this.popupElement.style.zIndex = this.baseZIndex + 1; // Popup above its overlay
 
         // Apply size
         if (this.width !== 'auto') {
@@ -221,6 +253,14 @@ class PopupComponent {
                 if (alertModal && alertModal.contains(e.target)) {
                     return;
                 }
+                
+                // If click is inside any popup (including child popups), don't close
+                const clickedPopup = e.target.closest('.framework-popup');
+                if (clickedPopup) {
+                    return;
+                }
+                
+                // If click is outside this popup, close it
                 if (this.popupElement && !this.popupElement.contains(e.target)) {
                     this.hide();
                 }
