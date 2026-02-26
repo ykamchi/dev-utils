@@ -73,14 +73,14 @@ window.conversations.utils.createDivContainer = function (container = null, clas
     return div;
 }
 
-window.conversations.utils.createFieldDiv = function (container, labelText) {
-    const fieldDiv = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
+window.conversations.utils.createFieldDiv = function (container, labelText, style = null) {
+    const fieldDiv = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical', style);
     window.conversations.utils.createLabel(fieldDiv, labelText);
     return fieldDiv;   
 }
 
-window.conversations.utils.createField = function (container, labelText, value, readOnly = false) {
-    const fieldDiv = window.conversations.utils.createFieldDiv(container, labelText);
+window.conversations.utils.createField = function (container, labelText, value, readOnly = false, style = null) {
+    const fieldDiv = window.conversations.utils.createFieldDiv(container, labelText, style);
     window.conversations.utils.createReadOnlyText(fieldDiv, value, readOnly ? null : 'conversations-field-value');
     return fieldDiv;
 }

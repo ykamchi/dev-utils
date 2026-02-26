@@ -35,8 +35,11 @@
         }
         
         async onQueueStateUpdate(event) {
+            if (event.detail.type !== 'queue-state') return;
             // Update local queue state with the new data
             this.queueState = event.detail.data; 
+            console.log('[Conversations Tool] - SystemQueueListComponent Received queue state update notification:', event.detail.data);
+            this.queueState = await window.conversations.system_api.queueState(this.container);
             this.createButtonsArea();
         }
 

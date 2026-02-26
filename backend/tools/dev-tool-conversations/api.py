@@ -501,6 +501,11 @@ def register_members_apis(app, base_path: str):
             return jsonify({'success': False, 'error': 'Failed to contact upstream members/update'}), 502
 
 
+
+# Conversations API endpoints
+#         
+#
+def register_conversations_apis(app, base_path: str):
     @app.route(f"{base_path}/conversations_list", methods=["POST"])
     def conversations_list():
         """
@@ -512,6 +517,7 @@ def register_members_apis(app, base_path: str):
                 'group_id': payload.get('group_id'),
                 'member_id': payload.get('member_id'),
                 'conversation_type': payload.get('conversation_type'),
+                'conversation_id': payload.get('conversation_id'),
                 'only_last': payload.get('only_last')
             }   
 
@@ -522,11 +528,6 @@ def register_members_apis(app, base_path: str):
             return jsonify({'success': False, 'error': 'Failed to contact upstream members/conversations/list'}), 502
 
 
-
-# Conversations API endpoints
-#         
-#
-def register_conversations_apis(app, base_path: str):
     @app.route(f"{base_path}/conversations_add", methods=["POST"])
     def conversation_add():
         """

@@ -6,6 +6,7 @@
         constructor(container, groupId, member, onMembersChanged = null) {
             this.container = container;
             this.groupId = groupId;
+            this.member = member;
             this.onMembersChanged = onMembersChanged;
             this.group = null;
 
@@ -124,7 +125,7 @@
 
             // Member profile as JSON textarea
             window.conversations.utils.createTextArea(this.memberEditArea, 'Member Profile (JSON):', {
-                initialValue: JSON.stringify(this.member, null, 2),
+                initialValue: JSON.stringify(this.member.member_profile, null, 2),
                 placeholder: '{}',
                 onChange: (value) => {
                     try {

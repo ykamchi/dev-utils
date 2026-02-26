@@ -13,7 +13,7 @@
 }
 
 .framework-progressbar-container {
-    background: var(--color-background-secondary);
+    background: rgb(from var(--color-highlight) r g b / 0.2);
     border: 1px solid var(--color-border);
     border-radius: 4px;
     overflow: hidden;

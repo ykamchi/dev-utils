@@ -296,14 +296,14 @@ class ListComponent {
     clearSelection() {
         this.selectedIndices = [];
         this.selectedItems.clear();
-        
+
         // Update selection classes in the DOM
         if (this.itemElements) {
             this.itemElements.forEach((li) => {
                 li.classList.remove('selected');
             });
         }
-        
+
         if (this.onSelect) {
             this.onSelect([]);
         }
@@ -311,7 +311,21 @@ class ListComponent {
 
     updateItems(newItems) {
         this.allItems = newItems || [];
-        this.filterItems(this.searchInput ? this.searchInput.value : '');
+
+        // Rebuild items from allItems first
+        const query = this.searchInput ? this.searchInput.value : '';
+
+        if (query) {
+            this.items = this.allItems.filter(item => this.onFilter(item, query));
+        } else {
+            this.items = [...this.allItems];
+        }
+
+        if (this.selectedSortField) {
+            this.sortItems();
+        }
+
+        this.renderList();
     }
     
     /**
@@ -325,7 +339,7 @@ class ListComponent {
         if (allIndex === -1) {
             return; // Item not found
         }
-        
+
         const oldItem = this.allItems[allIndex];
         this.allItems[allIndex] = updatedItem;
 

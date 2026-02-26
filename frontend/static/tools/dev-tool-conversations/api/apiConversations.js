@@ -6,7 +6,7 @@ window.conversations.apiConversations = window.conversations.apiConversations ||
 
 
 // Fetch group names from backend
-window.conversations.apiConversations.conversationsList = async function (spinnerContainer, groupId = null, memberId = null, conversationType = null, onlyLast = false) {
+window.conversations.apiConversations.conversationsList = async function (spinnerContainer, groupId = null, memberId = null, conversationType = null, conversationId = null, onlyLast = false) {
     // Show loading spinner while fetching
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: 'Loading conversations ...', size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
 
@@ -18,6 +18,7 @@ window.conversations.apiConversations.conversationsList = async function (spinne
                 group_id: groupId,
                 member_id: memberId,
                 conversation_type: conversationType,
+                conversation_id: conversationId,
                 only_last: onlyLast
             })
         });

@@ -18,8 +18,11 @@
         }
 
         async onQueueStateUpdate(event) {
+            if (event.detail.type !== 'queue-state') return;
+            console.log('[Conversations Tool] - MenuSystemComponentReceived queue state update notification:', event.detail.data);
             // Update local queue state with the new data
             this.queueState = event.detail.data; 
+            this.queueState = await window.conversations.system_api.queueState(this.container);
             this.renderSystemContainer();
         }
 
@@ -70,10 +73,10 @@
                 !this.queueState.paused,
                 async (v) => {
                     if (v) {
-                        await window.conversations.system_api.queueResume(null);
+                        await window.conversations.system_api.queueResume(this.container);
                         // await this.refreshQueueState();
                     } else {
-                        await window.conversations.system_api.queuePause(null);
+                        await window.conversations.system_api.queuePause(this.container);
                         // await this.refreshQueueState();
                     }
                 }, 

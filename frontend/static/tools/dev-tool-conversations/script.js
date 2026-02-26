@@ -45,9 +45,9 @@ window.tool_script = {
 
     initNotificationHub() {
         window.conversations.notificationHub = new EventTarget();
-        
+
         // Start as null (Unknown)
-        this.isAvailable = null; 
+        this.isAvailable = null;
 
         // Connect to the server-sent events endpoint to receive notifications about system status and other updates. The mere fact that 
         // we can connect and receive messages means the system is "Available" (even if some messages are just heartbeats).
@@ -77,7 +77,7 @@ window.tool_script = {
                 console.log('[Conversations Tool] - 📜 Received message from notification hub:', data);
                 window.conversations.notificationHub.dispatchEvent(new CustomEvent(data.type, { detail: data }));
             } catch (e) {
-                // It was likely a ": ping" heartbeat. Still counts as "Available"!
+                console.error('[Conversations Tool] - 🤯 Invalid notification payload:', event.data);
             }
         };
 

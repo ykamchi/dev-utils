@@ -63,22 +63,25 @@
             
             
             // Add click handler to show conversation details popup
-            wrapper.addEventListener('click', this.showConversationDetails.bind(this));
+            wrapper.addEventListener('click', () => {
+                window.conversations.popups.openConversationView(this.conversation.conversation_id, this.conversation.info.conversation_type, this.member)
+            });
 
         }
 
-        async showConversationDetails() {
-            new window.PopupComponent({
-                icon: window.conversations.CONVERSATION_TYPES_ICONS[this.conversation.info.conversation_type],
-                title: 'Conversation Details',
-                content: (container) => {
-                    new window.conversations.MemberConversationDetailsComponent(container, this.member, this.conversation);
-                },
-                closable: true,
-                width: '1200px',
-                height: '800px'
-            }).show();
-        }
+        // async showConversationDetails() {
+        //     new window.PopupComponent({
+        //         icon: window.conversations.CONVERSATION_TYPES_ICONS[this.conversation.info.conversation_type],
+        //         title: 'Conversation Details',
+        //         content: (container) => {
+        //             new window.conversations.ConversationViewComponent(container, this.conversation, this.member);
+        //             // new window.conversations.MemberConversationDetailsComponent(container, this.member, this.conversation);
+        //         },
+        //         closable: true,
+        //         width: '1200px',
+        //         height: '800px'
+        //     }).show();
+        // }
     }
 
     window.conversations = window.conversations || {};

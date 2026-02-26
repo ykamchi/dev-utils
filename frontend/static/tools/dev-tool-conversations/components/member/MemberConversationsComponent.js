@@ -9,9 +9,12 @@
             this.member = member
             this.conversation_type = conversation_type;
 
+            // Version number to track refreshes and avoid unnecessary updates
+            this._refreshVersion = 0;
+
             // A dummy element to attach the spinner to when refreshing the list without a specific entry in context
             this.nullElementForSpinner = null;
-            
+
             // Notification listener for conversations updates - to refresh the list when changes occur
             this._onConversationsUpdate = this.onConversationsUpdate.bind(this);
             this.queueStateListener = window.conversations.notificationHub.addEventListener('conversations-update', this._onConversationsUpdate);
@@ -32,7 +35,20 @@
         }
 
         async onConversationsUpdate(event) {
-            this.refresh();
+            if (event.detail.type !== 'conversations-update') return;
+
+            const changed = event.detail.data.conversations;
+
+            const relevant = changed.some(c =>
+                c.group_id === this.groupId &&
+                c.conversation_type === this.conversation_type &&
+                c.participants.some(p => p.member_id === this.member.member_id)
+            );
+
+            if (relevant) {
+                console.log('[Conversations Tool] - Conversations update relevant to this member, refreshing list...');
+                await this.refresh();
+            }
         }
 
         render() {
@@ -41,7 +57,7 @@
 
             // Create the main page component
             this.page = new window.conversations.PageComponent(this.container);
-            
+
             //Create buttons area
             this.createButtonsArea();
 
@@ -58,7 +74,7 @@
             this.groupInstructions = await window.conversations.apiInstructions.instructionsList(this.container, this.groupId, this.conversation_type);
 
             // Initial refresh to populate the list immediately
-            this.refresh(); 
+            this.refresh();
         }
 
         createButtonsArea() {
@@ -80,7 +96,7 @@
                         this.showOnlyLast = false;
                     }
                     window.StorageService.setStorageJSON(this.showOnlyLastStorageKey, this.showOnlyLast);
-                    this.loadContent();
+                    this.refresh();
                 },
                 'Last per type',
                 'All',
@@ -112,11 +128,11 @@
 
             // List container
             this.listContainer = window.conversations.utils.createDivContainer(contentDiv, 'conversation-container-vertical');
-            
+
             // Update content area
             this.page.updateContentArea(contentDiv);
         }
-        
+
         async createConversationsList() {
             // Clear previous content
             this.listContainer.innerHTML = '';
@@ -141,25 +157,36 @@
                 ],
                 async () => {
                     // Refresh callback
-                    await this.createConversationsList();
+                    await this.refresh();
                 }
             );
         }
 
         async refresh() {
+            const version = ++this._refreshVersion;
 
-            // Fetch conversations for the member
-            const newConversationsData = await window.conversations.apiConversations.conversationsList(this.nullElementForSpinner, this.groupId, this.member.member_id, this.conversation_type, this.showOnlyLast);
+            const data =
+                await window.conversations.apiConversations.conversationsList(
+                    this.nullElementForSpinner,
+                    this.groupId,
+                    this.member.member_id,
+                    this.conversation_type,
+                    null,
+                    this.showOnlyLast
+                );
 
-            // Check if conversations data has changed before re-rendering
-            if (!this.conversationsData || !_.isEqual(newConversationsData, this.conversationsData)) {
-                this.conversationsData = newConversationsData;
+            if (version !== this._refreshVersion) {
+                return;
+            }
+
+            if (!_.isEqual(data, this.conversationsData)) {
+                this.conversationsData = data;
+
                 if (!this.list) {
                     await this.createConversationsList();
-                    return;
+                } else {
+                    this.list.updateItems(this.conversationsData);
                 }
-                // Update the conversations list with the new data
-                this.list.updateItems(this.conversationsData);
             }
         }
 

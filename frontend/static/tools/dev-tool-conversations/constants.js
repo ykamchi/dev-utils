@@ -58,12 +58,14 @@ window.conversations.CONVERSATION_STATE_COMPLETED = 'completed';
 window.conversations.CONVERSATION_STATE_RUNNING = 'running';
 window.conversations.CONVERSATION_STATE_STOPPED = 'stopped';
 window.conversations.CONVERSATION_STATE_PENDING = 'pending';
+window.conversations.CONVERSATION_STATE_CREATED = 'created';
 window.conversations.CONVERSATION_STATE_ICONS = {
     [window.conversations.CONVERSATION_STATE_COMPLETED]: '✔',
     [window.conversations.CONVERSATION_STATE_FAILED]: '✖',
     [window.conversations.CONVERSATION_STATE_RUNNING]: '🏃‍➡️',
     [window.conversations.CONVERSATION_STATE_STOPPED]: '✋',
-    [window.conversations.CONVERSATION_STATE_PENDING]: '⏳'
+    [window.conversations.CONVERSATION_STATE_PENDING]: '⏳',
+    [window.conversations.CONVERSATION_STATE_CREATED]: '🆕'
 }
 
 window.conversations.CONVERSATION_STATE_LABELS = {
@@ -71,7 +73,8 @@ window.conversations.CONVERSATION_STATE_LABELS = {
     [window.conversations.CONVERSATION_STATE_FAILED]: '✖ Failed',
     [window.conversations.CONVERSATION_STATE_RUNNING]: '🏃‍➡️ Running',
     [window.conversations.CONVERSATION_STATE_STOPPED]: '✋ Stopped',
-    [window.conversations.CONVERSATION_STATE_PENDING]: '⏳ Pending'
+    [window.conversations.CONVERSATION_STATE_PENDING]: '⏳ Pending',
+    [window.conversations.CONVERSATION_STATE_CREATED]: '🆕 Created'
 }
 
 window.conversations.CONVERSATION_STATE_OPTIONS = [
@@ -79,7 +82,8 @@ window.conversations.CONVERSATION_STATE_OPTIONS = [
     { label: window.conversations.CONVERSATION_STATE_LABELS[window.conversations.CONVERSATION_STATE_PENDING], value: window.conversations.CONVERSATION_STATE_PENDING },
     { label: window.conversations.CONVERSATION_STATE_LABELS[window.conversations.CONVERSATION_STATE_RUNNING], value: window.conversations.CONVERSATION_STATE_RUNNING },
     { label: window.conversations.CONVERSATION_STATE_LABELS[window.conversations.CONVERSATION_STATE_COMPLETED], value: window.conversations.CONVERSATION_STATE_COMPLETED },
-    { label: window.conversations.CONVERSATION_STATE_LABELS[window.conversations.CONVERSATION_STATE_FAILED], value: window.conversations.CONVERSATION_STATE_FAILED }
+    { label: window.conversations.CONVERSATION_STATE_LABELS[window.conversations.CONVERSATION_STATE_FAILED], value: window.conversations.CONVERSATION_STATE_FAILED },
+    { label: window.conversations.CONVERSATION_STATE_LABELS[window.conversations.CONVERSATION_STATE_CREATED], value: window.conversations.CONVERSATION_STATE_CREATED }
 ];  
 
 window.conversations.LLM_PROVIDER_OPTIONS =

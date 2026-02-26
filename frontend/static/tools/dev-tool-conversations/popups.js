@@ -94,6 +94,19 @@ window.conversations.popups.openGroupSettings = async function (groupId, onGroup
     popup.show();
 }
 
+window.conversations.popups.openConversationView = async function (conversationId, conversationType, member) {
+    new window.PopupComponent({ 
+        icon: window.conversations.CONVERSATION_TYPES_ICONS[conversationType],
+        title: 'Conversation Details',
+        content: (container) => {
+            new window.conversations.ConversationViewComponent(container, conversationId, member);
+        },
+        closable: true,
+        width: '1920px',
+        height: '1080px'
+    }).show();
+}
+
 window.conversations.popups.openSystemSettings = async function () {
     let systemViewComponent = null;
     
