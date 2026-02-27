@@ -79,6 +79,31 @@ window.conversations.apiConversations.conversationAdd = async function (spinnerC
     }
 };
 
+window.conversations.apiConversations.conversationPriorityUpdate = async function (spinnerContainer, conversationId, priority) {
+    const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Updating conversation priority...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+    
+    try {
+        const resp = await fetch('/api/dev-tool-conversations/conversations_priority_update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ conversation_id: conversationId, priority })
+        });
+
+        const result = await resp.json();
+        spinner.remove();
+        if (result.success) {
+            return result;
+        } else {
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to update conversation priority');
+        }
+    } catch (e) {
+        spinner.remove();
+        console.error('Error updating conversation priority:', e);
+        throw e;
+    }
+}
+
 window.conversations.apiConversations.conversationsMessages = async function (spinnerContainer, conversationId) {
     // Show loading spinner while fetching
     const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Loading conversation messages ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });

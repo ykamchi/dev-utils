@@ -578,6 +578,29 @@ def register_conversations_apis(app, base_path: str):
             return jsonify({'success': False, 'error': 'Failed to contact upstream conversation service'}), 502
 
 
+    @app.route(f"{base_path}/conversations_priority_update", methods=["POST"])
+    def conversation_priority_update():
+        """
+        Proxy to upstream /api/conversations/priority/update (POST) to update conversation priority.
+        Expects JSON payload: {"conversation_id": ..., "priority": ...}
+        """
+        payload = request.get_json(force=True)
+        conversation_id = payload.get('conversation_id')
+        priority = payload.get('priority')
+        
+        if not conversation_id:
+            return jsonify({'success': False, 'error': 'missing conversation_id'}), 400
+        if priority is None:
+            return jsonify({'success': False, 'error': 'missing priority'}), 400
+        
+        try:
+            upstream_resp = _proxy_post('/api/conversations/priority/update', {'conversation_id': conversation_id, 'priority': priority})
+            return jsonify(upstream_resp)
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/conversations/priority/update')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream conversation priority update service'}), 502
+
+
     @app.route(f"{base_path}/conversations_messages_list", methods=["POST"])
     def conversations_messages_list():
         """

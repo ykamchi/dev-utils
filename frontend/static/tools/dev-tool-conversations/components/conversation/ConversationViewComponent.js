@@ -184,6 +184,16 @@
             const typeField = window.conversations.utils.createFieldDiv(infoInfoDiv, 'Type:', { 'max-width': '120px' });
             window.conversations.utils.createReadOnlyText(typeField, window.conversations.CONVERSATION_TYPES_STRING(this.conversation.conversation_type, true, true, true, false), 'conversations-badge-generic');
             window.conversations.utils.createField(infoInfoDiv, 'Instructions:', this.conversation.info.name);
+            new window.OptionButtonsComponent(infoInfoDiv, {
+                options: window.conversations.CONVERSATION_PRIORITY_OPTIONS,
+                selected: this.conversation.priority,
+                onChange: (v) => {
+                    window.conversations.apiConversations.conversationPriorityUpdate(this.container, this.conversation.conversation_id, v).then(() => {
+                        
+                    });
+                },
+                multiSelect: false
+            });
 
             // Time information
             const timeInfoDiv = this.createDetailsDiv(leftDiv, this.conversation.state === window.conversations.CONVERSATION_STATE_COMPLETED ? 'wait-completed' : 'wait-unpatiant');

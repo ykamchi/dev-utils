@@ -42,6 +42,11 @@ window.conversations.CONVERSATION_TYPES_OPTIONS = [
     { label: window.conversations.CONVERSATION_TYPES_STRING(window.conversations.CONVERSATION_TYPES.AI_DECISION), value: window.conversations.CONVERSATION_TYPES.AI_DECISION }
 ]
 
+window.conversations.CONVERSATION_PRIORITY_OPTIONS = [
+    { label: 'Low', value: -1 },
+    { label: 'Standard', value: 0 },
+    { label: 'Important', value: 1 }
+]
 
 // Seed types for SeedImportComponent
 window.conversations.SEED_TYPES = {
