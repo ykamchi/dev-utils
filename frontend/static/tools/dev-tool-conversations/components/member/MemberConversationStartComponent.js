@@ -23,6 +23,9 @@
             this.memberSelectedRole = null; // Store the role selected for this.member
             this.memberRoleSelectComponent = null; // Store reference to role select component
 
+            this.selectedLLMProvider = window.conversations.LLM_PROVIDER_OLLAMA;
+            this.selectedLLMModel = window.conversations.LLM_PROVIDER_OPTIONS[window.conversations.LLM_PROVIDER_OLLAMA].defaultModel;
+            this.modelSelection = null; // Store reference to model selection component
             this.render();
         }
 
@@ -109,18 +112,20 @@
             // Instructions chooser
             new window.SelectComponent(
                 selectInstructionWrapper,
-                availableInstructions.map(entry => ({ label: entry.info.name, value: entry.instruction_key })),
-                (selectedValue) => {
-                    this.selectedInstruction = availableInstructions.find(entry => entry.instruction_key === selectedValue);
+                {
+                    options: availableInstructions.map(entry => ({ label: entry.info.name, value: entry.instruction_key })),
+                    onSelection: (selectedValue) => {
+                        this.selectedInstruction = availableInstructions.find(entry => entry.instruction_key === selectedValue);
 
-                    // Reload content with new instruction's roles
-                    this.loadContentTabs();
+                        // Reload content with new instruction's roles
+                        this.loadContentTabs();
 
-                    // Save selected instruction to storage
-                    window.StorageService.setStorageJSON(this.storageKeyLastSelectedInstructionKey, this.selectedInstruction.instruction_key);
-                },
-                'Select an instruction...',
-                this.selectedInstruction ? this.selectedInstruction.info.instruction_key : null
+                        // Save selected instruction to storage
+                        window.StorageService.setStorageJSON(this.storageKeyLastSelectedInstructionKey, this.selectedInstruction.instruction_key);
+                    },
+                    placeholder: 'Select an instruction...',
+                    value: this.selectedInstruction ? this.selectedInstruction.info.instruction_key : null
+                }
             );
 
             this.page.updateControlArea(pageControlDiv);
@@ -186,30 +191,33 @@
                     // Create select component for role selection
                     this.memberRoleSelectComponent = new window.SelectComponent(
                         memberRoleFieldDiv,
-                        allowedRoles.map(role => ({ label: role.role_name, value: role.role_name })),
-                        (selectedRole) => {
-                            // Remove member from old role
-                            if (this.memberSelectedRole && this.selectedMembers[this.memberSelectedRole]) {
-                                this.selectedMembers[this.memberSelectedRole] = this.selectedMembers[this.memberSelectedRole].filter(
-                                    m => m.member_name !== this.member.member_name
-                                );
-                                if (this.selectedMembers[this.memberSelectedRole].length === 0) {
-                                    delete this.selectedMembers[this.memberSelectedRole];
+                        {
+                            options: allowedRoles.map(role => ({ label: role.role_name, value: role.role_name })),
+                            fullWidth: false,
+                            onSelection: (selectedRole) => {
+                                // Remove member from old role
+                                if (this.memberSelectedRole && this.selectedMembers[this.memberSelectedRole]) {
+                                    this.selectedMembers[this.memberSelectedRole] = this.selectedMembers[this.memberSelectedRole].filter(
+                                        m => m.member_name !== this.member.member_name
+                                    );
+                                    if (this.selectedMembers[this.memberSelectedRole].length === 0) {
+                                        delete this.selectedMembers[this.memberSelectedRole];
+                                    }
                                 }
-                            }
 
-                            // Add member to new role
-                            this.memberSelectedRole = selectedRole;
-                            if (!this.selectedMembers[this.memberSelectedRole]) {
-                                this.selectedMembers[this.memberSelectedRole] = [];
-                            }
-                            this.selectedMembers[this.memberSelectedRole].push(this.member);
+                                // Add member to new role
+                                this.memberSelectedRole = selectedRole;
+                                if (!this.selectedMembers[this.memberSelectedRole]) {
+                                    this.selectedMembers[this.memberSelectedRole] = [];
+                                }
+                                this.selectedMembers[this.memberSelectedRole].push(this.member);
 
-                            // Revalidate
-                            this.validateSelections();
-                        },
-                        'Select role...',
-                        this.memberSelectedRole
+                                // Revalidate
+                                this.validateSelections();
+                            },
+                            placeholder: 'Select role...',
+                            value: this.memberSelectedRole
+                        }
                     );
                 }
             }
@@ -247,14 +255,34 @@
 
             new window.TabsetComponent(rightDiv, tabs);
 
-            // Add OpenAI checkbox at the bottom
-            const openaiCheckboxDiv = window.conversations.utils.createDivContainer(contentDiv, 'conversation-field-container-vertical');
-            this.useOpenAICheckbox = new window.CheckboxComponent(
-                openaiCheckboxDiv,
-                false,  // checked
-                null,   // onChange
-                'Use OpenAI'  // labelText
-            );
+            // Model selection area
+            const modelSelectionDiv = window.conversations.utils.createDivContainer(contentDiv, 'conversation-container-horizontal');
+            const providerSelection = window.conversations.utils.createFieldDiv(modelSelectionDiv, 'Select LLM Provider:');
+            new window.SelectComponent(providerSelection, {
+                options: Object.values(window.conversations.LLM_PROVIDER_OPTIONS).map(provider => ({ label: provider.label, value: provider.value })),
+                fullWidth: false,
+                onSelection: (selectedProvider) => {
+                    this.selectedLLMProvider = selectedProvider;
+                    this.modelSelection.updateOptionsAndValue(
+                        window.conversations.LLM_PROVIDER_OPTIONS[this.selectedLLMProvider].models.map(model => ({ label: model, value: model })), 
+                        window.conversations.LLM_PROVIDER_OPTIONS[this.selectedLLMProvider].defaultModel
+                    );
+                    this.selectedLLMModel = window.conversations.LLM_PROVIDER_OPTIONS[this.selectedLLMProvider].defaultModel;
+                },
+                placeholder: 'Select OpenAI model...',
+                value: this.selectedLLMProvider,
+            });
+
+            const modelSelection = window.conversations.utils.createFieldDiv(modelSelectionDiv, 'Select Model:');
+            this.modelSelection = new window.SelectComponent(modelSelection, {
+                options: window.conversations.LLM_PROVIDER_OPTIONS[this.selectedLLMProvider].models.map(model => ({ label: model, value: model })),
+                fullWidth: false,
+                onSelection: (selectedModel) => {
+                    this.selectedLLMModel = selectedModel;
+                },
+                placeholder: 'Select model...',
+                value: this.selectedLLMModel,
+            });
 
             this.page.updateContentArea(contentDiv);
 
@@ -387,21 +415,14 @@
                 return;
             }
 
-            // Prepare optional LLM parameters
-            const llmParams = {};
-            if (this.useOpenAICheckbox && this.useOpenAICheckbox.isChecked()) {
-                llmParams.llm_provider = 'openai';
-                llmParams.llm_model = 'gpt-5.2';
-            }
-
             // Start the conversation with new structure
             await window.conversations.apiConversations.conversationAdd(
                 null,
                 this.group.group_id,
                 this.selectedInstruction.info,
                 participants,
-                llmParams.llm_provider,
-                llmParams.llm_model
+                this.selectedLLMProvider,
+                this.selectedLLMModel
             );
 
             // Close popup on success

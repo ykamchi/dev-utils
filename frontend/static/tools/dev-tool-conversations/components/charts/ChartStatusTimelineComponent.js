@@ -187,16 +187,18 @@
             const groupOptions = this.groups.map(g => ({ label: g.group_name, value: String(g.group_id) }));
             new window.SelectComponent(
                 groupNameSelectDiv,
-                [{ label: 'All Groups', value: ALL_VALUE }].concat(groupOptions),
-                async (v) => {
-                    this.state.group_id = v;
-                    this.state.instructions_key = ALL_VALUE;
-                    await this.renderInstructionSelect();
-                    this.renderChart();
-                    window.StorageService.setLocalStorageItem('conversations_chart_status_timeline_group_id', v);
-                },
-                'Select Group ...',
-                this.state.group_id
+                {
+                    options: [{ label: 'All Groups', value: ALL_VALUE }].concat(groupOptions),
+                    onSelection: async (v) => {
+                        this.state.group_id = v;
+                        this.state.instructions_key = ALL_VALUE;
+                        await this.renderInstructionSelect();
+                        this.renderChart();
+                        window.StorageService.setLocalStorageItem('conversations_chart_status_timeline_group_id', v);
+                    },
+                    placeholder: 'Select Group ...',
+                    value: this.state.group_id
+                }
             );
         }
 
@@ -204,16 +206,18 @@
             // Conversation type select
             new window.SelectComponent(
                 conversationTypeDiv,
-                CONVERSATION_TYPES,
-                async (v) => {
-                    this.state.conversation_type = v;
-                    this.state.instructions_key = ALL_VALUE;
-                    await this.renderInstructionSelect();
-                    this.renderChart();
-                    window.StorageService.setLocalStorageItem('conversations_chart_status_timeline_conversation_type', v);
-                },
-                'Select Type ...',
-                this.state.conversation_type
+                {
+                    options: CONVERSATION_TYPES,
+                    onSelection: async (v) => {
+                        this.state.conversation_type = v;
+                        this.state.instructions_key = ALL_VALUE;
+                        await this.renderInstructionSelect();
+                        this.renderChart();
+                        window.StorageService.setLocalStorageItem('conversations_chart_status_timeline_conversation_type', v);
+                    },
+                    placeholder: 'Select Type ...',
+                    value: this.state.conversation_type
+                }
             );
         }
 
@@ -222,7 +226,16 @@
             this.instructionsKeyControlDiv.innerHTML = '';
 
             if (this.state.group_id === ALL_VALUE) {
-                new window.SelectComponent(this.instructionsKeyControlDiv, [{ label: 'Select a group first', value: ALL_VALUE }], null, 'Select Instruction ...', ALL_VALUE, true);
+                new window.SelectComponent(
+                    this.instructionsKeyControlDiv,
+                    {
+                        options: [{ label: 'Select a group first', value: ALL_VALUE }],
+                        onSelection: null,
+                        placeholder: 'Select Instruction ...',
+                        value: ALL_VALUE,
+                        disabled: true
+                    }
+                );
 
             } else {
                 // Fetch instructions for the selected group (with caching)
@@ -240,14 +253,16 @@
 
                 new window.SelectComponent(
                     this.instructionsKeyControlDiv,
-                    options,
-                    (v) => {
-                        this.state.instructions_key = v;
-                        this.renderChart();
-                        window.StorageService.setLocalStorageItem('conversations_chart_status_timeline_instructions_key', v);
-                    },
-                    'Select Instruction ...',
-                    this.state.instructions_key
+                    {
+                        options: options,
+                        onSelection: (v) => {
+                            this.state.instructions_key = v;
+                            this.renderChart();
+                            window.StorageService.setLocalStorageItem('conversations_chart_status_timeline_instructions_key', v);
+                        },
+                        placeholder: 'Select Instruction ...',
+                        value: this.state.instructions_key
+                    }
                 );
             }
         };
@@ -289,14 +304,16 @@
             // Measure select
             new window.SelectComponent(
                 measureControlDiv,
-                Object.entries(MEASURE_FIELDS).map(([key, mf]) => ({ label: mf.label, value: key })),
-                (v) => {
-                    this.state.measure_field = v;
-                    this.renderChart();
-                    window.StorageService.setLocalStorageItem('conversations_chart_status_timeline_measure_field', v);
-                },
-                'Select Measure ...',
-                this.state.measure_field
+                {
+                    options: Object.entries(MEASURE_FIELDS).map(([key, mf]) => ({ label: mf.label, value: key })),
+                    onSelection: (v) => {
+                        this.state.measure_field = v;
+                        this.renderChart();
+                        window.StorageService.setLocalStorageItem('conversations_chart_status_timeline_measure_field', v);
+                    },
+                    placeholder: 'Select Measure ...',
+                    value: this.state.measure_field
+                }
             );
 
         }
@@ -322,17 +339,19 @@
             // Aggregation level 0 select
             new window.SelectComponent(
                 container,
-                AGGREGATION_LEVELS,
-                (v) => {
-                    this.state.aggregation_level_0 = v;
-                    if (this.state.aggregation_level_0 === AGGREGATION_LEVEL_NONE) {
-                        this.state.aggregation_level_1 = AGGREGATION_LEVEL_NONE;
-                    }
-                    this.renderAggregationLevel1Select();
-                    this.renderChart();
-                },
-                'Aggregation Level 0 ...',
-                this.state.aggregation_level_0
+                {
+                    options: AGGREGATION_LEVELS,
+                    onSelection: (v) => {
+                        this.state.aggregation_level_0 = v;
+                        if (this.state.aggregation_level_0 === AGGREGATION_LEVEL_NONE) {
+                            this.state.aggregation_level_1 = AGGREGATION_LEVEL_NONE;
+                        }
+                        this.renderAggregationLevel1Select();
+                        this.renderChart();
+                    },
+                    placeholder: 'Aggregation Level 0 ...',
+                    value: this.state.aggregation_level_0
+                }
             );
             this.renderAggregationLevel1Select();
         }
@@ -341,20 +360,31 @@
             this.aggregation_level_1Div.innerHTML = '';
 
             if (this.state.aggregation_level_0 === AGGREGATION_LEVEL_NONE) {
-                new window.SelectComponent(this.aggregation_level_1Div, [{ label: 'Select aggregation level 0 first', value: AGGREGATION_LEVEL_NONE }], AGGREGATION_LEVEL_NONE, 'Select Aggregation Level 0 first ...', null, true);
+                new window.SelectComponent(
+                    this.aggregation_level_1Div,
+                    {
+                        options: [{ label: 'Select aggregation level 0 first', value: AGGREGATION_LEVEL_NONE }],
+                        onSelection: null,
+                        placeholder: 'Select Aggregation Level 0 first ...',
+                        value: AGGREGATION_LEVEL_NONE,
+                        disabled: true
+                    }
+                );
 
             } else {
 
                 // Aggregation level 1 select
                 new window.SelectComponent(
                     this.aggregation_level_1Div,
-                    AGGREGATION_LEVELS.filter(al => al.value !== this.state.aggregation_level_0),
-                    (v) => {
-                        this.state.aggregation_level_1 = v;
-                        this.renderChart();
-                    },
-                    'Aggregation Level 1 ...',
-                    this.state.aggregation_level_1
+                    {
+                        options: AGGREGATION_LEVELS.filter(al => al.value !== this.state.aggregation_level_0),
+                        onSelection: (v) => {
+                            this.state.aggregation_level_1 = v;
+                            this.renderChart();
+                        },
+                        placeholder: 'Aggregation Level 1 ...',
+                        value: this.state.aggregation_level_1
+                    }
                 );
             }
         }

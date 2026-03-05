@@ -74,15 +74,17 @@ class ListComponent {
                 // Create sort select component
                 this.sortSelect = new window.SelectComponent(
                     sortSelectContainer,
-                    this.sortFields.map(field => ({ label: field.label, value: field.label })),
-                    (selectedSortField) => {
-                        if (selectedSortField) {
-                            this.selectedSortField = this.sortFields.find(field => field.label === selectedSortField);
-                            this.sortItems();
-                            this.renderList();
-                        }
-                    },
-                    'Sort by...'
+                    {
+                        options: this.sortFields.map(field => ({ label: field.label, value: field.label })),
+                        onSelection: (selectedSortField) => {
+                            if (selectedSortField) {
+                                this.selectedSortField = this.sortFields.find(field => field.label === selectedSortField);
+                                this.sortItems();
+                                this.renderList();
+                            }
+                        },
+                        placeholder: 'Sort by...'
+                    }
                 );
 
                 // Initial sort

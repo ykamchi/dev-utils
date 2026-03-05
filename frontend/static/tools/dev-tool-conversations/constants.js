@@ -94,13 +94,24 @@ window.conversations.CONVERSATION_STATE_OPTIONS = [
 window.conversations.LLM_PROVIDER_OLLAMA = 'ollama';
 window.conversations.LLM_PROVIDER_OPENAI = 'openai';
 
-window.conversations.LLM_PROVIDER_AUTO = [window.conversations.LLM_PROVIDER_OLLAMA]
-
 window.conversations.LLM_PROVIDER_OPTIONS =
-[
-    { label: '𖠿 Ollama', value: window.conversations.LLM_PROVIDER_OLLAMA },
-    { label: '֎ OpenAI', value: window.conversations.LLM_PROVIDER_OPENAI }
-]
+{
+    [window.conversations.LLM_PROVIDER_OLLAMA]: { 
+        label: '𖠿 Ollama', 
+        autoRun: true,
+        value: window.conversations.LLM_PROVIDER_OLLAMA, 
+        models: ['llama3.1:8b', 'gpt-oss:20b', 'mistral:7b-instruct'], 
+        defaultModel: 'llama3.1:8b' 
+    },
+    [window.conversations.LLM_PROVIDER_OPENAI]: { 
+        label: '֎ OpenAI', 
+        autoRun: false,
+        value: window.conversations.LLM_PROVIDER_OPENAI, 
+        models: ['gpt-4.1-mini', 'gpt-4.1', 'gpt-5.2-chat-latest', 'gpt-5.2'], 
+        defaultModel: 'gpt-4.1-mini' 
+    }
+}
+
 // Default instructions template for conversations
 window.conversations.DEFAULT_INSTRUCTIONS = `
 This is a test conversation.

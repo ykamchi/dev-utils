@@ -187,18 +187,20 @@
                     const feedbackTypeSelectContainer = window.conversations.utils.createDivContainer(feedbackTypeContainer);
                     new window.SelectComponent(
                         feedbackTypeSelectContainer,
-                        [{ label: 'Integer', value: 'integer' }, { label: 'String', value: 'string' }],
-                        (value) => {
-                            feedback_def.type = value;
-                            // Clear other type-specific properties
-                            delete feedback_def.min;
-                            delete feedback_def.max;
-                            delete feedback_def['optional-values'];
-                            this.renderFeedbackTypeOptions(feedbackTypeOptionsContainer, feedback_def);
-                            this.onChange(this.roles);
-                        },
-                        'Select type ...',
-                        feedback_def.type
+                        {
+                            options: [{ label: 'Integer', value: 'integer' }, { label: 'String', value: 'string' }],
+                            onSelection: (value) => {
+                                feedback_def.type = value;
+                                // Clear other type-specific properties
+                                delete feedback_def.min;
+                                delete feedback_def.max;
+                                delete feedback_def['optional-values'];
+                                this.renderFeedbackTypeOptions(feedbackTypeOptionsContainer, feedback_def);
+                                this.onChange(this.roles);
+                            },
+                            placeholder: 'Select type ...',
+                            value: feedback_def.type
+                        }
                     );
 
                     // Options Area

@@ -238,7 +238,11 @@
                 easing: 'easeOutQuart'
             },
             plugins: {
-                legend: { display: true },
+                legend: {
+                    display: true,
+                    position: 'left',       // Options: 'top', 'left', 'bottom', 'right'
+                    align: 'start'         // Options: 'start', 'center', 'end'
+                },
                 tooltip: { enabled: true }
             },
             scales: {

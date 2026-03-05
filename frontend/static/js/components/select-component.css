@@ -9,6 +9,10 @@
   transition: border-color 0.2s ease;
 }
 
+.align-self {
+    align-self: flex-start
+}
+
 .framework-select-component:focus {
   border-color: var(--color-primary);
 }

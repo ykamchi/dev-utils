@@ -62,7 +62,7 @@
                 window.conversations.utils.createReadOnlyText(nameWrapper, name, 'conversations-card-name');
 
                 // Description
-                const description = `${roleEntry.source} • ${roleEntry.role.role_description}`;
+                const description = `${roleEntry.source} • ${roleEntry.role.role_objectives}`;
                 window.conversations.utils.createReadOnlyText(info, description, roleEntry.valid ? 'conversations-card-description' : 'conversations-error');
 
                 // Create body content - show instruction info and role JSON

@@ -127,7 +127,7 @@ window.conversations.utils.updateChartInstance = function (container, chartInsta
     }
 
     const field = window.conversations.utils.createFieldDiv(container, title);
-    chartInstance = new window.ChartComponent(field, type, data, options, '100%', '100%', title);
+    chartInstance = new window.ChartComponent(field, type, data, options, '100%', '580px', title);
 
     if (chartInstance && typeof chartInstance.refresh === 'function') {
         setTimeout(() => chartInstance.refresh(), 0);

@@ -37,18 +37,20 @@
         }
 
         render() {
-            // Horizontal layout with chart on the left and controls on the right
-            const horizontalDiv = window.conversations.utils.createDivContainer(this.container, 'conversation-container-horizontal');
+            const chartDiv = window.conversations.utils.createDivContainer(this.container, '-');
 
             // Chart wrapper
-            this.chartWrapper = window.conversations.utils.createDivContainer(horizontalDiv, 'conversations-scrollable-group', { flex: '0.8' });
+            this.chartWrapper = window.conversations.utils.createDivContainer(chartDiv, '-');
+            
+            
+            // Horizontal layout with chart on the left and controls on the right
+            const horizontalDiv = window.conversations.utils.createDivContainer(this.container, 'conversation-container-horizontal-space-between', { 'flex': 1 });
 
-            // Controls (filter lines) div
-            const controlsDiv = window.conversations.utils.createDivContainer(horizontalDiv, 'conversation-container-vertical', { flex: '0.2' });
+            new window.conversations.ConvyComponent(horizontalDiv, { reaction: 'observing-insights', width: 500, height: 300 });
 
-            this.memberSelectionDiv = window.conversations.utils.createDivContainer(controlsDiv, 'conversation-field-container-vertical');
+            this.memberSelectionDiv = window.conversations.utils.createDivContainer(horizontalDiv, 'conversation-field-container-vertical');
 
-            this.feedbackSelectionDiv = window.conversations.utils.createDivContainer(controlsDiv, 'conversation-field-container-vertical');
+            this.feedbackSelectionDiv = window.conversations.utils.createDivContainer(horizontalDiv, 'conversation-field-container-vertical');
 
             // Initial state - all members selected (using member_name to match datasets)
             this.state.members = this.conversation.participants.map(p => p.member_name);
@@ -57,7 +59,7 @@
             this.state.feedbacks = this.conversation.info.roles.flatMap(role => role.feedback_def.filter(f => f.type === 'integer').map(f => f.name));
 
             // Members options
-            this.renderMembersSelectionDiv(controlsDiv);
+            this.renderMembersSelectionDiv();
 
             // Feedback options per role
             this.renderMembersFeedbackSelectionDiv();
@@ -75,9 +77,7 @@
                     options: this.conversation.participants.map(participant => ({ label: participant.member_name + ' - ' + participant.instruction_role, value: participant.member_name })),
                     onChange: async (v) => {
                         this.state.members = v;
-                        await this.buildChartData();
-
-                        this.chartInstance.setData(this.chartData);
+                        this.loadChart();
                     },
                     selected: this.state.members,
                     multiSelect: true,
@@ -99,9 +99,7 @@
                         options: role.feedback_def.filter(f => f.type === 'integer').map(feedback => ({ label: feedback.name, value: feedback.name })),
                         onChange: async (v) => {
                             this.state.feedbacks = v;
-                            await this.buildChartData();
-
-                            this.chartInstance.setData(this.chartData);
+                            this.loadChart();
                         },
                         selected: this.state.feedbacks,
                         multiSelect: true,

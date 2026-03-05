@@ -111,44 +111,44 @@
                 {
                     name: 'Details',
                     icon: '🗂️',
-                    description: 'state, duration, message count ...',
+                    description: 'Conversation information, state, time and duration, message count, and system information',
                     populateFunc: this.populateDetailsTab.bind(this)
 
                 },
                 {
-                    name: 'Roles',
+                    name: 'Objectives & Roles',
                     icon: '🧩',
-                    description: 'Conversation roles and their details',
+                    description: 'Conversation objectives, roles and their instructions details including feedback definitions',
                     populateFunc: this.populateRolesTab.bind(this)
                 },
                 {
                     name: 'Participants',
                     icon: '👥',
-                    description: 'Conversation participants',
+                    description: 'Conversation participants including their role, profile, and the latest feedback they provided in the conversation',
                     populateFunc: this.populateParticipantsTab.bind(this)
                 },
                 {
                     name: 'Messages',
                     icon: '📣',
-                    description: 'Conversation messages',
+                    description: 'Conversation messages including feedback along the conversation',
                     populateFunc: this.populateMessagesTab.bind(this)
                 },
                 {
                     name: 'Insights',
                     icon: '🕵🏻',
-                    description: 'Members feedback, diagnostics ...',
+                    description: 'Members feedback, diagnostics and insights extracted from the feedback during the conversation',
                     populateFunc: this.populateInsightsTab.bind(this)
                 },
                 {
                     name: 'Runtime',
                     icon: '🏁',
-                    description: 'Conversation runtime information',
+                    description: 'Conversation runtime information including execution details as they were executed in the system',
                     populateFunc: this.populateRuntimeInstructionsTab.bind(this)
                 },
                 {
                     name: 'Logs',
                     icon: '📜',
-                    description: 'Conversation logs and history',
+                    description: 'Conversation logs and history including all messages and events that were logged during the conversation execution',
                     populateFunc: this.populateLogsTab.bind(this)
                 }
             ];
@@ -215,6 +215,7 @@
         async populateRuntimeInstructionsTab() {
             // Clear previous content
             this.rightDiv.innerHTML = '';
+            const wrapper = window.conversations.utils.createDivContainer(this.rightDiv, 'conversations-page-wrapper');
 
             let tabs = this.conversation.participants.map(participant => ({
                 name: participant.member_name + ' system message',
@@ -232,7 +233,7 @@
                 }
             });
             const storageKey = `conversations-conversation-view-roles-tabset`;
-            new window.TabsetComponent(this.rightDiv, tabs, storageKey);
+            new window.TabsetComponent(wrapper, tabs, storageKey);
         }
 
         async populateDetailsTab() {
@@ -251,8 +252,6 @@
             const typeField = window.conversations.utils.createFieldDiv(infoInfoDiv, 'Type:', { 'max-width': '120px' });
             window.conversations.utils.createReadOnlyText(typeField, window.conversations.CONVERSATION_TYPES_STRING(this.conversation.conversation_type, true, true, true, false), 'conversations-badge-generic');
             window.conversations.utils.createField(infoInfoDiv, 'Instructions:', this.conversation.info.name);
-            const conventionsObjectivesDiv = window.conversations.utils.createFieldDiv(infoInfoDiv, 'Conversation Objectives:'); 
-            window.conversations.utils.createReadOnlyText(conventionsObjectivesDiv, this.conversation.info.conversation_objectives);
             
 
             // Time information
@@ -311,7 +310,13 @@
         async populateRolesTab() {
             // Clear previous content
             this.rightDiv.innerHTML = '';
+            const wrapper = window.conversations.utils.createDivContainer(this.rightDiv, 'conversations-page-wrapper');
+            const conventionsObjectivesAndRolesDiv = window.conversations.utils.createDivContainer(wrapper, 'conversation-field-container-vertical');
 
+            const conventionsObjectivesDiv = window.conversations.utils.createFieldDiv(conventionsObjectivesAndRolesDiv, 'Conversation Objectives:'); 
+            window.conversations.utils.createReadOnlyText(conventionsObjectivesDiv, this.conversation.info.conversation_objectives);
+
+            const conventionsRolesDiv = window.conversations.utils.createFieldDiv(conventionsObjectivesAndRolesDiv, 'Conversation Roles:'); 
             const tabs = this.conversation.info.roles.map(role => ({
                 name: role.role_name,
                 populateFunc: (container) => {
@@ -356,14 +361,14 @@
                 }
             }));
             const storageKey = `conversations-conversation-view-roles-tabset`;
-            new window.TabsetComponent(this.rightDiv, tabs, storageKey);
+            new window.TabsetComponent(conventionsRolesDiv, tabs, storageKey);
 
         }
 
         async populateParticipantsTab() {
             // Clear previous content
             this.rightDiv.innerHTML = '';
-
+            const wrapper = window.conversations.utils.createDivContainer(this.rightDiv, 'conversations-page-wrapper');
             const tabs = this.conversation.participants.map(participant => ({
                 name: participant.member_name,
                 populateFunc: (container) => {
@@ -390,7 +395,7 @@
                 }
             }));
             const storageKey = `conversations-conversation-view-participants-tabset`;
-            new window.TabsetComponent(this.rightDiv, tabs, storageKey);
+            new window.TabsetComponent(wrapper, tabs, storageKey);
 
         }
 

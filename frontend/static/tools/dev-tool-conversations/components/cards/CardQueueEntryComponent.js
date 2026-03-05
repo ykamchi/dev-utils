@@ -35,6 +35,9 @@
             if (this.conversation.llm_provider) {
                 descriptionParts.push(this.conversation.llm_provider);
             }
+            if (this.conversation.llm_model) {
+                descriptionParts.push(this.conversation.llm_model);
+            }
             if (this.conversation.created_at) {
                 descriptionParts.push(new Date(this.conversation.created_at).toLocaleString());
             }

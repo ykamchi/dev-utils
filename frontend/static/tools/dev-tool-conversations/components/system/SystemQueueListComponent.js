@@ -20,7 +20,7 @@
             // Initialize dynamic data variables
             this.queueData = null; 
             this.queueState = null;
-            this.filters = { state: [], conversation_type: [], llm_provider: [], group_id: [] };
+            this.filters = { state: [], conversation_type: [], llm_provider: [],  llm_model: [], group_id: [] };
 
             // Dynamic UI elements
             this.listContainer = null;
@@ -98,11 +98,10 @@
             const contentDiv = window.conversations.utils.createDivContainer();
 
             // Create wrapper
-            const wrapper = window.conversations.utils.createDivContainer(contentDiv, 'conversation-container-vertical');
+            const wrapper = window.conversations.utils.createDivContainer(contentDiv, 'conversations-page-wrapper');
             
             // Queue Entries Section
             const queueEntriesDiv = window.conversations.utils.createDivContainer(wrapper, 'conversation-field-container-vertical-full');
-            window.conversations.utils.createLabel(queueEntriesDiv, 'Queue Entries:');
             
             // Horizontal split: filters on left, list on right
             const horizontalSplit = window.conversations.utils.createDivContainer(queueEntriesDiv, 'conversation-container-horizontal-space-between-full');
@@ -192,10 +191,25 @@
             const llmProviderDiv = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
             window.conversations.utils.createLabel(llmProviderDiv, 'LLM Provider:');
             new window.OptionButtonsComponent(llmProviderDiv, {
-                options: window.conversations.LLM_PROVIDER_OPTIONS,
+                options: Object.values(window.conversations.LLM_PROVIDER_OPTIONS).map(opt => ({ label: opt.label, value: opt.value })),
                 selected: this.filters.llm_provider,
                 onChange: async (selected) => {
                     this.filters.llm_provider = selected;
+                    await this.list.updateItems(this.filterQueueData());
+                },
+                multiSelect: true,
+                viewType: window.OptionButtonsComponent.TYPE_CHECKBOXES,
+                layout: window.OptionButtonsComponent.VIEW_TYPE_VERTICAL
+            });
+
+            // LLM Model filter
+            const llmModelDiv = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
+            window.conversations.utils.createLabel(llmModelDiv, 'LLM Model:');
+            new window.OptionButtonsComponent(llmModelDiv, {
+                options: Object.values(window.conversations.LLM_PROVIDER_OPTIONS).flatMap(opt => opt.models.map(model => ({ label: model, value: model }))),
+                selected: this.filters.llm_model,
+                onChange: async (selected) => {
+                    this.filters.llm_model = selected;
                     await this.list.updateItems(this.filterQueueData());
                 },
                 multiSelect: true,
@@ -230,6 +244,9 @@
             }
             if (this.filters.llm_provider.length > 0) {
                 queueData = queueData.filter(entry => this.filters.llm_provider.includes(entry.llm_provider));
+            }
+            if (this.filters.llm_model.length > 0) {
+                queueData = queueData.filter(entry => this.filters.llm_model.includes(entry.llm_model));
             }
             return queueData;
         }

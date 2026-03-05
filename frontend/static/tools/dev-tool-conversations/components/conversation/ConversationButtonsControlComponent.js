@@ -51,10 +51,10 @@
                 });
             }
             
-            const llmProviderLabel = window.conversations.LLM_PROVIDER_OPTIONS.find(option => option.value === this.conversation.llm_provider).label;
+            const llmProviderLabel = window.conversations.LLM_PROVIDER_OPTIONS[this.conversation.llm_provider].label;
 
             // Running state - show stop button
-            if (this.conversation.state === window.conversations.CONVERSATION_STATE_PENDING && !window.conversations.LLM_PROVIDER_AUTO.includes(this.conversation.llm_provider)) {
+            if (this.conversation.state === window.conversations.CONVERSATION_STATE_PENDING && !window.conversations.LLM_PROVIDER_OPTIONS[this.conversation.llm_provider].autoRun) {
                 const stopButton = new window.ButtonComponent(buttonsContainer, {
                     label: '🏃‍➡️ Allow ' + llmProviderLabel,
                     onClick: async () => {
@@ -73,7 +73,7 @@
             // Stopped state - show run button or allow running based on LLM provider
             if (this.conversation.state === window.conversations.CONVERSATION_STATE_STOPPED) {
                 const triggerButton = new window.ButtonComponent(buttonsContainer, {
-                    label: window.conversations.LLM_PROVIDER_AUTO.includes(this.conversation.llm_provider) ? '🏃‍➡️ Run' : '🏃‍➡️ Allow running - ' + llmProviderLabel,
+                    label: window.conversations.LLM_PROVIDER_OPTIONS[this.conversation.llm_provider].autoRun ? '🏃‍➡️ Run' : '🏃‍➡️ Allow running - ' + llmProviderLabel,
                     onClick: async () => {
                         triggerButton.setDisabled(true);
                         await window.conversations.system_api.queueConversationsResume(this.container, this.conversation.conversation_id);

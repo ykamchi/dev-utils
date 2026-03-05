@@ -106,19 +106,21 @@
             // Select group dropdown 
             new window.SelectComponent(
                 this.groupSelectionContainer,
-                this.groups.map(g => ({ label: g.group_name, value: g.group_id })),
-                (selectedGroup) => {
-                    this.selectedGroupId = parseInt(selectedGroup);
+                {
+                    options: this.groups.map(g => ({ label: g.group_name, value: g.group_id })),
+                    onSelection: (selectedGroup) => {
+                        this.selectedGroupId = parseInt(selectedGroup);
 
-                    // Persist selection
-                    window.StorageService.setStorageJSON('last-selected-group', this.selectedGroupId);
+                        // Persist selection
+                        window.StorageService.setStorageJSON('last-selected-group', this.selectedGroupId);
 
-                    // Trigger onChange callback
-                    this.onSelectionChange();
+                        // Trigger onChange callback
+                        this.onSelectionChange();
 
-                },
-                'Select Group ...',
-                this.selectedGroupId
+                    },
+                    placeholder: 'Select Group ...',
+                    value: this.selectedGroupId
+                }
             );
 
             this.updateButtonsArea();

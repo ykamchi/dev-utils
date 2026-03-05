@@ -3,19 +3,22 @@
     class SelectComponent {
         /**
          * @param {HTMLElement} container - The container to append the select to
-         * @param {Array<{label: string, value: any}>} selectOptions - The options for the select
-         * @param {function(value: any): void} onSelection - Callback when selection changes
-         * @param {string} [placeholder] - Optional placeholder text
-         * @param {any} [value] - Optional initial value
-         * @param {boolean} [disabled] - Optional disabled state
+         * @param {Object} options - Configuration options
+         * @param {Array<{label: string, value: any}>} options.options - The options for the select
+         * @param {function(value: any): void} [options.onSelection] - Callback when selection changes
+         * @param {string} [options.placeholder] - Optional placeholder text
+         * @param {any} [options.value] - Optional initial value
+         * @param {boolean} [options.disabled] - Optional disabled state
+         * @param {boolean} [options.fullWidth] - Optional boolean to set the width to full width of the container - default: true
          */
-        constructor(container, selectOptions, onSelection, placeholder = '', value = undefined, disabled = false) {
+        constructor(container, options = {}) {
             this.container = container;
-            this.selectOptions = selectOptions;
-            this.onSelection = onSelection;
-            this.placeholder = placeholder;
-            this.value = value;
-            this.disabled = disabled;
+            this.selectOptions = options.options || [];
+            this.onSelection = options.onSelection;
+            this.placeholder = options.placeholder || '';
+            this.value = options.value;
+            this.disabled = options.disabled || false;
+            this.fullWidth = options.fullWidth !== undefined ? options.fullWidth : true;
             this.select = this._createSelect();
             container.appendChild(this.select);
         }
@@ -23,7 +26,7 @@
         _createSelect() {
             const select = document.createElement('select');
             select.disabled = this.disabled;
-            select.className = 'framework-select-component';
+            select.className = 'framework-select-component' + (this.fullWidth ? '' : ' align-self');
             let placeholderOption = null;
             if (this.placeholder) {
                 placeholderOption = document.createElement('option');
@@ -61,6 +64,25 @@
 
         getSelectedValue() {
             return this.select.value;
+        }
+
+        /**
+         * Replace options and selected value, recreating the select as if it was new
+         * @param {Array<{label: string, value: any}>} newOptions - New options for the select
+         * @param {any} newValue - New selected value
+         */
+        updateOptionsAndValue(newOptions, newValue) {
+            this.selectOptions = newOptions;
+            this.value = newValue;
+            
+            // Remove old select element
+            if (this.select && this.select.parentNode) {
+                this.select.parentNode.removeChild(this.select);
+            }
+            
+            // Create and append new select
+            this.select = this._createSelect();
+            this.container.appendChild(this.select);
         }
     }
 
