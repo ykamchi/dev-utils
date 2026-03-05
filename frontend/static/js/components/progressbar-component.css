@@ -6,12 +6,6 @@
     gap: 8px;
 }
 
-.framework-progressbar-label {
-    font-size: 12px;
-    color: var(--color-text-secondary);
-    font-weight: 500;
-}
-
 .framework-progressbar-container {
     background: rgb(from var(--color-highlight) r g b / 0.2);
     border: 1px solid var(--color-border);
@@ -27,4 +21,17 @@
     transition: width 0.3s ease;
     border-radius: 3px;
     min-height: 8px;
+}
+
+.framework-progressbar-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+    color: var(--color-text-light);
+    font-weight: 600;
+    pointer-events: none;
+    z-index: 1;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
 }

@@ -267,7 +267,7 @@
             const stateField = window.conversations.utils.createFieldDiv(turnsInfoDiv, 'State:', { 'max-width': '120px' });
             window.conversations.utils.createReadOnlyText(stateField, this.conversation.state, 'conversations-badge-state-' + this.conversation.state, 'State');
             const progressField = window.conversations.utils.createFieldDiv(turnsInfoDiv, 'Progress:', { 'min-width': '200px' });
-            new window.ProgressBarComponent(progressField, { width: '100%', height: '12px', percentage: 100 * this.conversation.message_count / this.conversation.info.max_turns, label: '' });
+            new window.ProgressBarComponent(progressField, { width: '100%', height: '12px', percentage: 100 * this.conversation.message_count / this.conversation.info.max_turns });
             window.conversations.utils.createField(turnsInfoDiv, 'Message count:', this.conversation.message_count, false, { 'min-width': '200px' });
             window.conversations.utils.createField(turnsInfoDiv, 'Max turns:', this.conversation.info.max_turns, false, { 'min-width': '200px' });
             const priorityField = window.conversations.utils.createFieldDiv(turnsInfoDiv, 'Priority:');

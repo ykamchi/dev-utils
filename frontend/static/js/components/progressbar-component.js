@@ -7,26 +7,18 @@
      * @param {string} [options.width] - Width of progress bar (default: '200px')
      * @param {string} [options.height] - Height of progress bar (default: '8px')
      * @param {number} [options.percentage] - Current percentage 0-100 (default: 0)
-     * @param {string} [options.label] - Optional label text above the progress bar
+     * @param {boolean} [options.label] - Whether to show percentage label inside the bar (default: true)
      */
     class ProgressBarComponent {
         constructor(container, options = {}) {
             this.width = options.width || '200px';
             this.height = options.height || '8px';
             this.percentage = options.percentage !== undefined ? Math.max(0, Math.min(100, options.percentage)) : 0;
-            this.label = options.label || null;
+            this.showLabel = options.label !== undefined ? options.label : true;
 
             // Create wrapper
             this.wrapper = document.createElement('div');
             this.wrapper.className = 'framework-progressbar-wrapper';
-
-            // Create label if provided
-            if (this.label) {
-                this.labelElement = document.createElement('div');
-                this.labelElement.className = 'framework-progressbar-label';
-                this.labelElement.textContent = this.label;
-                this.wrapper.appendChild(this.labelElement);
-            }
 
             // Create progress bar container
             this.container = document.createElement('div');
@@ -40,6 +32,15 @@
             this.fill.style.width = `${this.percentage}%`;
 
             this.container.appendChild(this.fill);
+
+            // Create percentage label inside the progress bar
+            if (this.showLabel) {
+                this.labelElement = document.createElement('div');
+                this.labelElement.className = 'framework-progressbar-label';
+                this.labelElement.textContent = `${Math.round(this.percentage)}%`;
+                this.container.appendChild(this.labelElement);
+            }
+
             this.wrapper.appendChild(this.container);
             container.appendChild(this.wrapper);
         }
@@ -58,27 +59,15 @@
             
             this.fill.style.width = `${this.percentage}%`;
             
+            // Update label text if showing label
+            if (this.showLabel && this.labelElement) {
+                this.labelElement.textContent = `${Math.round(this.percentage)}%`;
+            }
+            
             if (!animated) {
                 // Force reflow to apply the no-transition state
                 this.fill.offsetHeight;
                 this.fill.style.transition = '';
-            }
-        }
-
-        /**
-         * Update the label text
-         * @param {string} text - New label text
-         */
-        setLabel(text) {
-            this.label = text;
-            if (this.labelElement) {
-                this.labelElement.textContent = text;
-            } else if (text) {
-                // Create label if it didn't exist
-                this.labelElement = document.createElement('div');
-                this.labelElement.className = 'framework-progressbar-label';
-                this.labelElement.textContent = text;
-                this.wrapper.insertBefore(this.labelElement, this.container);
             }
         }
 

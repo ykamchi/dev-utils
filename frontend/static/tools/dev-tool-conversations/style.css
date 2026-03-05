@@ -433,6 +433,7 @@
     border-radius: 4px;
     color: var(--color-text-light);
     font-weight: 700;
+    min-width: 84px;
 }
 .conversations-badge-state-running {
     background: var(--color-state-running);

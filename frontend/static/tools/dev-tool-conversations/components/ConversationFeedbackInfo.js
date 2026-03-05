@@ -1,12 +1,13 @@
 (function() {
     'use strict';
     class ConversationFeedbackInfoComponent {
-        constructor(container, feedback, feedback_def, onlyImportant = false, vertical = false) {
+        constructor(container, feedback, feedback_def, onlyImportant = false, vertical = false, innerLabels = false) {
             this.container = container;
             this.feedback_def = feedback_def;
             this.feedback = feedback;
             this.onlyImportant = onlyImportant;
             this.vertical = vertical;
+            this.innerLabels = innerLabels;
             this.render();
         }
 
@@ -40,11 +41,26 @@
 
                     // Create feedback field according to its type
                     const feedbackField = window.conversations.utils.createDivContainer(wrapperDiv, 'conversation-field-container-vertical', null, feedbackDef.description);
-                    window.conversations.utils.createLabel(feedbackField, key);
-                    if (feedbackDef.type === 'integer') {
-                        new window.RateComponent(feedbackField, feedbackDef.min, feedbackDef.max, value, '100px', '18px', true);
+                    
+                    if (this.innerLabels) {
+                        // Inner labels mode: show "[label] - value" in a single line
+                        if (feedbackDef.type === 'integer') {
+                            // For integer type, still create label separately since RateComponent is visual
+                            window.conversations.utils.createLabel(feedbackField, key);
+                            new window.RateComponent(feedbackField, feedbackDef.min, feedbackDef.max, value, '100px', '18px', true);
+                        } else {
+                            // For text fields, combine label and value
+                            const combinedText = `${key} - ${value}`;
+                            window.conversations.utils.createReadOnlyText(feedbackField, combinedText, 'conversations-field-value');
+                        }
                     } else {
-                        window.conversations.utils.createReadOnlyText(feedbackField, value, 'conversations-field-value');
+                        // Default mode: label on top, value below
+                        window.conversations.utils.createLabel(feedbackField, key);
+                        if (feedbackDef.type === 'integer') {
+                            new window.RateComponent(feedbackField, feedbackDef.min, feedbackDef.max, value, '100px', '18px', true);
+                        } else {
+                            window.conversations.utils.createReadOnlyText(feedbackField, value, 'conversations-field-value');
+                        }
                     }
                 }
             }

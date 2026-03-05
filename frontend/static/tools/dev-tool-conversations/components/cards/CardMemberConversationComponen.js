@@ -19,13 +19,15 @@
         }
 
         render() {
+                        // window.conversations.utils.createReadOnlyText(tagsDiv, this.conversation.info.name + 'ss', 'conversations-badge-generic', this.conversation.info.conversation_objectives);
+
             const wrapper = window.conversations.utils.createDivContainer(this.container, 'conversations-card-wrapper');
             
             // Icon 
             window.conversations.utils.createReadOnlyText(wrapper, `${window.conversations.CONVERSATION_TYPES_ICONS[this.conversation.info.conversation_type]}`, 'conversations-list-card-icon');
 
             // Info
-            const info = window.conversations.utils.createDivContainer(wrapper, 'conversations-card-info');
+            const info = window.conversations.utils.createDivContainer(wrapper, 'conversations-card-info', { 'gap': '8px' });
 
             // First line
             const firstLine = window.conversations.utils.createDivContainer(info, 'conversation-container-horizontal-space-between-full');
@@ -34,7 +36,9 @@
             window.conversations.utils.createReadOnlyText(firstLine, this.conversation.participants.map(p => p.member_name).join(", "), 'conversations-card-name');
 
             // Created at
-            window.conversations.utils.createLabel(firstLine, Utils.formatDateTime(this.conversation.created_at), 'conversations-instructions-item-created-at');    
+            // const createdAtDiv = window.conversations.utils.createDivContainer(firstLine, '-', { 'display': 'flex', 'align-items': 'center', 'gap': '4px' });
+            window.conversations.utils.createSpan(firstLine, this.conversation.info.name + ' - ' +  Utils.formatDateTime(this.conversation.created_at));
+            // window.conversations.utils.createLabel(createdAtDiv, Utils.formatDateTime(this.conversation.created_at), 'conversations-instructions-item-created-at');    
 
             // Second line
             const secondLine = window.conversations.utils.createDivContainer(info, 'conversation-container-horizontal-space-between-full');
@@ -54,9 +58,9 @@
 
             const tagsDiv = window.conversations.utils.createDivContainer(rightSide, 'conversations-tags-container');
             // Conversation type
-            window.conversations.utils.createReadOnlyText(tagsDiv, this.conversation.info.name, 'conversations-badge-generic', this.conversation.info.description);
             window.conversations.utils.createReadOnlyText(tagsDiv, Utils.durationSecondsToHMS(this.conversation.duration_seconds), 'conversations-badge-generic', 'Duration');
-            window.conversations.utils.createReadOnlyText(tagsDiv, this.conversation.message_count, 'conversations-badge-generic', 'Number of messages');
+            window.conversations.utils.createReadOnlyText(tagsDiv, this.conversation.message_count + ' / ' + this.conversation.info.max_turns, 'conversations-badge-generic', 'Number of messages');
+            new window.ProgressBarComponent(tagsDiv, { width: '150px', height: '100%', percentage: 100 * this.conversation.message_count / this.conversation.info.max_turns });
             window.conversations.utils.createReadOnlyText(tagsDiv, this.conversation.state, 'conversations-badge-state-'+this.conversation.state, 'State');
             
             //new window.ProgressBarComponent(rightSide, { width: '100%', height: '12px', percentage: 100*this.conversation.message_count/this.conversation.info.max_turns, label: '' });
