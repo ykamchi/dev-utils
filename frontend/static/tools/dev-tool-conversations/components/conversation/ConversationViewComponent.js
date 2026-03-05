@@ -59,6 +59,7 @@
             }
 
             this.conversation = data[0];
+            this.messages = await window.conversations.apiConversations.conversationsMessages(this.nullElementForSpinner, this.conversation.conversation_id);
 
             this.loadContent();
         }
@@ -252,7 +253,7 @@
             const typeField = window.conversations.utils.createFieldDiv(infoInfoDiv, 'Type:', { 'max-width': '120px' });
             window.conversations.utils.createReadOnlyText(typeField, window.conversations.CONVERSATION_TYPES_STRING(this.conversation.conversation_type, true, true, true, false), 'conversations-badge-generic');
             window.conversations.utils.createField(infoInfoDiv, 'Instructions:', this.conversation.info.name);
-            
+            window.conversations.utils.createField(infoInfoDiv, 'Cost:', window.conversations.utils.messagesCost(this.conversation.llm_provider, this.conversation.llm_model, this.messages) + '$');
 
             // Time information
             const timeInfoDiv = this.createDetailsDiv(leftDiv, this.conversation.state === window.conversations.CONVERSATION_STATE_COMPLETED ? 'wait-completed' : 'wait-unpatiant');

@@ -100,18 +100,80 @@ window.conversations.LLM_PROVIDER_OPTIONS =
         label: '𖠿 Ollama', 
         autoRun: true,
         value: window.conversations.LLM_PROVIDER_OLLAMA, 
-        models: ['llama3.1:8b', 'gpt-oss:20b', 'mistral:7b-instruct'], 
+        models: {
+            'llama3.1:8b': {
+                input_price: 0, // Cost per 1M tokens in USD
+                cached_input_price: 0, // Cached cost per 1M tokens in USD 
+                output_price: 0, // Cost per 1M tokens in USD
+            },
+            'gpt-oss:20b': {
+                input_price: 0, // Cost per 1M tokens in USD
+                cached_input_price: 0, // Cached cost per 1M tokens in USD 
+                output_price: 0, // Cost per 1M tokens in USD
+            },
+            'mistral:7b-instruct': {
+                input_price: 0, // Cost per 1M tokens in USD
+                cached_input_price: 0, // Cached cost per 1M tokens in USD 
+                output_price: 0, // Cost per 1M tokens in USD
+            }
+        },
         defaultModel: 'llama3.1:8b' 
     },
     [window.conversations.LLM_PROVIDER_OPENAI]: { 
         label: '֎ OpenAI', 
         autoRun: false,
         value: window.conversations.LLM_PROVIDER_OPENAI, 
-        models: ['gpt-4.1-mini', 'gpt-4.1', 'gpt-5.2-chat-latest', 'gpt-5.2'], 
+        models: {
+            'gpt-4.1-mini': {
+                input_price: 0.00000030, // Cost per 1K tokens in USD
+                cached_input_price: 0.00000003, // Cached cost per 1K tokens in USD (assuming 50% cache hit rate)
+                output_price: 0.00000120, // Cost per 1K tokens in USD
+            },
+            'gpt-5-mini': {
+                input_price: 0.00000125, // Cost per 1K tokens in USD
+                cached_input_price: 0.000000125, // Cached cost per 1K tokens in USD (assuming 50% cache hit rate)
+                output_price: 0.00000500, // Cost per 1K tokens in USD
+            },
+            'gpt-4.1': {
+                input_price: 0.00000500, // Cost per 1K tokens in USD
+                cached_input_price: 0.00000050, // Cached cost per 1K tokens in USD (assuming 50% cache hit rate)
+                output_price: 0.00001500, // Cost per 1K tokens in USD
+            },
+            'gpt-5.2': {
+                input_price: 0.00000500, // Cost per 1K tokens in USD
+                cached_input_price: 0.00000050, // Cached cost per 1K tokens in USD (assuming 50% cache hit rate)
+                output_price: 0.00001500, // Cost per 1K tokens in USD
+            }
+        },
         defaultModel: 'gpt-4.1-mini' 
     }
 }
+/*
 
+14 turns conversation cost estimation for different models (assuming 20 messages per turn, 100 tokens per message, and the following token pricing: gpt-4.1-mini: $0.0007/1K tokens, gpt-5-mini: $0.003/1K tokens, gpt-4.1: $0.014/1K tokens, gpt-5.2: $0.014/1K tokens):
+| Conversations | 4.1-mini | 5-mini | 4.1    | 5.2    |
+| ------------- | -------- | ------ | ------ | ------ |
+| 100           | $0.70    | ~$3    | $14    | $14    |
+| 1,000         | $7       | ~$30   | $140   | $140   |
+| 10,000        | $70      | ~$300  | $1,400 | $1,400 |
+
+8 turns conversation cost estimation for different models (assuming 20 messages per turn, 100 tokens per message, and the following token pricing: gpt-4.1-mini: $0.0007/1K tokens, gpt-5-mini: $0.003/1K tokens, gpt-4.1: $0.014/1K tokens, gpt-5.2: $0.014/1K tokens):
+| Conversations | gpt-4.1-mini | gpt-5-mini | gpt-4.1 | gpt-5.2 |
+| ------------- | ------------ | ---------- | ------- | ------- |
+| 100           | $0.48        | ~$2.0      | ~$9.7   | ~$9.7   |
+| 1,000         | $4.83        | ~$20       | ~$97    | ~$97    |
+| 10,000        | $48.3        | ~$200      | ~$970   | ~$970   |
+
+
+
+Full Cost Table (1000 conversations)
+Model	8 turns	14 turns
+gpt-4.1-mini	$4.83	$8.45
+gpt-5-mini	~$20	~$35
+gpt-4.1	~$97	~$169
+gpt-5.2	~$97	~$169
+
+*/
 // Default instructions template for conversations
 window.conversations.DEFAULT_INSTRUCTIONS = `
 This is a test conversation.

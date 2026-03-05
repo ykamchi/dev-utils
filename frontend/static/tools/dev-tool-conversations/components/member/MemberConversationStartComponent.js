@@ -264,7 +264,7 @@
                 onSelection: (selectedProvider) => {
                     this.selectedLLMProvider = selectedProvider;
                     this.modelSelection.updateOptionsAndValue(
-                        window.conversations.LLM_PROVIDER_OPTIONS[this.selectedLLMProvider].models.map(model => ({ label: model, value: model })), 
+                        Object.keys(window.conversations.LLM_PROVIDER_OPTIONS[this.selectedLLMProvider].models).map(model => ({ label: model, value: model })), 
                         window.conversations.LLM_PROVIDER_OPTIONS[this.selectedLLMProvider].defaultModel
                     );
                     this.selectedLLMModel = window.conversations.LLM_PROVIDER_OPTIONS[this.selectedLLMProvider].defaultModel;
@@ -275,7 +275,7 @@
 
             const modelSelection = window.conversations.utils.createFieldDiv(modelSelectionDiv, 'Select Model:');
             this.modelSelection = new window.SelectComponent(modelSelection, {
-                options: window.conversations.LLM_PROVIDER_OPTIONS[this.selectedLLMProvider].models.map(model => ({ label: model, value: model })),
+                options: Object.keys(window.conversations.LLM_PROVIDER_OPTIONS[this.selectedLLMProvider].models).map(model => ({ label: model, value: model })),
                 fullWidth: false,
                 onSelection: (selectedModel) => {
                     this.selectedLLMModel = selectedModel;

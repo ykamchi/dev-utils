@@ -206,7 +206,7 @@
             const llmModelDiv = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
             window.conversations.utils.createLabel(llmModelDiv, 'LLM Model:');
             new window.OptionButtonsComponent(llmModelDiv, {
-                options: Object.values(window.conversations.LLM_PROVIDER_OPTIONS).flatMap(opt => opt.models.map(model => ({ label: model, value: model }))),
+                options: Object.values(window.conversations.LLM_PROVIDER_OPTIONS).flatMap(opt => Object.keys(opt.models)).map(model => ({ label: model, value: model })),
                 selected: this.filters.llm_model,
                 onChange: async (selected) => {
                     this.filters.llm_model = selected;

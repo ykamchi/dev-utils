@@ -4,6 +4,26 @@
 window.conversations = window.conversations || {};
 window.conversations.utils = window.conversations.utils || {};
 
+window.conversations.utils.messageCost = function (llm_provider, llm_model, message) {
+    const modelInfo = window.conversations.LLM_PROVIDER_OPTIONS[llm_provider].models[llm_model];
+    const usage = message.usage;
+    const cost = (
+        (usage.prompt_tokens - usage.cached_tokens) * modelInfo.input_price +
+        usage.cached_tokens * modelInfo.cached_input_price +
+        usage.completion_tokens * modelInfo.output_price
+    );
+    return parseFloat(cost.toFixed(6));
+}
+
+window.conversations.utils.messagesCost = function (llm_provider, llm_model, messages) {
+    let cost = 0;
+    if (messages && messages.length > 0) {
+        for (const message of messages) {
+            cost += window.conversations.utils.messageCost(llm_provider, llm_model, message);
+        }
+    }
+    return parseFloat(cost.toFixed(6));
+}
 
 // Create a label element
 window.conversations.utils.createLabel = function (container, text, alignRight = false) {
@@ -59,24 +79,24 @@ window.conversations.utils.createDivContainer = function (container = null, clas
     if (container) {
         container.appendChild(div);
     }
-    
+
     // Apply inline styles from style object
     if (style && typeof style === 'object') {
         Object.assign(div.style, style);
     }
-    
+
     // Set title attribute
     if (title) {
         div.title = title;
     }
-    
+
     return div;
 }
 
 window.conversations.utils.createFieldDiv = function (container, labelText, style = null) {
     const fieldDiv = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical', style);
     window.conversations.utils.createLabel(fieldDiv, labelText);
-    return fieldDiv;   
+    return fieldDiv;
 }
 
 window.conversations.utils.createField = function (container, labelText, value, readOnly = false, style = null) {
@@ -85,18 +105,18 @@ window.conversations.utils.createField = function (container, labelText, value, 
     return fieldDiv;
 }
 
-window.conversations.utils.createInput = function(container, labelText, options = {}) {
+window.conversations.utils.createInput = function (container, labelText, options = {}) {
     const infoNameGroup = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
     window.conversations.utils.createLabel(infoNameGroup, labelText);
     new window.TextInputComponent(infoNameGroup, options);
 }
 
-window.conversations.utils.createRange = function(container, labelText, minValue, maxValue, onChange) {
+window.conversations.utils.createRange = function (container, labelText, minValue, maxValue, onChange) {
     const groupDiv = window.conversations.utils.createDivContainer(container, 'conversation-field-container-vertical');
     window.conversations.utils.createLabel(groupDiv, labelText);
     new window.RangeComponent(groupDiv, minValue, maxValue, onChange);
 }
-              
+
 window.conversations.utils.createTextArea = function (container, labelText, options = {}) {
     const rows = options.rows !== undefined ? options.rows : -1;
     const textAreaGroup = window.conversations.utils.createDivContainer(container, rows === -1 ? 'conversation-field-container-vertical-full' : 'conversation-field-container-vertical');
@@ -132,7 +152,7 @@ window.conversations.utils.updateChartInstance = function (container, chartInsta
     if (chartInstance && typeof chartInstance.refresh === 'function') {
         setTimeout(() => chartInstance.refresh(), 0);
     }
-    
+
     return chartInstance;
 };
 
