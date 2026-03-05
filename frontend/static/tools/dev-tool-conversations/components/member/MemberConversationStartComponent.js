@@ -4,11 +4,11 @@
     */
 
     class MemberConversationStartComponent {
-        constructor(container, group, member, groupInstructions, conversation_type, popupInstance) {
+        constructor(container, group, member, conversation_type, popupInstance) {
             this.container = container;
             this.group = group;
             this.member = member;
-            this.groupInstructions = groupInstructions;
+            this.groupInstructions = null;
             this.conversationType = conversation_type;
             this.popupInstance = popupInstance;
             this.memberListComponents = {}; // Store list components per role
@@ -27,11 +27,17 @@
         }
 
         render() {
+            this.load();
+        }
+
+        async load() {
+            this.groupInstructions = await window.conversations.apiInstructions.instructionsList(this.container, this.group.group_id, this.conversation_type);
+
             // Create the main page component
-            this.page = new window.conversations.PageComponent(this.container, 
-                window.conversations.CONVERSATION_TYPES_ICONS[this.conversationType], 
+            this.page = new window.conversations.PageComponent(this.container,
+                window.conversations.CONVERSATION_TYPES_ICONS[this.conversationType],
                 'Start ' + window.conversations.CONVERSATION_TYPES_NAMES[this.conversationType] + (this.member ? ' - ' + this.member.member_name : ''),
-                [ this.group.group_name ]
+                [this.group.group_name]
             );
 
             // Start and Cancel buttons
@@ -47,7 +53,7 @@
                 onClick: () => this.handleStartClick(),
                 type: window.ButtonComponent.TYPE_GHOST,
                 tooltip: 'Start ' + window.conversations.CONVERSATION_TYPES_NAMES[this.conversationType],
-                disabled: true 
+                disabled: true
             });
             this.page.updateButtonsArea(pageButtonsDiv);
 
@@ -59,7 +65,7 @@
                 const missingInstructionsDiv = window.conversations.utils.createReadOnlyText(pageControlDiv, 'No instructions available for this conversation type.', 'conversations-message-empty');
                 this.page.updateContentArea(missingInstructionsDiv);
                 return;
-            
+
             }
 
             const selectInstructionWrapper = window.conversations.utils.createDivContainer(pageControlDiv);
@@ -72,7 +78,7 @@
                         return false;
                     }
                     // Check if any instruction role matches any member role
-                    return instruction.info.roles.some(role => 
+                    return instruction.info.roles.some(role =>
                         this.member.member_roles.includes(role.role_name)
                     );
                 });
@@ -82,10 +88,10 @@
             if (availableInstructions.length === 0) {
                 this.page.updateControlArea(null);
                 const missingInstructionsDiv = window.conversations.utils.createReadOnlyText(
-                    pageControlDiv, 
-                    this.member 
+                    pageControlDiv,
+                    this.member
                         ? `No instructions available for ${this.member.member_name}.`
-                        : 'No instructions available for this conversation type.', 
+                        : 'No instructions available for this conversation type.',
                     'conversations-message-empty'
                 );
                 this.page.updateContentArea(missingInstructionsDiv);
@@ -100,17 +106,16 @@
 
             // Don't auto-select - let user choose
             // Only pre-select if we found a previously selected instruction from storage
-
             // Instructions chooser
             new window.SelectComponent(
-                selectInstructionWrapper, 
-                availableInstructions.map(entry => ({ label: entry.info.name, value: entry.instruction_key })), 
-                (selectedValue) => { 
+                selectInstructionWrapper,
+                availableInstructions.map(entry => ({ label: entry.info.name, value: entry.instruction_key })),
+                (selectedValue) => {
                     this.selectedInstruction = availableInstructions.find(entry => entry.instruction_key === selectedValue);
-                    
+
                     // Reload content with new instruction's roles
                     this.loadContentTabs();
-                    
+
                     // Save selected instruction to storage
                     window.StorageService.setStorageJSON(this.storageKeyLastSelectedInstructionKey, this.selectedInstruction.instruction_key);
                 },
@@ -119,13 +124,14 @@
             );
 
             this.page.updateControlArea(pageControlDiv);
-            
+
             // Only load content tabs if we have a selected instruction
             if (this.selectedInstruction) {
                 this.loadContentTabs();
             } else {
                 // Show empty state
-                const contentDiv = window.conversations.utils.createDivContainer();
+                const contentDiv = window.conversations.utils.createDivContainer(null, '-', { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' });
+                new window.conversations.ConvyComponent(contentDiv, { reaction: 'conversation-table-drinking', width: 480, height: 480 });
                 window.conversations.utils.createReadOnlyText(contentDiv, 'Please select an instruction to start.', 'conversations-message-empty');
                 this.page.updateContentArea(contentDiv);
             }
@@ -136,11 +142,11 @@
             this.members = await window.conversations.apiMembers.membersList(null, this.group.group_id);
 
             // Reset selected members when instruction changes
-            this.selectedMembers = {}; 
+            this.selectedMembers = {};
             this.memberSelectedRole = null;
 
             const contentDiv = window.conversations.utils.createDivContainer();
-            
+
             if (!this.selectedInstruction) {
                 window.conversations.utils.createReadOnlyText(contentDiv, 'No instruction selected.', 'conversations-message-empty');
                 this.page.updateContentArea(contentDiv);
@@ -154,24 +160,29 @@
                 return;
             }
 
+            const wrapper = window.conversations.utils.createDivContainer(contentDiv, 'conversations-page-wrapper');
+            const splitter = window.conversations.utils.createDivContainer(wrapper, 'conversation-container-horizontal-space-between-full');
+            const leftDiv = window.conversations.utils.createDivContainer(splitter, 'conversation-container-vertical', { flex: '0.5', padding: '8px' });
+            const rightDiv = window.conversations.utils.createDivContainer(splitter, 'conversation-container-vertical', { flex: '0.5' });
+
             // If member is provided, add role selector field
             if (this.member && this.member.member_roles) {
                 // Get allowed roles for this member in this instruction
-                const allowedRoles = this.selectedInstruction.info.roles.filter(role => 
+                const allowedRoles = this.selectedInstruction.info.roles.filter(role =>
                     this.member.member_roles.includes(role.role_name)
                 );
 
                 if (allowedRoles.length > 0) {
                     // Create field for member role selection
-                    const memberRoleFieldDiv = window.conversations.utils.createDivContainer(contentDiv, 'conversation-field-container-vertical');
+                    const memberRoleFieldDiv = window.conversations.utils.createDivContainer(leftDiv, 'conversation-field-container-vertical');
                     window.conversations.utils.createLabel(memberRoleFieldDiv, `Select role for ${this.member.member_name}:`);
-                    
+
                     // Auto-select first allowed role
                     this.memberSelectedRole = allowedRoles[0].role_name;
-                    
+
                     // Add member to selected members with their role
                     this.selectedMembers[this.memberSelectedRole] = [this.member];
-                    
+
                     // Create select component for role selection
                     this.memberRoleSelectComponent = new window.SelectComponent(
                         memberRoleFieldDiv,
@@ -186,14 +197,14 @@
                                     delete this.selectedMembers[this.memberSelectedRole];
                                 }
                             }
-                            
+
                             // Add member to new role
                             this.memberSelectedRole = selectedRole;
                             if (!this.selectedMembers[this.memberSelectedRole]) {
                                 this.selectedMembers[this.memberSelectedRole] = [];
                             }
                             this.selectedMembers[this.memberSelectedRole].push(this.member);
-                            
+
                             // Revalidate
                             this.validateSelections();
                         },
@@ -203,11 +214,27 @@
                 }
             }
 
-            this.validationLabelDiv = window.conversations.utils.createDivContainer(contentDiv, '-');
+            const convyDiv = window.conversations.utils.createDivContainer(leftDiv, '-', { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' });
+            const conversationConditions = this.selectedInstruction.info.roles.map(role => {
+                let ret = '';
+                if (role.min === role.max) {
+                    ret = `exactly ${role.min} ${role.role_name}`;
+                } else {
+                    ret = `at least ${role.min} ${role.role_name} (up to ${role.max})`;
+                }
+                if (this.member) {
+                    ret += `, you have already selected ${this.member.member_name} for the role of ${this.memberSelectedRole}`;
+                }
+                return ret;
+            }).join(', ');
+            window.conversations.utils.createReadOnlyText(convyDiv, 'To run this conversation you must select ' + conversationConditions, 'conversations-message-empty');
+            new window.conversations.ConvyComponent(convyDiv, { reaction: 'conversation-table-drinking', width: 480, height: 480 });
+            this.validationLabelDiv = window.conversations.utils.createDivContainer(convyDiv, '-');
 
             // Create validation label above tabs
-            this.validationLabel = window.conversations.utils.createLabel(contentDiv, '');
-            
+            this.validationLabel = window.conversations.utils.createReadOnlyText(this.validationLabelDiv, '');
+
+
             // Build tabs - one per role
             const tabs = [];
             this.selectedInstruction.info.roles.forEach(role => {
@@ -218,8 +245,8 @@
                 });
             });
 
-            new window.TabsetComponent(contentDiv, tabs);
-            
+            new window.TabsetComponent(rightDiv, tabs);
+
             // Add OpenAI checkbox at the bottom
             const openaiCheckboxDiv = window.conversations.utils.createDivContainer(contentDiv, 'conversation-field-container-vertical');
             this.useOpenAICheckbox = new window.CheckboxComponent(
@@ -228,9 +255,9 @@
                 null,   // onChange
                 'Use OpenAI'  // labelText
             );
-            
+
             this.page.updateContentArea(contentDiv);
-            
+
             // Initial validation
             this.validateSelections();
         }
@@ -245,26 +272,26 @@
                 // Only show members that have this role in their member_roles array
                 return member.member_roles && member.member_roles.includes(role.role_name);
             });
-            
+
             // Create members list component for this role
             new window.ListComponent(
-                container, 
-                filteredMembers, 
+                container,
+                filteredMembers,
                 (member) => {
                     const tempDiv = window.conversations.utils.createDivContainer();
                     new window.conversations.CardMemberComponent(tempDiv, member);
                     return tempDiv;
-                }, 
+                },
                 window.ListComponent.SELECTION_MODE_MULTIPLE,
                 (selectedItems) => {
                     // Start with selected items from the list
                     let membersForRole = [...selectedItems];
-                    
+
                     // If this.member is assigned to this role, add them to the array
                     if (this.member && this.memberSelectedRole === role.role_name) {
                         membersForRole.push(this.member);
                     }
-                    
+
                     this.selectedMembers[role.role_name] = membersForRole;
                     this.validateSelections();
                 },
@@ -282,23 +309,23 @@
         validateSelections() {
             const validationResults = [];
             let allValid = true;
-            
+
             for (const role of this.selectedInstruction.info.roles) {
                 const roleName = role.role_name || role;
                 const min = role.min || 0;
                 const max = role.max || Infinity;
-                
+
                 // Count selected members for this role (including this.member if they selected this role)
                 let selectedCount = 0;
                 if (this.selectedMembers[roleName]) {
                     selectedCount = this.selectedMembers[roleName].length;
                 }
-                
+
                 const isValid = selectedCount >= min && selectedCount <= max;
                 if (!isValid) {
                     allValid = false;
                 }
-                
+
                 let constraintText = '';
                 if (min === max) {
                     constraintText = `exactly ${min}`;
@@ -309,7 +336,7 @@
                 } else {
                     constraintText = `${min}-${max}`;
                 }
-                
+
                 validationResults.push({
                     roleName,
                     selectedCount,
@@ -319,7 +346,7 @@
                     constraintText
                 });
             }
-            
+
             // Update validation label
             if (this.validationLabel) {
                 const messages = validationResults.map(r => {
@@ -327,9 +354,9 @@
                     return `${emoji} ${r.roleName}: ${r.selectedCount} selected (need ${r.constraintText})`;
                 });
                 this.validationLabelDiv.innerHTML = ''; // Clear previous content
-                window.conversations.utils.createLabel(this.validationLabelDiv, messages.join(' | '));
+                window.conversations.utils.createReadOnlyText(this.validationLabelDiv, messages.join(' | '));
             }
-            
+
             // Update start button state
             if (this.startButton) {
                 this.startButton.setDisabled(!allValid);
@@ -342,7 +369,7 @@
                 new window.AlertComponent('Missing Instruction', 'Please select an instruction type.');
                 return;
             }
-            
+
             // Build participants array with role assignments
             const participants = [];
 
@@ -354,29 +381,29 @@
                     });
                 });
             });
-            
+
             if (participants.length === 0) {
                 new window.AlertComponent('Missing Members', 'Please select at least one member to participate in the conversation.');
                 return;
             }
-            
+
             // Prepare optional LLM parameters
             const llmParams = {};
             if (this.useOpenAICheckbox && this.useOpenAICheckbox.isChecked()) {
                 llmParams.llm_provider = 'openai';
-                llmParams.llm_model = 'gpt-4o';
+                llmParams.llm_model = 'gpt-5.2';
             }
-            
+
             // Start the conversation with new structure
             await window.conversations.apiConversations.conversationAdd(
-                null, 
-                this.group.group_id, 
-                this.selectedInstruction.info, 
+                null,
+                this.group.group_id,
+                this.selectedInstruction.info,
                 participants,
                 llmParams.llm_provider,
                 llmParams.llm_model
             );
-            
+
             // Close popup on success
             this.popupInstance.hide();
         }

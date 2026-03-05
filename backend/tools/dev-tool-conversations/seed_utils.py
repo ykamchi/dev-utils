@@ -181,16 +181,16 @@ def validate_role(role_name: str, role: Any) -> Dict[str, Any]:
     
     Required fields:
     - role_name: string
-    - role_description: string
+    - role_objectives: string
     - min: integer
     - max: integer
-    - system_prompt: string
+    - role_conversation_guide: string
     - feedback_def: object (validated separately)
     """
     if not isinstance(role, dict):
         return {'valid': False, 'reason': f'Role {role_name} must be a dictionary'}
     
-    required_fields = ['role_name', 'role_description', 'min', 'max', 'system_prompt', 'feedback_def']
+    required_fields = ['role_name', 'role_objectives', 'min', 'max', 'role_conversation_guide', 'feedback_def']
     for field in required_fields:
         if field not in role:
             return {'valid': False, 'reason': f'Role {role_name}: Missing required field: {field}'}
@@ -198,8 +198,8 @@ def validate_role(role_name: str, role: Any) -> Dict[str, Any]:
     if not isinstance(role['role_name'], str):
         return {'valid': False, 'reason': f'Role {role_name}: role_name must be a string'}
     
-    if not isinstance(role['role_description'], str):
-        return {'valid': False, 'reason': f'Role {role_name}: role_description must be a string'}
+    if not isinstance(role['role_objectives'], str):
+        return {'valid': False, 'reason': f'Role {role_name}: role_objectives must be a string'}
     
     if not isinstance(role['min'], int):
         return {'valid': False, 'reason': f'Role {role_name}: min must be an integer'}
@@ -207,8 +207,8 @@ def validate_role(role_name: str, role: Any) -> Dict[str, Any]:
     if not isinstance(role['max'], int):
         return {'valid': False, 'reason': f'Role {role_name}: max must be an integer'}
     
-    if not isinstance(role['system_prompt'], str):
-        return {'valid': False, 'reason': f'Role {role_name}: system_prompt must be a string'}
+    if not isinstance(role['role_conversation_guide'], str):
+        return {'valid': False, 'reason': f'Role {role_name}: role_conversation_guide must be a string'}
     
     # Validate feedback_def
     feedback_validation = validate_feedback_def(role['feedback_def'])

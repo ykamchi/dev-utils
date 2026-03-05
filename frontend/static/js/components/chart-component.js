@@ -105,8 +105,28 @@
 
         setData(data) {
             if (!this.chart) return;
-            this.chart.data = data;
-            this.chart.update();
+
+            const chart = this.chart;
+
+            // Replace labels
+            chart.data.labels = data.labels;
+
+            // Update datasets without replacing objects
+            data.datasets.forEach((incoming, i) => {
+
+                if (!chart.data.datasets[i]) {
+                    chart.data.datasets[i] = incoming;
+                    return;
+                }
+
+                const existing = chart.data.datasets[i];
+
+                existing.data = incoming.data;
+                existing.label = incoming.label;
+                existing.borderColor = incoming.borderColor;
+            });
+
+            chart.update();
         }
 
         setOptions(options) {
@@ -213,6 +233,10 @@
             responsive: true,
             maintainAspectRatio: false,
             spanGaps: true, // IMPORTANT: This connects the dots across the null values
+            animation: {
+                duration: 1500,
+                easing: 'easeOutQuart'
+            },
             plugins: {
                 legend: { display: true },
                 tooltip: { enabled: true }

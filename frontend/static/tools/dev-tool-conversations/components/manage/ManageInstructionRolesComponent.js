@@ -115,23 +115,23 @@
                 this.onChange(this.roles);
             });
 
-            // Role description (editable)
-            window.conversations.utils.createTextArea(systemPromptContainer, 'Role Description:', {
-                initialValue: role.role_description,
-                placeholder: 'Role initial system prompt',
+            // Role objectives (editable)
+            window.conversations.utils.createTextArea(systemPromptContainer, 'Role Objectives:', {
+                initialValue: role.role_objectives,
+                placeholder: 'Role objectives, i.e., Describe what this role is trying to achieve in this conversation.',
                 onChange: (value) => {
-                    role.role_description = value;
+                    role.role_objectives = value;
                     this.onChange(this.roles);
                 },
                 rows: 2
             });
 
-            // System Prompt field
-            window.conversations.utils.createTextArea(systemPromptContainer, 'System Prompt:', {
-                initialValue: role.system_prompt,
-                placeholder: 'Role initial system prompt',
+            // Role Conversation Guide field
+            window.conversations.utils.createTextArea(systemPromptContainer, 'Role Conversation Guide:', {
+                initialValue: role.role_conversation_guide,
+                placeholder: 'Role conversation guide, i.e. Add role-specific functional expectations for this scenario.',
                 onChange: (value) => {
-                    role.system_prompt = value;
+                    role.role_conversation_guide = value;
                     this.onChange(this.roles);
                 }
             });
@@ -160,11 +160,11 @@
 
                     // Name (editable)
                     window.conversations.utils.createInput(feedbackDiv, 'Name:', {
-                        initialValue: feedback_def.feedbackName,
+                        initialValue: feedback_def.name,
                         pattern: /^[a-z_]+$/,
                         placeholder: 'e.g., feedback_name',
                         onChange: (value) => {
-                            feedback_def.feedbackName = value;
+                            feedback_def.name = value;
                             this.onChange(this.roles);
                         }
                     });

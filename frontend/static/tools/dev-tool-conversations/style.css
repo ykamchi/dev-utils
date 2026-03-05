@@ -11,6 +11,7 @@
     /* Red */
     --color-state-created: #9b59b6;
     /* Purple */
+    --color-state-stopped: #e67e22;
 }
 
 /************************************************************************/
@@ -38,7 +39,7 @@
     display: flex;
     gap: 16px;
     justify-content: flex-end;
-    /* margin-bottom: 16px; */
+    margin-bottom: 1px;
 }
 
 .conversations-buttons-container-left {
@@ -424,64 +425,41 @@
 /************************************************************************/
 /* Badge styles                                                         */
 /************************************************************************/
+[class^="conversations-badge-state-"],
 .conversations-badge-generic {
     text-align: center;
     font-size: 12px;
     padding: 4px 8px;
     border-radius: 4px;
-    background: var(--color-secondary-accent);
     color: var(--color-text-light);
     font-weight: 700;
 }
-
 .conversations-badge-state-running {
-    text-align: center;
-    font-size: 12px;
-    padding: 4px 8px;
-    border-radius: 4px;
     background: var(--color-state-running);
-    color: var(--color-text-light);
-    font-weight: 700;
 }
 
 .conversations-badge-state-created {
-    text-align: center;
-    font-size: 12px;
-    padding: 4px 8px;
-    border-radius: 4px;
     background: var(--color-state-created);
-    color: var(--color-text-light);
-    font-weight: 700;
 }
 
 .conversations-badge-state-pending {
-    text-align: center;
-    font-size: 12px;
-    padding: 4px 8px;
-    border-radius: 4px;
     background: var(--color-state-pending);
-    color: var(--color-text-light);
-    font-weight: 700;
+}
+
+.conversations-badge-state-stopped {
+    background: var(--color-state-stopped);
 }
 
 .conversations-badge-state-completed {
-    text-align: center;
-    font-size: 12px;
-    padding: 4px 8px;
-    border-radius: 4px;
     background: var(--color-state-completed);
-    color: var(--color-text-light);
-    font-weight: 700;
 }
 
 .conversations-badge-state-failed {
-    text-align: center;
-    font-size: 12px;
-    padding: 4px 8px;
-    border-radius: 4px;
     background: var(--color-state-failed);
-    color: var(--color-text-light);
-    font-weight: 700;
+}
+
+.conversations-badge-generic {
+    background: var(--color-secondary-accent);
 }
 
 /************************************************************************/
@@ -495,6 +473,9 @@
     background: var(--color-background);
     cursor: pointer;
     transition: box-shadow 0.2s ease;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
 }
 
 .conversations-card:hover {

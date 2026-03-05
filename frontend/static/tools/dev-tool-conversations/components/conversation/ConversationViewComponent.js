@@ -20,10 +20,13 @@
 
             // Initialize dynamic data variables
             this.conversation = null;
+            this.messages = null;
+            this.conversationLogs = null;
 
             // Dynamic UI elements
             this.menuDiv = null;
             this.menuList = null;
+            this.insightsChart = null;
 
             this.page = null;
             this.render();
@@ -85,6 +88,8 @@
             this.menuDiv = window.conversations.utils.createDivContainer(wrapper, 'conversations-layout-left', { flex: 0.2 });
             this.rightDiv = window.conversations.utils.createDivContainer(wrapper, 'conversation-container-vertical', { flex: 0.8 });
 
+            // Create buttons area
+            this.createButtonsArea();
 
             // Populate menu
             this.createMenuList();
@@ -94,24 +99,25 @@
 
         }
 
+        createButtonsArea() {
+            const buttonsArea = window.conversations.utils.createDivContainer();
+            new window.conversations.ConversationButtonsControlComponent(buttonsArea, this.conversation);
+
+            this.page.updateButtonsArea(buttonsArea);
+        }
+
         createMenuList() {
             const menuItems = [
                 {
-                    name: 'Conversation Details',
-                    icon: '📝',
+                    name: 'Details',
+                    icon: '🗂️',
                     description: 'state, duration, message count ...',
                     populateFunc: this.populateDetailsTab.bind(this)
 
                 },
-                // {
-                //     name: 'Instructions',
-                //     icon: window.conversations.CONVERSATION_TYPES_ICONS[this.conversation.info.conversation_type],
-                //     description: 'Conversation instruction details',
-                //     populateFunc: this.populateInstructionsTab.bind(this)
-                // },
                 {
                     name: 'Roles',
-                    icon: '📑',
+                    icon: '🧩',
                     description: 'Conversation roles and their details',
                     populateFunc: this.populateRolesTab.bind(this)
                 },
@@ -133,11 +139,25 @@
                     description: 'Members feedback, diagnostics ...',
                     populateFunc: this.populateInsightsTab.bind(this)
                 },
+                {
+                    name: 'Runtime',
+                    icon: '🏁',
+                    description: 'Conversation runtime information',
+                    populateFunc: this.populateRuntimeInstructionsTab.bind(this)
+                },
+                {
+                    name: 'Logs',
+                    icon: '📜',
+                    description: 'Conversation logs and history',
+                    populateFunc: this.populateLogsTab.bind(this)
+                }
             ];
+
+            const menuWrapper = window.conversations.utils.createDivContainer(this.menuDiv, 'conversations-menu-selection-wrapper');
 
             // Create the menu list
             this.menuList = new window.ListComponent(
-                this.menuDiv,
+                menuWrapper,
                 menuItems,
                 (menuItem) => {
                     const wrapper = window.conversations.utils.createDivContainer(this.container, 'conversations-card-wrapper');
@@ -166,6 +186,55 @@
             this.menuList.setLastSelected('conversation-view-menu-list-last-selection', item => item.name);
         }
 
+        async populateLogsTab() {
+            // Clear previous content
+            this.rightDiv.innerHTML = '';
+            if (!this.conversationLogs) {
+                this.conversationLogs = await window.conversations.apiConversationsLogs.conversationsLogsList(this.rightDiv, this.conversation.conversation_id);
+            }
+            const wrapper = window.conversations.utils.createDivContainer(this.rightDiv, 'conversations-page-wrapper');
+            const buttonContainer = window.conversations.utils.createDivContainer(wrapper, 'conversations-buttons-container');
+            new window.ButtonComponent(buttonContainer, {
+                label: 'Copy logs to clipboard',
+                onClick: () => {
+                    const logsText = this.conversationLogs.map(log => Utils.formatDateTime(log.created_at) + ' - ' + log.log_text).join('\n');
+                    navigator.clipboard.writeText(logsText);
+                }
+            });
+
+            new ListComponent(wrapper, this.conversationLogs,
+                (log) => {
+                    const wrapper = window.conversations.utils.createDivContainer(null, '-');
+                    window.conversations.utils.createReadOnlyText(wrapper, Utils.formatDateTime(log.created_at) + ' - ' + log.log_text);
+                    return wrapper;
+                },
+                window.ListComponent.SELECTION_MODE_NONE
+            );
+        }
+
+        async populateRuntimeInstructionsTab() {
+            // Clear previous content
+            this.rightDiv.innerHTML = '';
+
+            let tabs = this.conversation.participants.map(participant => ({
+                name: participant.member_name + ' system message',
+                populateFunc: (container) => {
+                    // Prepare details layout
+                    const wrapper = window.conversations.utils.createDivContainer(container, 'conversations-page-wrapper');
+                    window.conversations.utils.createReadOnlyText(wrapper, participant.prepared_system_message);
+                }
+            }));
+            tabs.unshift({
+                name: 'Task prompt',
+                populateFunc: (container) => {
+                    const wrapper = window.conversations.utils.createDivContainer(container, 'conversations-page-wrapper');
+                    window.conversations.utils.createReadOnlyText(wrapper, this.conversation.prepared_task);
+                }
+            });
+            const storageKey = `conversations-conversation-view-roles-tabset`;
+            new window.TabsetComponent(this.rightDiv, tabs, storageKey);
+        }
+
         async populateDetailsTab() {
             // Clear previous content
             this.rightDiv.innerHTML = '';
@@ -179,21 +248,12 @@
             // Conversation information
             const infoInfoDiv = this.createDetailsDiv(leftDiv, 'watching-information-sign');
             window.conversations.utils.createField(infoInfoDiv, 'Conversation ID:', this.conversation.conversation_id);
-            const stateField = window.conversations.utils.createFieldDiv(infoInfoDiv, 'State:', { 'max-width': '120px' });
-            window.conversations.utils.createReadOnlyText(stateField, this.conversation.state, 'conversations-badge-state-' + this.conversation.state, 'State');
             const typeField = window.conversations.utils.createFieldDiv(infoInfoDiv, 'Type:', { 'max-width': '120px' });
             window.conversations.utils.createReadOnlyText(typeField, window.conversations.CONVERSATION_TYPES_STRING(this.conversation.conversation_type, true, true, true, false), 'conversations-badge-generic');
             window.conversations.utils.createField(infoInfoDiv, 'Instructions:', this.conversation.info.name);
-            new window.OptionButtonsComponent(infoInfoDiv, {
-                options: window.conversations.CONVERSATION_PRIORITY_OPTIONS,
-                selected: this.conversation.priority,
-                onChange: (v) => {
-                    window.conversations.apiConversations.conversationPriorityUpdate(this.container, this.conversation.conversation_id, v).then(() => {
-                        
-                    });
-                },
-                multiSelect: false
-            });
+            const conventionsObjectivesDiv = window.conversations.utils.createFieldDiv(infoInfoDiv, 'Conversation Objectives:'); 
+            window.conversations.utils.createReadOnlyText(conventionsObjectivesDiv, this.conversation.info.conversation_objectives);
+            
 
             // Time information
             const timeInfoDiv = this.createDetailsDiv(leftDiv, this.conversation.state === window.conversations.CONVERSATION_STATE_COMPLETED ? 'wait-completed' : 'wait-unpatiant');
@@ -205,10 +265,23 @@
 
             // Measurements
             const turnsInfoDiv = this.createDetailsDiv(rightDiv, 'measurements');
+            const stateField = window.conversations.utils.createFieldDiv(turnsInfoDiv, 'State:', { 'max-width': '120px' });
+            window.conversations.utils.createReadOnlyText(stateField, this.conversation.state, 'conversations-badge-state-' + this.conversation.state, 'State');
             const progressField = window.conversations.utils.createFieldDiv(turnsInfoDiv, 'Progress:', { 'min-width': '200px' });
             new window.ProgressBarComponent(progressField, { width: '100%', height: '12px', percentage: 100 * this.conversation.message_count / this.conversation.info.max_turns, label: '' });
             window.conversations.utils.createField(turnsInfoDiv, 'Message count:', this.conversation.message_count, false, { 'min-width': '200px' });
             window.conversations.utils.createField(turnsInfoDiv, 'Max turns:', this.conversation.info.max_turns, false, { 'min-width': '200px' });
+            const priorityField = window.conversations.utils.createFieldDiv(turnsInfoDiv, 'Priority:');
+            new window.OptionButtonsComponent(priorityField, {
+                options: window.conversations.CONVERSATION_PRIORITY_OPTIONS,
+                selected: this.conversation.priority,
+                onChange: (v) => {
+                    window.conversations.apiConversations.conversationPriorityUpdate(this.container, this.conversation.conversation_id, v).then(() => {
+
+                    });
+                },
+                multiSelect: false
+            });
 
             // System information
             const systemInfoDiv = this.createDetailsDiv(rightDiv, 'calculates');
@@ -221,7 +294,7 @@
 
         // Helper function to create a details section with Convy reaction
         createDetailsDiv(container, reaction) {
-            const infoDiv = window.conversations.utils.createDivContainer(container, 'conversations-card', { flex: '0.5', 'margin-bottom': '20px' });
+            const infoDiv = window.conversations.utils.createDivContainer(container, 'conversations-card', { flex: '0.5' });
             const infoSplitDiv = window.conversations.utils.createDivContainer(infoDiv, 'conversation-container-horizontal-space-between-full', { gap: '96px' });
             new window.conversations.ConvyComponent(infoSplitDiv, { reaction: reaction, width: 160, height: 160 });
             return window.conversations.utils.createDivContainer(infoSplitDiv, 'conversation-container-vertical');
@@ -248,11 +321,21 @@
                     const leftDiv = window.conversations.utils.createDivContainer(splitter, 'conversation-container-vertical', { flex: '0.5' });
                     const rightDiv = window.conversations.utils.createDivContainer(splitter, 'conversation-container-vertical', { flex: '0.5' });
 
-                    window.conversations.utils.createField(leftDiv, 'Role Name:', role.role_name);
-                    window.conversations.utils.createField(leftDiv, 'Description:', role.role_description);
-                    window.conversations.utils.createField(leftDiv, 'System Prompt:', role.system_prompt);
-                    window.conversations.utils.createField(leftDiv, 'Participants (min - max):', role.min + ' - ' + role.max);
-                    new window.conversations.ConvyComponent(leftDiv, { reaction: 'thinking-up-left', width: 320, height: 320 });
+                    const topPropertiesDiv = window.conversations.utils.createDivContainer(leftDiv, '-');
+                    const topSplitter = window.conversations.utils.createDivContainer(topPropertiesDiv, 'conversation-container-horizontal-space-between-full');
+                    const topSplitterLeft = window.conversations.utils.createDivContainer(topSplitter, 'conversation-container-vertical', { flex: '0.5' });
+                    const topSplitterRight = window.conversations.utils.createDivContainer(topSplitter, 'conversation-container-vertical', { flex: '0.5' });
+                    new window.conversations.ConvyComponent(topSplitterRight, { reaction: 'thinking-up-left', width: 160, height: 160 });
+
+                    window.conversations.utils.createField(topSplitterLeft, 'Role Name:', role.role_name);
+                    window.conversations.utils.createField(topSplitterLeft, 'Participants (min - max):', role.min + ' - ' + role.max);
+
+                    const roleObjectivesDiv = window.conversations.utils.createFieldDiv(leftDiv, 'Role Objectives:');
+                    window.conversations.utils.createReadOnlyText(roleObjectivesDiv, role.role_objectives);
+                    const roleConversationGuideDiv = window.conversations.utils.createFieldDiv(leftDiv, 'Role Conversation Guide:');
+                    window.conversations.utils.createReadOnlyText(roleConversationGuideDiv, role.role_conversation_guide);
+                    
+                    
 
                     const feedbackField = window.conversations.utils.createFieldDiv(rightDiv, 'Feedback Definitions:');
                     new window.ListComponent(feedbackField, role.feedback_def, (feedback_def) => {
@@ -318,7 +401,7 @@
                 this.messages = await window.conversations.apiConversations.conversationsMessages(this.rightDiv, this.conversation.conversation_id);
             }
 
-            new window.ListComponent(this.rightDiv, this.messages, 
+            new window.ListComponent(this.rightDiv, this.messages,
                 (message) => {
                     const messageDiv = window.conversations.utils.createDivContainer();
                     new window.conversations.CardConversationMessageComponent(messageDiv, message, this.conversation);
@@ -327,8 +410,8 @@
                 window.ListComponent.SELECTION_MODE_NONE,
                 null,
                 (item, query) => {
-                    return item.message_text.toLowerCase().includes(query.toLowerCase()) || 
-                    item.member_name.toLowerCase().includes(query.toLowerCase());
+                    return item.message_text.toLowerCase().includes(query.toLowerCase()) ||
+                        item.member_name.toLowerCase().includes(query.toLowerCase());
                 },
                 null,
                 async () => {
@@ -336,19 +419,16 @@
                 }
 
             );
-
         }
 
         async populateInsightsTab() {
-            // Clear previous content
             this.rightDiv.innerHTML = '';
             // Fetch messages from API if not already fetched
             if (!this.messages) {
                 this.messages = await window.conversations.apiConversations.conversationsMessages(this.nullElementForSpinner, this.conversation.conversation_id);
             }
 
-            new window.conversations.charts.ChartConversationFeedbackProgressComponent(this.rightDiv, this.conversation, this.messages);
-
+            this.insightsChart = new window.conversations.charts.ChartConversationFeedbackProgressComponent(this.rightDiv, this.conversation, this.messages);
         }
 
         async refresh() {
@@ -358,9 +438,7 @@
             const version = ++this._refreshVersion;
 
             const data = await window.conversations.apiConversations.conversationsList(this.nullElementForSpinner, null, null, null, this.conversationId);
-            
-            this.messages = await window.conversations.apiConversations.conversationsMessages(this.nullElementForSpinner, this.conversation.conversation_id);
-            
+
             if (version !== this._refreshVersion) {
                 return;
             }
@@ -371,11 +449,20 @@
 
             this.conversation = data[0];
 
-            console.log(this.menuList.getSelectedItems());
+            this.messages = await window.conversations.apiConversations.conversationsMessages(this.nullElementForSpinner, this.conversation.conversation_id);
+
+            this.conversationLogs = await window.conversations.apiConversationsLogs.conversationsLogsList(this.nullElementForSpinner, this.conversation.conversation_id);
+
             const selected = this.menuList.getSelectedItems();
+             
             if (selected.length > 0) {
-                await selected[0].populateFunc();
+                if (selected[0].name === 'Insights' && this.insightsChart) {
+                    await this.insightsChart.refresh(this.conversation, this.messages);
+                } else {
+                    await selected[0].populateFunc();
+                }
             }
+            this.createButtonsArea();
         }
 
         destroy() {

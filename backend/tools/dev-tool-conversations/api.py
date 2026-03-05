@@ -37,6 +37,7 @@ def register_apis(app, base_path: str):
     register_members_apis(app, base_path)
     register_instructions_apis(app, base_path)
     register_conversations_apis(app, base_path)
+    register_conversations_logs_apis(app, base_path)
     register_seed_data_apis(app, base_path)
     register_ai_apis(app, base_path)
 
@@ -226,7 +227,7 @@ def register_groups_apis(app, base_path: str):
                 return jsonify({'success': False, 'error': 'missing group_name'}), 400
             if not payload.get('group_objectives'):
                 return jsonify({'success': False, 'error': 'missing group_objectives'}), 400
-            if not payload.get('group_info'):
+            if 'group_info' not in payload:
                 return jsonify({'success': False, 'error': 'missing group_info'}), 400
         
             upstream_payload = {
@@ -278,7 +279,7 @@ def register_groups_apis(app, base_path: str):
                 return jsonify({'success': False, 'error': 'missing group_name'}), 400
             if not payload.get('group_objectives'):
                 return jsonify({'success': False, 'error': 'missing group_objectives'}), 400
-            if not payload.get('group_info'):
+            if 'group_info' not in payload:
                 return jsonify({'success': False, 'error': 'missing group_info'}), 400
         
             upstream_payload = {
@@ -499,6 +500,29 @@ def register_members_apis(app, base_path: str):
         except RequestException:
             app.logger.exception('Failed to contact upstream /api/members/update')
             return jsonify({'success': False, 'error': 'Failed to contact upstream members/update'}), 502
+
+
+
+# Conversations Logs API endpoints
+#         
+#
+def register_conversations_logs_apis(app, base_path: str):
+    @app.route(f"{base_path}/conversations_logs_list", methods=["POST"])
+    def conversations_logs_list():
+        """
+        Proxy to upstream /api/conversations/logs/list (POST) with conversation_id from request body (required).
+        """
+        try:
+            payload = request.get_json(force=True)
+            upstream_payload = {
+                'conversation_id': payload.get('conversation_id')
+            }   
+
+            return jsonify(_proxy_post('/api/conversations/logs/list', upstream_payload))
+        
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/conversations/logs/list')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream conversations/logs/list'}), 502
 
 
 

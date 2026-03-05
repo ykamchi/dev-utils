@@ -91,10 +91,15 @@ window.conversations.CONVERSATION_STATE_OPTIONS = [
     { label: window.conversations.CONVERSATION_STATE_LABELS[window.conversations.CONVERSATION_STATE_CREATED], value: window.conversations.CONVERSATION_STATE_CREATED }
 ];  
 
+window.conversations.LLM_PROVIDER_OLLAMA = 'ollama';
+window.conversations.LLM_PROVIDER_OPENAI = 'openai';
+
+window.conversations.LLM_PROVIDER_AUTO = [window.conversations.LLM_PROVIDER_OLLAMA]
+
 window.conversations.LLM_PROVIDER_OPTIONS =
 [
-    { label: '𖠿 Ollama', value: 'ollama' },
-    { label: '֎ OpenAI', value: 'openai' }
+    { label: '𖠿 Ollama', value: window.conversations.LLM_PROVIDER_OLLAMA },
+    { label: '֎ OpenAI', value: window.conversations.LLM_PROVIDER_OPENAI }
 ]
 // Default instructions template for conversations
 window.conversations.DEFAULT_INSTRUCTIONS = `

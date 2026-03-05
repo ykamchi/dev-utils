@@ -137,15 +137,14 @@ window.conversations.popups.startConversation = async function (group, member, g
                 container, 
                 group, 
                 member, 
-                groupInstructions, 
                 conversation_type, 
                 popup,
                 onConversationStarted
             );
         },
         closable: true,
-        width: '910px',
-        height: '900px'
+        width: '1920px',
+        height: '1080px'
     });
     popup.show();
 }

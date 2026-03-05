@@ -129,7 +129,7 @@
                 onChange: (value) => {
                     this.seedCompare.change((data) => { data.group_objectives = value; });
                 },
-                rows: 4
+                
             });
 
             // Group Info input
@@ -147,7 +147,8 @@
                         return;
                     }
                     this.seedCompare.change((data) => { data.group_info = parsedValue; });
-                }
+                },
+                rows: 5
             });
         }
         
