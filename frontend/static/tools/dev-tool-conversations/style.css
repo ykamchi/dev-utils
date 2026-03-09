@@ -53,6 +53,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+    height: 16px;
 }
 
 .conversation-container-horizontal {
@@ -429,7 +430,7 @@
 .conversations-badge-generic {
     text-align: center;
     font-size: 12px;
-    padding: 4px 8px;
+    padding: 2px 8px;
     border-radius: 4px;
     color: var(--color-text-light);
     font-weight: 700;
@@ -461,6 +462,7 @@
 
 .conversations-badge-generic {
     background: var(--color-secondary-accent);
+    opacity: 0.6; 
 }
 
 /************************************************************************/

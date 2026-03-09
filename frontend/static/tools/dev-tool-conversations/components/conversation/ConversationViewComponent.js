@@ -354,7 +354,7 @@
                             window.conversations.utils.createField(wrapper, 'Min Value:', feedback_def.min);
                             window.conversations.utils.createField(wrapper, 'Max Value:', feedback_def.max);
                         } else if (feedback_def.type === 'string') {
-                            window.conversations.utils.createField(wrapper, 'Optional Values:', feedback_def['optional-values'].join(', '));
+                            window.conversations.utils.createField(wrapper, 'Optional Values:', feedback_def['optional_values'].join(', '));
                         }
                         return wrapper;
                     });

@@ -19,7 +19,7 @@ window.conversations.CONVERSATION_TYPES_NAMES = {
     [window.conversations.CONVERSATION_TYPES.AI_CONVERSATION]: 'conversation',
 }
 
-window.conversations.CONVERSATION_TYPES_STRING = function(type, icon = true, name = true, startWithCapital = true, plural = true) {
+window.conversations.CONVERSATION_TYPES_STRING = function (type, icon = true, name = true, startWithCapital = true, plural = true) {
     let result = '';
     if (icon) {
         result += window.conversations.CONVERSATION_TYPES_ICONS[type] + ' ';
@@ -74,7 +74,7 @@ window.conversations.CONVERSATION_STATE_ICONS = {
 }
 
 window.conversations.CONVERSATION_STATE_LABELS = {
-    [window.conversations.CONVERSATION_STATE_COMPLETED]: ' Completed',
+    [window.conversations.CONVERSATION_STATE_COMPLETED]: '✔ Completed',
     [window.conversations.CONVERSATION_STATE_FAILED]: '✖ Failed',
     [window.conversations.CONVERSATION_STATE_RUNNING]: '🏃‍➡️ Running',
     [window.conversations.CONVERSATION_STATE_STOPPED]: '✋ Stopped',
@@ -89,63 +89,63 @@ window.conversations.CONVERSATION_STATE_OPTIONS = [
     { label: window.conversations.CONVERSATION_STATE_LABELS[window.conversations.CONVERSATION_STATE_COMPLETED], value: window.conversations.CONVERSATION_STATE_COMPLETED },
     { label: window.conversations.CONVERSATION_STATE_LABELS[window.conversations.CONVERSATION_STATE_FAILED], value: window.conversations.CONVERSATION_STATE_FAILED },
     { label: window.conversations.CONVERSATION_STATE_LABELS[window.conversations.CONVERSATION_STATE_CREATED], value: window.conversations.CONVERSATION_STATE_CREATED }
-];  
+];
 
 window.conversations.LLM_PROVIDER_OLLAMA = 'ollama';
 window.conversations.LLM_PROVIDER_OPENAI = 'openai';
 
 window.conversations.LLM_PROVIDER_OPTIONS =
 {
-    [window.conversations.LLM_PROVIDER_OLLAMA]: { 
-        label: '𖠿 Ollama', 
+    [window.conversations.LLM_PROVIDER_OLLAMA]: {
+        label: '𖠿 Ollama',
         autoRun: true,
-        value: window.conversations.LLM_PROVIDER_OLLAMA, 
+        value: window.conversations.LLM_PROVIDER_OLLAMA,
         models: {
             'llama3.1:8b': {
-                input_price: 0, // Cost per 1M tokens in USD
-                cached_input_price: 0, // Cached cost per 1M tokens in USD 
-                output_price: 0, // Cost per 1M tokens in USD
+                input_price: 0, // Cost per token in USD
+                cached_input_price: 0, // Cached input cost per token in USD
+                output_price: 0, // Cost per output token in USD
             },
-            'gpt-oss:20b': {
-                input_price: 0, // Cost per 1M tokens in USD
-                cached_input_price: 0, // Cached cost per 1M tokens in USD 
-                output_price: 0, // Cost per 1M tokens in USD
+            'llama3.2:latest': {
+                input_price: 0, // Cost per token in USD
+                cached_input_price: 0, // Cached input cost per token in USD
+                output_price: 0, // Cost per output token in USD
             },
-            'mistral:7b-instruct': {
-                input_price: 0, // Cost per 1M tokens in USD
-                cached_input_price: 0, // Cached cost per 1M tokens in USD 
-                output_price: 0, // Cost per 1M tokens in USD
+            'qwen3:8b': {
+                input_price: 0, // Cost per token in USD
+                cached_input_price: 0, // Cached input cost per token in USD
+                output_price: 0, // Cost per output token in USD
             }
         },
-        defaultModel: 'llama3.1:8b' 
+        defaultModel: 'llama3.1:8b'
     },
-    [window.conversations.LLM_PROVIDER_OPENAI]: { 
-        label: '֎ OpenAI', 
+    [window.conversations.LLM_PROVIDER_OPENAI]: {
+        label: '֎ OpenAI',
         autoRun: false,
-        value: window.conversations.LLM_PROVIDER_OPENAI, 
+        value: window.conversations.LLM_PROVIDER_OPENAI,
         models: {
             'gpt-4.1-mini': {
-                input_price: 0.00000030, // Cost per 1K tokens in USD
-                cached_input_price: 0.00000003, // Cached cost per 1K tokens in USD (assuming 50% cache hit rate)
-                output_price: 0.00000120, // Cost per 1K tokens in USD
+                input_price: 0.00000030, // Cost per token in USD
+                cached_input_price: 0.00000003, // Cached input cost per token in USD
+                output_price: 0.00000120, // Cost per output token in USD
             },
             'gpt-5-mini': {
-                input_price: 0.00000125, // Cost per 1K tokens in USD
-                cached_input_price: 0.000000125, // Cached cost per 1K tokens in USD (assuming 50% cache hit rate)
-                output_price: 0.00000500, // Cost per 1K tokens in USD
+                input_price: 0.00000125, // Cost per token in USD
+                cached_input_price: 0.000000125, // Cached input cost per token in USD
+                output_price: 0.00000500, // Cost per output token in USD
             },
             'gpt-4.1': {
-                input_price: 0.00000500, // Cost per 1K tokens in USD
-                cached_input_price: 0.00000050, // Cached cost per 1K tokens in USD (assuming 50% cache hit rate)
-                output_price: 0.00001500, // Cost per 1K tokens in USD
+                input_price: 0.00000500, // Cost per token in USD
+                cached_input_price: 0.00000050, // Cached input cost per token in USD
+                output_price: 0.00001500, // Cost per output token in USD
             },
             'gpt-5.2': {
-                input_price: 0.00000500, // Cost per 1K tokens in USD
-                cached_input_price: 0.00000050, // Cached cost per 1K tokens in USD (assuming 50% cache hit rate)
-                output_price: 0.00001500, // Cost per 1K tokens in USD
+                input_price: 0.00000500, // Cost per token in USD
+                cached_input_price: 0.00000050, // Cached input cost per token in USD
+                output_price: 0.00001500, // Cost per output token in USD
             }
         },
-        defaultModel: 'gpt-4.1-mini' 
+        defaultModel: 'gpt-4.1-mini'
     }
 }
 /*

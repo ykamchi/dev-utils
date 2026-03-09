@@ -20,20 +20,28 @@ class RateComponent {
             wrapper.title = this.title;
         }
 
-        const progressBar = document.createElement('progress');
-        progressBar.className = 'rate-progress-bar';
-        progressBar.style.width = '100%';
-        progressBar.style.height = '100%';
+        // Create container for the rate bar
+        const rateContainer = document.createElement('div');
+        rateContainer.className = 'rate-container';
+        rateContainer.style.width = '100%';
+        rateContainer.style.height = '100%';
+
+        // Create the filled portion with gradient
+        const rateFill = document.createElement('div');
+        rateFill.className = 'rate-fill';
         
-        progressBar.max = this.max - this.min;
-        progressBar.value = this.value - this.min;
+        // Calculate percentage
+        const percentage = ((this.value - this.min) / (this.max - this.min)) * 100;
+        rateFill.style.width = `${percentage}%`;
+        
+        // Create gradient where the max opacity reflects the value percentage
+        // If value is 50% of range, gradient goes from low opacity to 50% opacity
+        // If value is 100% of range, gradient goes from low opacity to 100% opacity
+        const maxOpacity = percentage / 100;
+        rateFill.style.background = `linear-gradient(to right, rgba(from var(--color-secondary-accent) r g b / 0.1), rgba(from var(--color-secondary-accent) r g b / ${maxOpacity}))`;
 
-        // Calculate bucket index (1 to 10)
-        const p = (this.value - this.min) / (this.max - this.min);
-        const bucket = Math.max(1, Math.min(10, Math.ceil(p * 10)));
-        progressBar.classList.add(`rate-bucket-${bucket}`);
-
-        wrapper.appendChild(progressBar);
+        rateContainer.appendChild(rateFill);
+        wrapper.appendChild(rateContainer);
         
         if (this.showValue) {
             const label = document.createElement('span');

@@ -194,7 +194,7 @@
                                 // Clear other type-specific properties
                                 delete feedback_def.min;
                                 delete feedback_def.max;
-                                delete feedback_def['optional-values'];
+                                delete feedback_def['optional_values'];
                                 this.renderFeedbackTypeOptions(feedbackTypeOptionsContainer, feedback_def);
                                 this.onChange(this.roles);
                             },
@@ -256,8 +256,8 @@
                 // Optional values field - store reference on the container for later retrieval
                 window.conversations.utils.createLabel(feedbackTypeOptionsContainer, 'Optional Values:');
                 feedbackTypeOptionsContainer.stringArrayComponent = new window.StringArrayComponent(feedbackTypeOptionsContainer,
-                    feedback_def['optional-values'], 'Add optional value...', (values) => {
-                        feedback_def['optional-values'] = values;
+                    feedback_def['optional_values'], 'Add optional value...', (values) => {
+                        feedback_def['optional_values'] = values;
                         this.onChange(this.roles);
                     }, window.StringArrayComponent.STYLE_WRAP);
 

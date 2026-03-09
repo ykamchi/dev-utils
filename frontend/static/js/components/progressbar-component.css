@@ -7,7 +7,7 @@
 }
 
 .framework-progressbar-container {
-    background: rgb(from var(--color-highlight) r g b / 0.2);
+    background: rgb(from var(--color-secondary-accent) r g b / 0.2);
     border: 1px solid var(--color-border);
     border-radius: 4px;
     overflow: hidden;
@@ -17,7 +17,7 @@
 
 .framework-progressbar-fill {
     height: 100%;
-    background: var(--color-highlight);
+    /* background is set dynamically in JavaScript with gradient */
     transition: width 0.3s ease;
     border-radius: 3px;
     min-height: 8px;

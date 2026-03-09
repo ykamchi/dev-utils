@@ -42,7 +42,7 @@
                     const feedbackField = window.conversations.utils.createDivContainer(wrapperDiv, 'conversation-field-container-vertical', null, feedbackDef.description);
                     window.conversations.utils.createLabel(feedbackField, key);
                     if (feedbackDef.type === 'integer') {
-                        new window.RateComponent(feedbackField, feedbackDef.min, feedbackDef.max, value, '100px', '18px', true);
+                        new window.RateComponent(feedbackField, feedbackDef.min, feedbackDef.max, value, '100px', '16px', true);
                     } else {
                         window.conversations.utils.createReadOnlyText(feedbackField, value, 'conversations-field-value');
                     }

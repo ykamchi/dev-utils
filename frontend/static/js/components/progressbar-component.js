@@ -30,6 +30,10 @@
             this.fill = document.createElement('div');
             this.fill.className = 'framework-progressbar-fill';
             this.fill.style.width = `${this.percentage}%`;
+            
+            // Create gradient where the max opacity reflects the percentage
+            const maxOpacity = this.percentage / 100;
+            this.fill.style.background = `linear-gradient(to right, rgba(from var(--color-secondary-accent) r g b / 0.1), rgba(from var(--color-secondary-accent) r g b / ${maxOpacity}))`;
 
             this.container.appendChild(this.fill);
 
@@ -58,6 +62,10 @@
             }
             
             this.fill.style.width = `${this.percentage}%`;
+            
+            // Update gradient based on new percentage
+            const maxOpacity = this.percentage / 100;
+            this.fill.style.background = `linear-gradient(to right, rgba(from var(--color-secondary-accent) r g b / 0.1), rgba(from var(--color-secondary-accent) r g b / ${maxOpacity}))`;
             
             // Update label text if showing label
             if (this.showLabel && this.labelElement) {

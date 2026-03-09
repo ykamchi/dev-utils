@@ -109,7 +109,7 @@ def validate_feedback_def(feedback_def: Any) -> Dict[str, Any]:
     - type: string (required) - "integer" or "string"
     - required: boolean (required)
     - For type="integer": min, max (required)
-    - For type="string": optional-values (optional array of strings)
+    - For type="string": optional_values (optional array of strings)
     """
     if not isinstance(feedback_def, list):
         return {'valid': False, 'reason': 'feedback_def must be an array'}
@@ -159,13 +159,13 @@ def validate_feedback_def(feedback_def: Any) -> Dict[str, Any]:
                 return {'valid': False, 'reason': f'feedback_def.{field_name}: max must be an integer'}
         
         elif field_def['type'] == 'string':
-            allowed_fields = set(base_fields + ['optional-values'])
+            allowed_fields = set(base_fields + ['optional_values'])
             
-            if 'optional-values' in field_def:
-                if not isinstance(field_def['optional-values'], list):
-                    return {'valid': False, 'reason': f'feedback_def.{field_name}: optional-values must be an array'}
-                if not all(isinstance(v, str) for v in field_def['optional-values']):
-                    return {'valid': False, 'reason': f'feedback_def.{field_name}: All optional-values must be strings'}
+            if 'optional_values' in field_def:
+                if not isinstance(field_def['optional_values'], list):
+                    return {'valid': False, 'reason': f'feedback_def.{field_name}: optional_values must be an array'}
+                if not all(isinstance(v, str) for v in field_def['optional_values']):
+                    return {'valid': False, 'reason': f'feedback_def.{field_name}: All optional_values must be strings'}
         
         # Check for unexpected fields
         unexpected = set(field_def.keys()) - allowed_fields
