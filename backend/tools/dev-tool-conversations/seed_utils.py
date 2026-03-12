@@ -319,43 +319,45 @@ def seeds_groups_get(group_key: Optional[str] = None, existing_keys: set = None)
     if existing_keys is None:
         existing_keys = set()
     if group_key == "templates":
-        # Scan templates folder for files named group-*
+        # Read the single group.json file from the templates directory
         templates_path = SEED_BASE_PATH / "templates"
         if not templates_path.exists():
             return []
-        all_templates = []
-        for file in templates_path.iterdir():
-            if file.is_file() and file.name.startswith("group-"):
-                try:
-                    with open(file, 'r', encoding='utf-8') as f:
-                        group_data = json.load(f)
-                    # Set group_key to null in returned data
-                    group_data['group_key'] = None
-                    validation = validate_group(group_data)
-                    
-                    # Templates always have group_key None, so they can't exist in database
-                    exists_in_db = False
-                    
-                    wrapped_group = {
-                        'type': 'group',
-                        'seed_key': None,
-                        'json': group_data,
-                        'include': validation['valid'] and not exists_in_db,
-                        'valid': validation['valid'],
-                        'exist': exists_in_db,
-                        'error': None if validation['valid'] else f"group.json validation error: {validation['reason']}"
-                    }
-                    all_templates.append(wrapped_group)
-                except (json.JSONDecodeError, IOError) as e:
-                    all_templates.append({
-                        'type': 'group',
-                        'seed_key': file.name,
-                        'json': None,
-                        'include': False,
-                        'valid': False,
-                        'error': f'Error reading {file.name}: {str(e)}'
-                    })
-        return all_templates
+        
+        group_file = templates_path / 'group.json'
+        if not group_file.exists():
+            return []
+        
+        try:
+            with open(group_file, 'r', encoding='utf-8') as f:
+                group_data = json.load(f)
+            # Set group_key to null in returned data
+            group_data['group_key'] = None
+            validation = validate_group(group_data)
+            
+            # Templates always have group_key None, so they can't exist in database
+            exists_in_db = False
+            
+            wrapped_group = {
+                'type': 'group',
+                'seed_name': group_data.get('group_name', 'Unknown Group'),
+                'seed_key': 'templates',
+                'json': group_data,
+                'include': validation['valid'] and not exists_in_db,
+                'valid': validation['valid'],
+                'exist': exists_in_db,
+                'error': None if validation['valid'] else f"group.json validation error: {validation['reason']}"
+            }
+            return [wrapped_group]
+        except (json.JSONDecodeError, IOError) as e:
+            return [{
+                'type': 'group',
+                'seed_key': 'templates',
+                'json': None,
+                'include': False,
+                'valid': False,
+                'error': f'Error reading templates/group.json: {str(e)}'
+            }]
 
     if not SEED_BASE_PATH.exists():
         raise FileNotFoundError(f"Seed base path does not exist: {SEED_BASE_PATH}")
