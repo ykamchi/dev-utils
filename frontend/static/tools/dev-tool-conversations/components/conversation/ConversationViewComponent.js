@@ -312,7 +312,7 @@
             // Clear previous content
             this.rightDiv.innerHTML = '';
             const wrapper = window.conversations.utils.createDivContainer(this.rightDiv, 'conversations-page-wrapper');
-            const conventionsObjectivesAndRolesDiv = window.conversations.utils.createDivContainer(wrapper, 'conversation-field-container-vertical');
+            const conventionsObjectivesAndRolesDiv = window.conversations.utils.createDivContainer(wrapper, 'conversation-container-vertical');
 
             const conventionsObjectivesDiv = window.conversations.utils.createFieldDiv(conventionsObjectivesAndRolesDiv, 'Conversation Objectives:'); 
             window.conversations.utils.createReadOnlyText(conventionsObjectivesDiv, this.conversation.info.conversation_objectives);

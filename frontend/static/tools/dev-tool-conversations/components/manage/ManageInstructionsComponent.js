@@ -68,9 +68,11 @@
             const wrapper = window.conversations.utils.createDivContainer(contentDiv, 'conversation-container-horizontal-space-between-full');
 
             this.instructionListDiv = window.conversations.utils.createDivContainer(wrapper, 'conversations-layout-left', { flex: 0.2 });
-            const rightDiv = window.conversations.utils.createDivContainer(wrapper, 'conversation-container-horizontal-space-between-full', { flex: 0.8 });
-            this.instructionPropertiesDiv = window.conversations.utils.createDivContainer(rightDiv, 'conversation-container-vertical', { flex: 0.2 });
-            this.rolesAreaDiv = window.conversations.utils.createDivContainer(rightDiv, 'conversation-container-vertical', { flex: 0.8 });
+            const rightDiv = window.conversations.utils.createDivContainer(wrapper, 'conversations-layout-right', { flex: 0.8 });
+            const rightWrapper = window.conversations.utils.createDivContainer(rightDiv, 'conversation-container-vertical');
+            
+            this.instructionPropertiesDiv = window.conversations.utils.createDivContainer(rightWrapper, 'conversation-container-vertical', {flex: '0 1 auto'});
+            this.rolesAreaDiv = window.conversations.utils.createDivContainer(rightWrapper, 'conversation-container-vertical');
 
             // Load instructions list component
             this.loadInstructions();
@@ -143,8 +145,12 @@
             // Load the seed data
             await this.loadSeed();
 
+            const splitter = window.conversations.utils.createDivContainer(this.instructionPropertiesDiv, 'conversation-container-horizontal-space-between-full');
+            const splitterLeft = window.conversations.utils.createDivContainer(splitter, '-');
+            const splitterRight = window.conversations.utils.createDivContainer(splitter, '-', { 'flex': 1 });
+
             // Name field (editable)
-            window.conversations.utils.createInput(this.instructionPropertiesDiv, 'Name:', {
+            window.conversations.utils.createInput(splitterLeft, 'Name:', {
                 initialValue: this.seedCompare.data.info.name,
                 pattern: /^[a-zA-Z0-9 _-]+$/,
                 placeholder: 'e.g., My Instruction Name',
@@ -154,7 +160,7 @@
             });
             
             // Max turns (editable)
-            window.conversations.utils.createInput(this.instructionPropertiesDiv, 'Max Turns:', {
+            window.conversations.utils.createInput(splitterLeft, 'Max Turns:', {
                 initialValue: this.seedCompare.data.info.max_turns,
                 type: 'number',
                 min: 3, max: 50,
@@ -164,19 +170,14 @@
                 }
             });
 
-            // Conversation Type field (read-only)
-            window.conversations.utils.createField(this.instructionPropertiesDiv, 'Conversation Type:', this.seedCompare.data.info.conversation_type, true);
-
-            // Instructions key field (read-only)
-            window.conversations.utils.createField(this.instructionPropertiesDiv, 'Instructions Key:', this.seedCompare.data.instruction_key, true);
-
             // Description field (editable)
-            window.conversations.utils.createTextArea(this.instructionPropertiesDiv, 'Objectives:', {
+            window.conversations.utils.createTextArea(splitterRight, 'Objectives:', {
                 initialValue: this.seedCompare.data.info.conversation_objectives,
                 placeholder: 'My Instruction Objectives',
                 onChange: (value) => {
                     this.seedCompare.change((data) => data.info.conversation_objectives = value);
                 },
+                rows: 5,
                 aiSuggestion: {
                     fn: window.conversations.apiAi.autocomplete,
                     context: {
@@ -191,20 +192,6 @@
                 }
             });
 
-            // Meta div (editable) - JSON object for metadata
-            window.conversations.utils.createTextArea(this.instructionPropertiesDiv, 'Meta (JSON):', {
-                initialValue: JSON.stringify(this.seedCompare.data.info.meta || {}, null, 2),
-                placeholder: '{}',
-                onChange: (value) => {
-                    try {
-                        this.seedCompare.change((data) => data.info.meta = JSON.parse(value));
-                    } catch (e) {
-                        console.error('Invalid JSON in meta field:', e);
-                    }
-                },
-                rows: 4
-            });
-
             this.loadRoles();
         }
 
@@ -213,9 +200,7 @@
             this.rolesAreaDiv.innerHTML = '';
 
             // Roles area
-            this.rolesFieldDiv = window.conversations.utils.createDivContainer(this.rolesAreaDiv, 'conversation-field-container-vertical-full');
-            window.conversations.utils.createLabel(this.rolesFieldDiv, 'Roles:');
-            new window.conversations.ManageInstructionRolesComponent(this.rolesFieldDiv, this.group, this.seedCompare.data.info.roles, 
+            new window.conversations.ManageInstructionRolesComponent(this.rolesAreaDiv, this.group, this.seedCompare.data.info.roles, 
                 (roles) => {
                 // 
                 this.seedCompare.change((data) => data.info.roles = roles);

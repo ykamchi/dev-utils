@@ -190,7 +190,7 @@ def validate_role(role_name: str, role: Any) -> Dict[str, Any]:
     if not isinstance(role, dict):
         return {'valid': False, 'reason': f'Role {role_name} must be a dictionary'}
     
-    required_fields = ['role_name', 'role_objectives', 'min', 'max', 'role_conversation_guide', 'feedback_def']
+    required_fields = ['role_name', 'role_objectives', 'min', 'max', 'role_conversation_guide', 'role_conversation_topics', 'feedback_def']
     for field in required_fields:
         if field not in role:
             return {'valid': False, 'reason': f'Role {role_name}: Missing required field: {field}'}

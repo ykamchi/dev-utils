@@ -83,7 +83,7 @@
     flex-direction: column;
     flex: 1;
     overflow: auto;
-    gap: 16px;
+    /* gap: 16px; */
 }
 
 .conversation-container-vertical-wrap {
@@ -98,13 +98,13 @@
 .conversation-field-container-vertical {
     display: flex;
     flex-direction: column;
-    margin-bottom: 16px;
+    margin-top: 16px;
 }
 
 .conversation-field-container-vertical-full {
     display: flex;
     flex-direction: column;
-    margin-bottom: 16px;
+    margin-top: 16px;
     overflow: auto;
     flex: 1;
 }

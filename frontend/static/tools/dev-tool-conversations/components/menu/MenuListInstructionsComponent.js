@@ -79,15 +79,7 @@
                         this.onInstructionSelect(null);
                         
                     }
-                },
-                (item, query) => {
-                    return item.instruction_name.toLowerCase().includes(query.toLowerCase());
-                },
-                [
-                    { label: 'Name', func: (a, b) => { return a.instruction_name < b.instruction_name ? -1 : 1; } , direction: 1 },
-                    { label: 'Location', func: (a, b) => a.instruction_profile.location < b.instruction_profile.location ? -1 : 1, direction: 1 },
-                    { label: 'Age', func: (a, b) => a.instruction_profile.age < b.instruction_profile.age ? -1 : 1, direction: 1 },
-                ] 
+                }
             );
 
             // Restore last selection, or select first item

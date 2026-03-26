@@ -131,6 +131,11 @@
                     try {
                         // this.member = JSON.parse(value);
                         // TODO: Add save functionality to persist changes
+                        try {
+                            this.seedCompare.change((data) => { data['member_profile'] = JSON.parse(value); });
+                        } catch (e) {
+                            // console.error('Invalid JSON in member profile:', e);
+                        }
                     } catch (e) {
                         console.error('Invalid JSON in member profile:', e);
                     }

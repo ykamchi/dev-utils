@@ -117,6 +117,11 @@ window.conversations.utils.createRange = function (container, labelText, minValu
     new window.RangeComponent(groupDiv, minValue, maxValue, onChange);
 }
 
+window.conversations.utils.createStringArray = function (container, labelText, values, placeholder, onChange, stringArrayStyle = window.StringArrayComponent.STYLE_WRAP, style = null) {
+    const groupDiv = window.conversations.utils.createFieldDiv(container, labelText, style);
+    new window.StringArrayComponent(groupDiv, values, placeholder, onChange, stringArrayStyle);
+}
+
 window.conversations.utils.createTextArea = function (container, labelText, options = {}) {
     const rows = options.rows !== undefined ? options.rows : -1;
     const textAreaGroup = window.conversations.utils.createDivContainer(container, rows === -1 ? 'conversation-field-container-vertical-full' : 'conversation-field-container-vertical');

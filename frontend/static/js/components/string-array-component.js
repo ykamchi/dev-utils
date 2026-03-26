@@ -20,7 +20,7 @@ class StringArrayComponent {
 
     render() {
         // this.container.innerHTML = '';
-        this.container.className = 'string-array-component';
+        // this.container.className = 'string-array-component';
 
         // Create list container for existing values
         const listContainer = document.createElement('div');
