@@ -128,3 +128,31 @@ window.conversations.apiInstructions.instructionsUpdate = async function (spinne
     }
 };
 
+// Group instructions - suggest observations
+window.conversations.apiInstructions.instructionsSuggestObservations = async function (spinnerContainer, instruction_id) {
+    // Show loading spinner while suggesting observations
+    const spinner = new window.SpinnerComponent(spinnerContainer, { text: `Suggesting observations for ...`, size: 16, textPosition: window.SpinnerComponent.TEXT_POSITION_RIGHT });
+    
+    try {
+        const resp = await fetch('/api/dev-tool-conversations/instructions_suggest_observations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                instruction_id: instruction_id
+            })
+        });
+
+        const result = await resp.json();
+        spinner.remove();
+        if (result.success) {
+            return result.data;
+        } else {
+            new window.conversations.AlertApiErrorComponent(result);
+            throw new Error(result.message || 'Failed to suggest observations');
+        }
+    } catch (e) {
+        spinner.remove();
+        console.error('Error suggesting observations:', e);
+        throw e;
+    }
+};

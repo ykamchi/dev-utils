@@ -175,6 +175,74 @@ def validate_feedback_def(feedback_def: Any) -> Dict[str, Any]:
     return {'valid': True, 'reason': None}
 
 
+def validate_observation(observation: Any, idx: int) -> Dict[str, Any]:
+    """
+    Validate observation structure.
+    
+    Required fields:
+    - name: string
+    - type: string (must be "outcome_observation" or "conversation_quality")
+    - goal: string
+    - output: array of output objects with structure:
+        - output_description: string
+        - output_name: string
+        - output_type: string
+    """
+    if not isinstance(observation, dict):
+        return {'valid': False, 'reason': f'observations[{idx}] must be an object'}
+    
+    required_fields = ['name', 'type', 'goal', 'output']
+    for field in required_fields:
+        if field not in observation:
+            return {'valid': False, 'reason': f'observations[{idx}]: Missing required field: {field}'}
+    
+    if not isinstance(observation['name'], str):
+        return {'valid': False, 'reason': f'observations[{idx}]: name must be a string'}
+    
+    if observation['type'] not in ['outcome_observation', 'conversation_quality']:
+        return {'valid': False, 'reason': f'observations[{idx}]: type must be "outcome_observation" or "conversation_quality"'}
+    
+    if not isinstance(observation['goal'], str):
+        return {'valid': False, 'reason': f'observations[{idx}]: goal must be a string'}
+    
+    # Validate output array
+    if not isinstance(observation['output'], list):
+        return {'valid': False, 'reason': f'observations[{idx}]: output must be an array'}
+    
+    for output_idx, output_field in enumerate(observation['output']):
+        if not isinstance(output_field, dict):
+            return {'valid': False, 'reason': f'observations[{idx}].output[{output_idx}] must be an object'}
+        
+        # Check required fields for output object
+        required_output_fields = ['output_description', 'output_name', 'output_type']
+        for field in required_output_fields:
+            if field not in output_field:
+                return {'valid': False, 'reason': f'observations[{idx}].output[{output_idx}]: Missing required field: {field}'}
+        
+        if not isinstance(output_field['output_description'], str):
+            return {'valid': False, 'reason': f'observations[{idx}].output[{output_idx}]: output_description must be a string'}
+        
+        if not isinstance(output_field['output_name'], str):
+            return {'valid': False, 'reason': f'observations[{idx}].output[{output_idx}]: output_name must be a string'}
+        
+        if not isinstance(output_field['output_type'], str):
+            return {'valid': False, 'reason': f'observations[{idx}].output[{output_idx}]: output_type must be a string'}
+        
+        # Check for unexpected fields in output object
+        allowed_fields = set(required_output_fields)
+        unexpected = set(output_field.keys()) - allowed_fields
+        if unexpected:
+            return {'valid': False, 'reason': f'observations[{idx}].output[{output_idx}]: Unexpected fields: {", ".join(unexpected)}'}
+    
+    # Check for unexpected fields at observation level
+    allowed_fields = set(required_fields)
+    unexpected = set(observation.keys()) - allowed_fields
+    if unexpected:
+        return {'valid': False, 'reason': f'observations[{idx}]: Unexpected fields: {", ".join(unexpected)}'}
+    
+    return {'valid': True, 'reason': None}
+
+
 def validate_role(role_name: str, role: Any) -> Dict[str, Any]:
     """
     Validate role structure within an instruction.
@@ -236,6 +304,7 @@ def validate_instruction(instruction: Any) -> Dict[str, Any]:
         - conversation_type: string
         - max_turns: integer
         - roles: array of role objects
+        - observations: array of observation objects - optional
     """
     if not isinstance(instruction, dict):
         return {'valid': False, 'reason': 'Instruction must be a dictionary'}
@@ -285,6 +354,15 @@ def validate_instruction(instruction: Any) -> Dict[str, Any]:
         if not role_validation['valid']:
             return role_validation
     
+    # Validate observations array
+    if 'observations' in info and not isinstance(info['observations'], list):
+        return {'valid': False, 'reason': 'info.observations must be an array'}
+    
+    for idx, observation in enumerate(info.get('observations', [])):
+        observation_validation = validate_observation(observation, idx)
+        if not observation_validation['valid']:
+            return observation_validation
+    
     # Check for unexpected fields at root level
     allowed_root_fields = {'instruction_key', 'info'}
     unexpected_root = set(instruction.keys()) - allowed_root_fields
@@ -293,6 +371,7 @@ def validate_instruction(instruction: Any) -> Dict[str, Any]:
     
     # Check for unexpected fields in info
     allowed_info_fields = set(required_info_fields)
+    allowed_info_fields.add('observations')  # observations is optional but allowed
     unexpected_info = set(info.keys()) - allowed_info_fields
     if unexpected_info:
         return {'valid': False, 'reason': f'Unexpected fields in info: {", ".join(unexpected_info)}'}

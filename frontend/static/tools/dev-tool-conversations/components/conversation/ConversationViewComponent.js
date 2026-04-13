@@ -141,6 +141,12 @@
                     populateFunc: this.populateInsightsTab.bind(this)
                 },
                 {
+                    name: 'Observations',
+                    icon: '🔍',
+                    description: 'Conversation observations that were added during the conversation execution to provide an observed summary of the conversation',
+                    populateFunc: this.populateObservationsTab.bind(this)
+                },
+                {
                     name: 'Runtime',
                     icon: '🏁',
                     description: 'Conversation runtime information including execution details as they were executed in the system',
@@ -314,10 +320,10 @@
             const wrapper = window.conversations.utils.createDivContainer(this.rightDiv, 'conversations-page-wrapper');
             const conventionsObjectivesAndRolesDiv = window.conversations.utils.createDivContainer(wrapper, 'conversation-container-vertical');
 
-            const conventionsObjectivesDiv = window.conversations.utils.createFieldDiv(conventionsObjectivesAndRolesDiv, 'Conversation Objectives:'); 
+            const conventionsObjectivesDiv = window.conversations.utils.createFieldDiv(conventionsObjectivesAndRolesDiv, 'Conversation Objectives:');
             window.conversations.utils.createReadOnlyText(conventionsObjectivesDiv, this.conversation.info.conversation_objectives);
 
-            const conventionsRolesDiv = window.conversations.utils.createFieldDiv(conventionsObjectivesAndRolesDiv, 'Conversation Roles:'); 
+            const conventionsRolesDiv = window.conversations.utils.createFieldDiv(conventionsObjectivesAndRolesDiv, 'Conversation Roles:');
             const tabs = this.conversation.info.roles.map(role => ({
                 name: role.role_name,
                 populateFunc: (container) => {
@@ -340,8 +346,8 @@
                     window.conversations.utils.createReadOnlyText(roleObjectivesDiv, role.role_objectives);
                     const roleConversationGuideDiv = window.conversations.utils.createFieldDiv(leftDiv, 'Role Conversation Guide:');
                     window.conversations.utils.createReadOnlyText(roleConversationGuideDiv, role.role_conversation_guide);
-                    
-                    
+
+
 
                     const feedbackField = window.conversations.utils.createFieldDiv(rightDiv, 'Feedback Definitions:');
                     new window.ListComponent(feedbackField, role.feedback_def, (feedback_def) => {
@@ -437,6 +443,155 @@
             this.insightsChart = new window.conversations.charts.ChartConversationFeedbackProgressComponent(this.rightDiv, this.conversation, this.messages);
         }
 
+        async populateObservationsTab() {
+            this.rightDiv.innerHTML = '';
+
+            if (!this.conversation.observations || this.conversation.observations.length === 0) {
+                if (this.conversation.state === window.conversations.CONVERSATION_STATE_FAILED) {
+                    window.conversations.utils.createReadOnlyText(this.rightDiv, 'No observations available. Conversation failed before any observation could be made.', 'conversations-message-error');
+
+                } else if (this.conversation.state === window.conversations.CONVERSATION_STATE_COMPLETED) {
+                    window.conversations.utils.createReadOnlyText(this.rightDiv, 'No observations available.', 'conversations-message-empty');
+
+                } else {
+                    const pageDiv = window.conversations.utils.createDivContainer(this.rightDiv, 'conversations-page-wrapper', { 'align-items': 'center' });
+                    const infoDiv = window.conversations.utils.createDivContainer(pageDiv, '-');
+                    const stateField = window.conversations.utils.createFieldDiv(infoDiv, 'State:', { 'max-width': '400px' });
+                    window.conversations.utils.createReadOnlyText(stateField, this.conversation.state, 'conversations-badge-state-' + this.conversation.state, 'State');
+                    const progressField = window.conversations.utils.createFieldDiv(infoDiv, 'Progress:', { 'min-width': '400px' });
+                    new window.ProgressBarComponent(progressField, { width: '100%', height: '12px', percentage: 100 * this.conversation.message_count / this.conversation.info.max_turns });
+
+                }
+
+                return;
+            }
+
+            const wrapper = window.conversations.utils.createDivContainer(this.rightDiv, 'conversations-page-wrapper');
+
+            const tabs = this.conversation.observations.map(observation => ({
+                name: observation.function_name,
+                populateFunc: (container) => {
+                    const observationDef = this.conversation.info.observations.find(o => o.name === observation.function_name);
+
+                    const wrapper = window.conversations.utils.createDivContainer(container, 'conversations-page-wrapper');
+
+                    const topWrapper = window.conversations.utils.createDivContainer(wrapper, '-');
+                    const splitter = window.conversations.utils.createDivContainer(topWrapper, 'conversation-container-horizontal-space-between-full');
+                    const leftDiv = window.conversations.utils.createDivContainer(splitter, 'conversation-container-vertical', { flex: '0.4' });
+                    const rightDiv = window.conversations.utils.createDivContainer(splitter, 'conversation-container-vertical', { flex: '0.6' });
+
+                    window.conversations.utils.createField(leftDiv, 'Function Name:', observation.function_name);
+                    window.conversations.utils.createField(leftDiv, 'Function Type:', observation.function_type);
+
+                    const goalDiv = window.conversations.utils.createFieldDiv(rightDiv, 'Goal:');
+                    window.conversations.utils.createReadOnlyText(goalDiv, observationDef ? observationDef.goal : '');
+
+                    if (!observationDef || !observationDef.output || observationDef.output.length === 0) {
+                        const rawDiv = window.conversations.utils.createFieldDiv(wrapper, 'Result:');
+                        window.conversations.utils.createJsonDiv(rawDiv, observation.result);
+                        return;
+                    }
+
+                    const resultItems = observationDef.output.map(outputDef => ({
+                        outputDef: outputDef,
+                        value: observation.result ? observation.result[outputDef.output_name] : undefined,
+                    }));
+
+                    new window.ListComponent(
+                        wrapper,
+                        resultItems,
+                        (resultItem) => {
+                            const outputDef = resultItem.outputDef;
+                            const value = resultItem.value;
+
+                            const cardWrapper = window.conversations.utils.createDivContainer(null, 'conversations-card');
+                            const cardMain = window.conversations.utils.createDivContainer(cardWrapper, 'conversation-container-vertical');
+
+                            const headerSplitter = window.conversations.utils.createDivContainer(cardMain, 'conversation-container-horizontal-space-between-full', { gap: '96px' });
+                            const headerLeft = window.conversations.utils.createDivContainer(headerSplitter, '-');
+                            const headerRight = window.conversations.utils.createDivContainer(headerSplitter, 'conversation-container-vertical', { flex: 1 });
+
+                            new window.conversations.ConvyComponent(headerLeft, { reaction: 'base', width: 160, height: 160 });
+
+                            window.conversations.utils.createField(headerRight, 'Output Name:', outputDef.output_name);
+                            window.conversations.utils.createField(headerRight, 'Output Type:', outputDef.output_type);
+
+                            const contentDiv = window.conversations.utils.createDivContainer(cardMain, 'conversation-container-vertical');
+
+                            if (outputDef.output_type === 'summary') {
+                                const valueDiv = window.conversations.utils.createFieldDiv(contentDiv, 'Value:');
+                                window.conversations.utils.createReadOnlyText(valueDiv, value ?? '');
+                                return cardWrapper;
+                            }
+
+                            if (outputDef.output_type === 'label') {
+                                window.conversations.utils.createField(contentDiv, 'Value:', value ?? '');
+                                return cardWrapper;
+                            }
+
+                            if (outputDef.output_type === 'signal_score_evidence_list') {
+                                if (!Array.isArray(value) || value.length === 0) {
+                                    window.conversations.utils.createReadOnlyText(contentDiv, 'No entries');
+                                    return cardWrapper;
+                                }
+
+                                const entriesWrapper = window.conversations.utils.createDivContainer(contentDiv, 'conversation-container-vertical');
+
+                                value.forEach(entry => {
+                                    const entryWrapper = window.conversations.utils.createDivContainer(entriesWrapper, 'conversations-card');
+                                    const entryTop = window.conversations.utils.createDivContainer(entryWrapper, 'conversation-container-horizontal-space-between-full');
+                                    const entryTopLeft = window.conversations.utils.createDivContainer(entryTop, 'conversation-container-vertical', { flex: '0.7' });
+                                    const entryTopRight = window.conversations.utils.createDivContainer(entryTop, 'conversation-container-vertical', { flex: '0.3' });
+
+                                    window.conversations.utils.createField(entryTopLeft, 'Signal:', entry.signal ?? '');
+                                    window.conversations.utils.createField(entryTopRight, 'Score:', entry.score ?? '');
+
+                                    const evidenceDiv = window.conversations.utils.createFieldDiv(entryWrapper, 'Evidence:');
+                                    window.conversations.utils.createReadOnlyText(evidenceDiv, entry.evidence ?? '');
+                                });
+
+                                return cardWrapper;
+                            }
+
+                            if (outputDef.output_type === 'trajectory_evidence_list') {
+                                if (!Array.isArray(value) || value.length === 0) {
+                                    window.conversations.utils.createReadOnlyText(contentDiv, 'No entries');
+                                    return cardWrapper;
+                                }
+
+                                const entriesWrapper = window.conversations.utils.createDivContainer(contentDiv, 'conversation-container-vertical');
+
+                                value.forEach(entry => {
+                                    const entryWrapper = window.conversations.utils.createDivContainer(entriesWrapper, 'conversations-card');
+                                    const entryTop = window.conversations.utils.createDivContainer(entryWrapper, 'conversation-container-horizontal-space-between-full');
+                                    const entryTopLeft = window.conversations.utils.createDivContainer(entryTop, 'conversation-container-vertical', { flex: '0.5' });
+                                    const entryTopMiddle = window.conversations.utils.createDivContainer(entryTop, 'conversation-container-vertical', { flex: '0.25' });
+                                    const entryTopRight = window.conversations.utils.createDivContainer(entryTop, 'conversation-container-vertical', { flex: '0.25' });
+
+                                    window.conversations.utils.createField(entryTopLeft, 'Signal:', entry.signal ?? '');
+                                    window.conversations.utils.createField(entryTopMiddle, 'Score:', entry.score ?? '');
+                                    window.conversations.utils.createField(entryTopRight, 'Turn Range:', entry.turn_range ?? '');
+
+                                    const evidenceDiv = window.conversations.utils.createFieldDiv(entryWrapper, 'Evidence:');
+                                    window.conversations.utils.createReadOnlyText(evidenceDiv, entry.evidence ?? '');
+                                });
+
+                                return cardWrapper;
+                            }
+
+                            const rawDiv = window.conversations.utils.createFieldDiv(contentDiv, 'Value:');
+                            window.conversations.utils.createJsonDiv(rawDiv, value);
+                            return cardWrapper;
+                        },
+                        window.ListComponent.SELECTION_MODE_NONE
+                    );
+                }
+            }));
+
+            const storageKey = `conversations-conversation-view-observations-tabset`;
+            new window.TabsetComponent(wrapper, tabs, storageKey);
+        }
+
         async refresh() {
             // Menu is not populated yet, no need to refresh
             if (!this.menuList) return;
@@ -460,7 +615,7 @@
             this.conversationLogs = await window.conversations.apiConversationsLogs.conversationsLogsList(this.nullElementForSpinner, this.conversation.conversation_id);
 
             const selected = this.menuList.getSelectedItems();
-             
+
             if (selected.length > 0) {
                 if (selected[0].name === 'Insights' && this.insightsChart) {
                     await this.insightsChart.refresh(this.conversation, this.messages);

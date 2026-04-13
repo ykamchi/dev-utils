@@ -7,12 +7,14 @@ class TabsetComponent {
      * @param {Array<{name: string, populateFunc?: function(HTMLElement):void}>} tabsArray - Array of tab objects.
      * @param {string} [storageKey] - Optional key for persistent tab selection.
      * @param {function(string):void} [onTabSwitch] - Optional callback function invoked when tab is switched. Receives the new tab name.
+     * @param {boolean} [sticky=false] - Optional flag to make the tab buttons sticky.
      */
-    constructor(container, tabsArray, storageKey = '', onTabSwitch = null) {
+    constructor(container, tabsArray, storageKey = '', onTabSwitch = null, sticky = false) {
         this.container = container;
         this.tabsArray = tabsArray;
         this.storageKey = storageKey;
         this.onTabSwitch = onTabSwitch;
+        this.sticky = sticky;
         this.tabContentContainers = {};
         this.populatedTabs = new Set(); // Track which tabs have been populated
         // Load last selected tab if storageKey is provided
@@ -29,6 +31,9 @@ class TabsetComponent {
         // Tab buttons
         const tabButtonsDiv = document.createElement('div');
         tabButtonsDiv.className = 'tabset-tab-buttons';
+        if (this.sticky) {
+            tabButtonsDiv.classList.add('tabset-tab-buttons-sticky');
+        }
         this.tabsArray.forEach(tab => {
             const btn = document.createElement('button');
             btn.className = 'tabset-tab-button';

@@ -17,18 +17,16 @@
         }
 
         render() {
-            this.feedbackDefContainer = window.conversations.utils.createDivContainer(this.container, 'conversation-container-vertical');
+            this.feedbackDefContainer = window.conversations.utils.createDivContainer(this.container, 'conversation-container-vertical', { 'overflow': 'visible' });
             this.loadContent();
         }
 
         loadContent() {
             this.feedbackDefContainer.innerHTML = '';
 
-            // Create tabset for roles, with an additional tab for adding a new role
-            // const tabsetDiv = window.conversations.utils.createDivContainer(this.feedbackDefContainer, 'conversation-container-vertical');
-            const rolesFieldDiv = window.conversations.utils.createFieldDiv(this.feedbackDefContainer, 'Roles:', { 'overflow': 'auto' });
+            const rolesFieldDiv = window.conversations.utils.createFieldDiv(this.feedbackDefContainer, 'Roles:', { 'overflow': 'visible' });
 
-            const tabsetDiv = window.conversations.utils.createDivContainer(rolesFieldDiv, 'conversation-container-vertical');
+            const tabsetDiv = window.conversations.utils.createDivContainer(rolesFieldDiv, 'conversation-container-vertical', { 'overflow': 'visible' });
 
             // Add tabs for each role in the instruction, plus an additional tab for adding a new role
             const rolesTabs = [];
@@ -37,7 +35,7 @@
                 rolesTabs.push({ name: role.role_name, populateFunc: (c) => this.populateRoleTab(c, role) });
             });
             rolesTabs.push({ name: '+ Add role', populateFunc: (c) => this.populateAddRoleTab(c) });
-            new window.TabsetComponent(tabsetDiv, rolesTabs, `conversations-instruction-editor-${this.group.group_id}`);
+            new window.TabsetComponent(tabsetDiv, rolesTabs, `conversations-instruction-editor-${this.group.group_id}`, null, true);
         }
 
         handleDeleteRole(role) {
@@ -82,27 +80,23 @@
             // Add buttons container
             const buttonContainer = window.conversations.utils.createDivContainer(verticalWrapper, 'conversations-buttons-container');
             new window.ButtonComponent(buttonContainer, {
-                label: '+ Add feedback field',
-                onClick: () => this.handleAddFeedback(role),
-                type: window.ButtonComponent.TYPE_GHOST
-            });
-            new window.ButtonComponent(buttonContainer, {
-                label: '🗙 Delete role',
+                label: '🗙 Delete role ' + role.role_name,
                 onClick: () => this.handleDeleteRole(role),
                 type: window.ButtonComponent.TYPE_GHOST_DANGER,
-                tooltip: '🗙 Delete role'
+                tooltip: '🗙 Delete role ' + role.role_name
             });
 
-            // Horizontal wrapper for role details and feedback definitions
-            const horizontalWrapper = window.conversations.utils.createDivContainer(verticalWrapper, 'conversation-container-horizontal-space-between-full');
+            const splitter = window.conversations.utils.createDivContainer(verticalWrapper, 'conversation-container-horizontal-space-between-full');
+            const splitterLeft = window.conversations.utils.createDivContainer(splitter, '-');
+            const splitterRight = window.conversations.utils.createDivContainer(splitter, '-', { 'flex': 1 });
 
             // Left side: Role details
-            const systemPromptContainer = window.conversations.utils.createDivContainer(horizontalWrapper, 'conversation-container-vertical');
+            const systemPromptContainer = window.conversations.utils.createDivContainer(verticalWrapper, 'conversation-container-vertical');
 
             const nameAndRangeDiv = window.conversations.utils.createDivContainer(systemPromptContainer, 'conversation-container-horizontal');
 
             // Role name (editable)
-            window.conversations.utils.createInput(nameAndRangeDiv, 'Role Name:', {
+            window.conversations.utils.createInput(splitterLeft, 'Role Name:', {
                 initialValue: role.role_name,
                 // pattern: /^[a-zA-Z_]+$/,
                 placeholder: 'e.g., Interviewer',
@@ -113,40 +107,41 @@
             });
 
             // Participants field
-            window.conversations.utils.createRange(nameAndRangeDiv, 'Participants (min - max):', role.min, role.max, (range) => {
+            window.conversations.utils.createRange(splitterLeft, 'Participants (min - max):', role.min, role.max, (range) => {
                 role.min = range.min; role.max = range.max;
                 this.onChange(this.roles);
             });
 
 
-            window.conversations.utils.createStringArray(nameAndRangeDiv, 'Conversation Topics:', role.role_conversation_topics, 'Add topic...', (values) => {
+            window.conversations.utils.createStringArray(splitterLeft, 'Conversation Topics:', role.role_conversation_topics, 'Add topic...', (values) => {
                 role.role_conversation_topics = values;
                 this.onChange(this.roles);
-            });
+            }, window.StringArrayComponent.STYLE_COLUMN);
 
             // Role objectives (editable)
-            window.conversations.utils.createTextArea(systemPromptContainer, 'Role Objectives:', {
+            window.conversations.utils.createTextArea(splitterRight, 'Role Objectives:', {
                 initialValue: role.role_objectives,
                 placeholder: 'Role objectives, i.e., Describe what this role is trying to achieve in this conversation.',
                 onChange: (value) => {
                     role.role_objectives = value;
                     this.onChange(this.roles);
                 },
-                // rows: 6
+                rows: 5
             });
 
             // Role Conversation Guide field
-            window.conversations.utils.createTextArea(systemPromptContainer, 'Role Conversation Guide:', {
+            window.conversations.utils.createTextArea(splitterRight, 'Role Conversation Guide:', {
                 initialValue: role.role_conversation_guide,
                 placeholder: 'Role conversation guide, i.e. Add role-specific functional expectations for this scenario.',
                 onChange: (value) => {
                     role.role_conversation_guide = value;
                     this.onChange(this.roles);
-                }
+                },
+                rows: 5
             });
 
             // Right side: Feedback Definitions
-            const feedbackContainer = window.conversations.utils.createDivContainer(horizontalWrapper, 'conversation-container-vertical');
+            const feedbackContainer = window.conversations.utils.createDivContainer(verticalWrapper, 'conversation-container-vertical');
             this.feedbackDefContainer = window.conversations.utils.createDivContainer(feedbackContainer, 'conversation-field-container-vertical-full');
             this.populateFeedbackEditor(role);
         }
@@ -166,29 +161,30 @@
             new window.ListComponent(wrapper, role.feedback_def,
                 (feedback_def) => {
                     const feedbackDiv = document.createElement('div');
-                    const buttonContainer = window.conversations.utils.createDivContainer(feedbackDiv, 'conversations-buttons-container');
-                    // Required checkbox
-                    new window.CheckboxComponent(buttonContainer, feedback_def.required, (checked) => {
-                        feedback_def.required = checked;
-                        this.onChange(this.roles);
-                    }, 'Required');
+                    const buttonContainer = window.conversations.utils.createDivContainer(feedbackDiv, 'conversations-buttons-container-left');
                     // Add delete button
                     new window.ButtonComponent(buttonContainer, {
-                        label: '🗙 Delete feedback',
+                        label: '🗙',
                         onClick: () => {
                             role.feedback_def = role.feedback_def.filter(fd => fd.name !== feedback_def.name);
                             this.populateFeedbackEditor(role);
                             this.onChange(this.roles);
                         },
                         type: window.ButtonComponent.TYPE_GHOST_DANGER,
-                        tooltip: '🗙 Delete feedback field'
+                        tooltip: '🗙 Delete feedback field ' + feedback_def.name
                     });
+                    // Required checkbox
+                    new window.CheckboxComponent(buttonContainer, feedback_def.required, (checked) => {
+                        feedback_def.required = checked;
+                        this.onChange(this.roles);
+                    }, 'Required');
 
-
-                    const firstRowDiv = window.conversations.utils.createDivContainer(feedbackDiv, 'conversation-container-horizontal');
+                    const splitter = window.conversations.utils.createDivContainer(feedbackDiv, 'conversation-container-horizontal-space-between-full');
+                    const splitterLeft = window.conversations.utils.createDivContainer(splitter, '-');
+                    const splitterRight = window.conversations.utils.createDivContainer(splitter, '-', { 'flex': 1 });
 
                     // Name (editable)
-                    window.conversations.utils.createInput(firstRowDiv, 'Name:', {
+                    window.conversations.utils.createInput(splitterLeft, 'Name:', {
                         initialValue: feedback_def.name,
                         pattern: /^[a-z_]+$/,
                         placeholder: 'e.g., feedback_name',
@@ -200,7 +196,7 @@
                     
                     // Type field (editable)
                     // TODO: Create a util function for creating labeled select fields
-                    const feedbackTypeContainer = window.conversations.utils.createDivContainer(firstRowDiv, 'conversation-field-container-vertical');
+                    const feedbackTypeContainer = window.conversations.utils.createDivContainer(splitterLeft, 'conversation-field-container-vertical');
                     window.conversations.utils.createLabel(feedbackTypeContainer, 'Type:');
                     const feedbackTypeSelectContainer = window.conversations.utils.createDivContainer(feedbackTypeContainer);
                     new window.SelectComponent(
@@ -221,12 +217,12 @@
                         }
                     );
 
-                                        // Options Area
-                    const feedbackTypeOptionsContainer = window.conversations.utils.createDivContainer(firstRowDiv, 'conversation-field-container-vertical');
+                    // Options Area
+                    const feedbackTypeOptionsContainer = window.conversations.utils.createDivContainer(splitterLeft, 'conversation-field-container-vertical');
                     this.renderFeedbackTypeOptions(feedbackTypeOptionsContainer, feedback_def);
 
                     // Description field (editable)
-                    window.conversations.utils.createTextArea(feedbackDiv, 'Description:', {
+                    window.conversations.utils.createTextArea(splitterRight, 'Description:', {
                         initialValue: feedback_def.description,
                         placeholder: 'Detail description of the feedback',
                         rows: 6,
@@ -239,6 +235,16 @@
                     return feedbackDiv;
                 }
             );
+
+            // Add buttons container
+            const feedbacksButtonContainer = window.conversations.utils.createDivContainer(this.feedbackDefContainer, 'conversations-buttons-container');
+            
+            new window.ButtonComponent(feedbacksButtonContainer, {
+                label: '+ Add feedback field',
+                onClick: () => this.handleAddFeedback(role),
+                type: window.ButtonComponent.TYPE_GHOST
+            });
+
         }
 
         // Render type-specific options for feedback definition
@@ -263,7 +269,7 @@
                     feedback_def['optional_values'], 'Add optional value...', (values) => {
                         feedback_def['optional_values'] = values;
                         this.onChange(this.roles);
-                    }, window.StringArrayComponent.STYLE_WRAP);
+                    }, window.StringArrayComponent.STYLE_COLUMN);
 
             }
         }

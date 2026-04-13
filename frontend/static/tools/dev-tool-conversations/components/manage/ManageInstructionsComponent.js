@@ -71,8 +71,10 @@
             const rightDiv = window.conversations.utils.createDivContainer(wrapper, 'conversations-layout-right', { flex: 0.8 });
             const rightWrapper = window.conversations.utils.createDivContainer(rightDiv, 'conversation-container-vertical');
             
-            this.instructionPropertiesDiv = window.conversations.utils.createDivContainer(rightWrapper, 'conversation-container-vertical', {flex: '0 1 auto'});
-            this.rolesAreaDiv = window.conversations.utils.createDivContainer(rightWrapper, 'conversation-container-vertical');
+            this.instructionPropertiesDiv = window.conversations.utils.createDivContainer(rightWrapper, '-');
+            const scrolledDiv = window.conversations.utils.createDivContainer(rightWrapper, 'conversation-container-vertical');
+            this.rolesAreaDiv = window.conversations.utils.createDivContainer(scrolledDiv, '-');
+            this.observationsDiv = window.conversations.utils.createDivContainer(scrolledDiv, '-');
 
             // Load instructions list component
             this.loadInstructions();
@@ -135,7 +137,7 @@
         async loadContent() {
             this.instructionPropertiesDiv.innerHTML = '';
             this.rolesAreaDiv.innerHTML = '';
-
+            this.observationsDiv.innerHTML = '';
 
             if (!this.seedCompare.data) {
                 window.conversations.utils.createReadOnlyText(this.instructionPropertiesDiv, 'Please select an instruction to view and edit.', 'conversations-message-empty');
@@ -193,6 +195,8 @@
             });
 
             this.loadRoles();
+
+            this.loadObservations();
         }
 
         loadRoles() {
@@ -214,6 +218,28 @@
                 // Handle role deleted
                 this.seedCompare.change((data) => data.info.roles = roles);
                 this.loadRoles();
+            });
+        }
+
+        loadObservations() {
+            // Clear previous roles area content
+            this.observationsDiv.innerHTML = '';
+
+            // Observations area
+            new window.conversations.ManageInstructionObservationsComponent(this.observationsDiv, this.group, this.seedCompare.data.instruction_id, this.seedCompare.data.info.observations, 
+                (observations) => {
+                // 
+                this.seedCompare.change((data) => data.info.observations = observations);
+            }, 
+                (observations) => {
+                // Handle observations added
+                this.seedCompare.change((data) => data.info.observations = observations);
+                this.loadObservations();
+            },
+                (observations) => {
+                // Handle observation deleted
+                this.seedCompare.change((data) => data.info.observations = observations);
+                this.loadObservations();
             });
         }
 

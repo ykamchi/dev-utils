@@ -347,6 +347,28 @@ def register_instructions_apis(app, base_path: str):
             return jsonify({'success': False, 'error': 'Failed to contact upstream instructions/delete'}), 502
 
 
+    @app.route(f"{base_path}/instructions_suggest_observations", methods=["POST"])
+    def instructions_suggest_observations():
+        """
+        Proxy to upstream /api/instructions/suggest_observations to suggest observations for an instruction.
+        """
+        try:
+            payload = request.get_json(force=True)
+            
+            if not payload.get('instruction_id'):
+                return jsonify({'success': False, 'error': 'missing instruction_id'}), 400
+            
+            upstream_payload = {
+                'instruction_id': payload.get('instruction_id')
+            }
+            
+            return jsonify(_proxy_post('/api/instructions/suggest_observations', upstream_payload, timeout=120.0))
+        
+        except RequestException:
+            app.logger.exception('Failed to contact upstream /api/instructions/suggest_observations')
+            return jsonify({'success': False, 'error': 'Failed to contact upstream instructions/suggest_observations'}), 502
+
+
     @app.route(f"{base_path}/instructions_add", methods=["POST"])
     def instructions_add():
         """
